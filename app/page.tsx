@@ -1,8 +1,19 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col bg-[#fafafa]">
+      <div className="flex justify-center bg-white py-4">
+        <Image
+          src="/under-construction.png"
+          alt="Under construction"
+          width={600}
+          height={120}
+          className="max-w-full h-auto"
+          priority
+        />
+      </div>
       <header className="border-b border-neutral-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
           <span className="text-lg font-semibold text-neutral-900">
@@ -79,7 +90,15 @@ export default function Home() {
 
       <footer className="border-t border-neutral-200 py-6">
         <p className="text-center text-sm text-neutral-500">
-          SignupSmartly — organize volunteers simply
+          SignupSmartly — organize volunteers simply. Brought to you by{' '}
+          <a
+            href="https://www.digitaleigh.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-neutral-700 hover:underline"
+          >
+            Digitaleigh Co.
+          </a>
         </p>
       </footer>
     </main>
