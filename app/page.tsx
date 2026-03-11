@@ -11,7 +11,7 @@ export default function Home() {
         </p>
 
         <p className="text-gray-500 mb-8">
-          We're building a better way to coordinate volunteers for
+          We&apos;re building a better way to coordinate volunteers for
           sports teams, schools, and community events.
         </p>
 
