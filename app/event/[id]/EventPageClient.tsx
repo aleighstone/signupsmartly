@@ -1,0 +1,63 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { SlotList } from '@/components/SlotList';
+import { SignupModal } from '@/components/SignupModal';
+import type { EventWithSlots, SlotWithSignups } from '@/types/database';
+import type { SignupFormData } from '@/components/SignupForm';
+
+interface EventPageClientProps {
+  event: EventWithSlots;
+}
+
+export function EventPageClient({ event }: EventPageClientProps) {
+  const router = useRouter();
+  const [modalSlot, setModalSlot] = useState<SlotWithSignups | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSignUp = (slot: SlotWithSignups) => {
+    setModalSlot(slot);
+  };
+
+  const handleCloseModal = () => {
+    if (!isSubmitting) setModalSlot(null);
+  };
+
+  const handleSubmit = async (data: SignupFormData) => {
+    if (!modalSlot) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slotId: modalSlot.id,
+          name: data.name,
+          email: data.email,
+          comment: data.comment,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Signup failed');
+      router.push(`/signup/confirm?id=${json.signupId}`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <>
+      <SlotList slots={event.slots} onSignUp={handleSignUp} />
+      <SignupModal
+        isOpen={!!modalSlot}
+        onClose={handleCloseModal}
+        slotRoleName={modalSlot?.role_name ?? ''}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+      />
+    </>
+  );
+}
