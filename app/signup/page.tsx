@@ -17,7 +17,7 @@ export default function SignUpPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const { supabase } = await import('@/lib/supabase');
+      const supabase = (await import('@/lib/supabase-browser')).createClient();
       const { data, error: signUpError } =
         await supabase.auth.signUp({ email, password, options: { data: { name } } });
       if (signUpError) throw signUpError;
