@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { createClient } from '@/lib/supabase-browser';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function SignUpPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const supabase = (await import('@/lib/supabase-browser')).createClient();
+      const supabase = createClient();
       const { data, error: signUpError } =
         await supabase.auth.signUp({ email, password, options: { data: { name } } });
       if (signUpError) throw signUpError;

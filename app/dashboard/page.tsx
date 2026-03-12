@@ -70,12 +70,20 @@ export default async function DashboardPage() {
           <p className="text-muted font-body">
             Sign in to view and manage your events.
           </p>
-          <Link
-            href="/login"
-            className="mt-4 inline-block rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover transition-colors"
-          >
-            Sign in
-          </Link>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/signup"
+              className="inline-flex min-h-[44px] min-w-[140px] items-center justify-center rounded-xl bg-sage px-5 py-2.5 text-sm font-medium text-white hover:bg-sage-hover transition-colors font-body"
+            >
+              Create your first event
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex min-h-[44px] min-w-[140px] items-center justify-center rounded-xl border-2 border-charcoal bg-transparent px-5 py-2.5 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors font-body"
+            >
+              Sign in
+            </Link>
+          </div>
         </div>
       ) : events.length === 0 ? (
         <div className="mt-8 rounded-xl border border-dashed border-charcoal/20 bg-surface p-8 text-center shadow-soft">
@@ -117,16 +125,16 @@ export default async function DashboardPage() {
                       />
                     </div>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex items-center gap-3">
                     <Link
                       href={`/event/${event.id}`}
-                      className="rounded-xl border-2 border-charcoal bg-transparent px-4 py-2 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors"
+                      className="inline-flex items-center justify-center rounded-xl border-2 border-charcoal bg-transparent px-4 py-2 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors leading-none"
                     >
                       View Event
                     </Link>
                     <Link
                       href={`/dashboard/event/${event.id}/roster`}
-                      className="rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover transition-colors"
+                      className="inline-flex items-center justify-center rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover transition-colors leading-none"
                     >
                       View Roster
                     </Link>

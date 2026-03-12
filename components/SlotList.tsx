@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { formatTimeRange } from '@/lib/calendar';
 import type { SlotWithSignups } from '@/types/database';
 import { getSlotRemainingCapacity } from '@/lib/slot-utils';
@@ -47,8 +46,6 @@ function SlotCard({
 }
 
 export function SlotList({ slots, onSignUp }: SlotListProps) {
-  const [filledExpanded, setFilledExpanded] = useState(false);
-
   const openSlots = slots.filter((s) => getSlotRemainingCapacity(s) > 0);
   const filledSlots = slots.filter((s) => getSlotRemainingCapacity(s) === 0);
 
@@ -80,49 +77,33 @@ export function SlotList({ slots, onSignUp }: SlotListProps) {
 
       {filledSlots.length > 0 && (
         <section>
-          <button
-            type="button"
-            onClick={() => setFilledExpanded(!filledExpanded)}
-            className="mb-4 flex w-full items-center justify-between gap-2 text-left text-lg font-semibold text-muted hover:text-charcoal focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 rounded-xl py-1 font-heading transition-colors"
-            aria-expanded={filledExpanded}
-          >
-            <span className="flex items-center gap-2">
-              <span aria-hidden>✔</span>
-              Filled Roles
-            </span>
-            <span
-              className={`shrink-0 text-muted transition-transform ${
-                filledExpanded ? 'rotate-180' : ''
-              }`}
-            >
-              ▼
-            </span>
-          </button>
-          {filledExpanded && (
-            <ul className="space-y-3">
-              {filledSlots.map((slot) => {
-                const timeRange = formatTimeRange(
-                  slot.start_time,
-                  slot.end_time
-                );
-                const names = slot.signups
-                  .map((s) => s.name)
-                  .join(', ');
-                return (
-                  <li
-                    key={slot.id}
-                    className="rounded-xl border border-charcoal/10 bg-surface/60 px-4 py-3 shadow-soft"
-                  >
-                    <p className="font-medium text-charcoal font-body">
-                      {slot.role_name}
-                    </p>
-                    <p className="text-sm text-muted font-body">{timeRange}</p>
-                    <p className="mt-1 text-sm text-muted font-body">{names}</p>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-charcoal font-heading">
+            <span aria-hidden>✔</span>
+            Filled Roles
+          </h2>
+          <ul className="space-y-3">
+            {filledSlots.map((slot) => {
+              const timeRange = formatTimeRange(
+                slot.start_time,
+                slot.end_time
+              );
+              const names = slot.signups
+                .map((s) => s.name)
+                .join(', ');
+              return (
+                <li
+                  key={slot.id}
+                  className="rounded-xl border border-charcoal/10 bg-surface/60 px-4 py-3 shadow-soft"
+                >
+                  <p className="font-medium text-charcoal font-body">
+                    {slot.role_name}
+                  </p>
+                  <p className="text-sm text-muted font-body">{timeRange}</p>
+                  <p className="mt-1 text-sm text-muted font-body">{names}</p>
+                </li>
+              );
+            })}
+          </ul>
         </section>
       )}
     </div>

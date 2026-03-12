@@ -47,9 +47,18 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
   });
   const cancelUrl = `/signup/cancel?token=${signupTyped.cancel_token}`;
   const timeRange = formatTimeRange(slot.start_time, slot.end_time);
+  const eventId = (event as { id?: string }).id;
 
   return (
-    <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4">
+    <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4 relative">
+      {eventId && (
+        <Link
+          href={`/event/${eventId}`}
+          className="absolute top-4 left-4 text-sm text-muted hover:text-charcoal transition-colors font-body"
+        >
+          ← Back to Event Page
+        </Link>
+      )}
       <div className="w-full max-w-md text-center space-y-6">
         <h1 className="text-2xl font-semibold text-charcoal font-heading">
           You&apos;re signed up!

@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase-server';
 const slotSchema = z.object({
   role_name: z.string().min(1),
   role_description: z.string().nullable().optional(),
-  start_time: z.string(),
-  end_time: z.string(),
+  start_time: z.string().nullable().optional(),
+  end_time: z.string().nullable().optional(),
   capacity: z.number().min(1),
   instructions: z.string().nullable().optional(),
 });
@@ -18,7 +18,7 @@ const createEventSchema = z.object({
   description: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
   start_date: z.string(),
-  end_date: z.string(),
+  end_date: z.string().nullable().optional(),
   published: z.boolean().optional(),
   slots: z.array(slotSchema).min(1),
 });
@@ -41,14 +41,16 @@ export async function POST(request: Request) {
     }
 
     const { slots, ...eventData } = parsed.data;
+    const eventPayload = {
+      ...eventData,
+      end_date: eventData.end_date || null,
+      published: eventData.published ?? true,
+    };
 
     const { data: event, error: eventError } = await supabase
       .from('events')
       // @ts-expect-error Supabase SSR createServerClient return type incompatibility with Database
-      .insert({
-        ...eventData,
-        published: eventData.published ?? true,
-      })
+      .insert(eventPayload)
       .select('id')
       .single();
 
@@ -61,8 +63,8 @@ export async function POST(request: Request) {
       event_id: eventRow.id,
       role_name: s.role_name,
       role_description: s.role_description ?? null,
-      start_time: s.start_time,
-      end_time: s.end_time,
+      start_time: s.start_time || null,
+      end_time: s.end_time || null,
       capacity: s.capacity,
       instructions: s.instructions ?? null,
     }));

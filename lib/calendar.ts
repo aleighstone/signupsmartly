@@ -8,8 +8,15 @@ export function generateAddToCalendarUrl(params: {
 }) {
   const { event, slot, volunteerName } = params;
 
-  const start = new Date(slot.start_time);
-  const end = new Date(slot.end_time);
+  // Use slot times if present, else event date range
+  const start = slot.start_time
+    ? new Date(slot.start_time)
+    : new Date(event.start_date);
+  const end = slot.end_time
+    ? new Date(slot.end_time)
+    : event.end_date
+      ? new Date(event.end_date)
+      : new Date(new Date(event.start_date).setHours(23, 59, 59, 999));
 
   const formatForGoogle = (d: Date) =>
     d.toISOString().replace(/-|:|\.\d\d\d/g, '');
@@ -27,19 +34,28 @@ export function generateAddToCalendarUrl(params: {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startStr}/${endStr}&details=${details}&location=${location}`;
 }
 
-export function formatEventDateRange(startDate: string, endDate: string): string {
+export function formatEventDateRange(
+  startDate: string,
+  endDate: string | null
+): string {
   const start = new Date(startDate);
+  if (!endDate) {
+    return format(start, 'EEEE, MMMM d, yyyy');
+  }
   const end = new Date(endDate);
-
-  const sameDay =
-    start.toDateString() === end.toDateString();
-
+  const sameDay = start.toDateString() === end.toDateString();
   if (sameDay) {
     return format(start, 'EEEE, MMMM d, yyyy');
   }
   return `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`;
 }
 
-export function formatTimeRange(startTime: string, endTime: string): string {
+export function formatTimeRange(
+  startTime: string | null,
+  endTime: string | null
+): string {
+  if (!startTime || !endTime) {
+    return 'All day';
+  }
   return `${format(new Date(startTime), 'h:mm a')} – ${format(new Date(endTime), 'h:mm a')}`;
 }

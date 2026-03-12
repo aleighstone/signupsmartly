@@ -7,8 +7,16 @@ const supabaseAnonKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder';
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+// Use no-store so event/slot/signup data is never cached (keeps "still needed" accurate)
+const noCacheFetch: typeof fetch = (url, init) =>
+  fetch(url, { ...init, cache: 'no-store' });
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  global: { fetch: noCacheFetch },
+});
 
 export function createServerClient() {
-  return createClient<Database>(supabaseUrl, supabaseAnonKey);
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    global: { fetch: noCacheFetch },
+  });
 }

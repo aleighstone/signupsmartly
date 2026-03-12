@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getEventWithSlots } from '@/lib/db';
-import { getEventCoverage } from '@/lib/db';
+import { getEventWithSlots, getEventCoverage } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 import { EventHeader } from '@/components/EventHeader';
 import { CoverageMeter } from '@/components/CoverageMeter';
 import { EventPageClient } from './EventPageClient';

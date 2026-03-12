@@ -83,7 +83,7 @@ export interface Database {
           description: string | null;
           location: string | null;
           start_date: string;
-          end_date: string;
+          end_date: string | null;
           published: boolean;
           created_by: string | null;
           created_at: string;
@@ -95,7 +95,7 @@ export interface Database {
           description?: string | null;
           location?: string | null;
           start_date: string;
-          end_date: string;
+          end_date?: string | null;
           published?: boolean;
           created_by?: string | null;
           created_at?: string;
@@ -119,8 +119,8 @@ export interface Database {
           event_id: string;
           role_name: string;
           role_description: string | null;
-          start_time: string;
-          end_time: string;
+          start_time: string | null;
+          end_time: string | null;
           capacity: number;
           instructions: string | null;
           created_at: string;
@@ -130,8 +130,8 @@ export interface Database {
           event_id: string;
           role_name: string;
           role_description?: string | null;
-          start_time: string;
-          end_time: string;
+          start_time?: string | null;
+          end_time?: string | null;
           capacity?: number;
           instructions?: string | null;
           created_at?: string;
@@ -141,8 +141,8 @@ export interface Database {
           event_id?: string;
           role_name?: string;
           role_description?: string | null;
-          start_time?: string;
-          end_time?: string;
+          start_time?: string | null;
+          end_time?: string | null;
           capacity?: number;
           instructions?: string | null;
           created_at?: string;

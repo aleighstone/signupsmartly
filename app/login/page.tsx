@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { createClient } from '@/lib/supabase-browser';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const supabase = (await import('@/lib/supabase-browser')).createClient();
+      const supabase = createClient();
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -50,6 +51,12 @@ export default function LoginPage() {
 
         <form
           onSubmit={handleSubmit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
+              e.preventDefault();
+              e.currentTarget.requestSubmit();
+            }
+          }}
           className="rounded-xl border border-charcoal/10 bg-surface p-6 space-y-4 shadow-soft"
         >
           {error && (

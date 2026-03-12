@@ -9,8 +9,8 @@ import { z } from 'zod';
 const slotSchema = z.object({
   role_name: z.string().min(1, 'Role name required'),
   role_description: z.string().optional(),
-  start_time: z.string().min(1, 'Start time required'),
-  end_time: z.string().min(1, 'End time required'),
+  start_time: z.string().optional(),
+  end_time: z.string().optional(),
   capacity: z.number().min(1, 'At least 1'),
   instructions: z.string().optional(),
 });
@@ -18,9 +18,9 @@ const slotSchema = z.object({
 const formSchema = z.object({
   title: z.string().min(1, 'Title required'),
   description: z.string().optional(),
-  location: z.string().optional(),
+  location: z.string().min(1, 'Location required'),
   start_date: z.string().min(1, 'Start date required'),
-  end_date: z.string().min(1, 'End date required'),
+  end_date: z.string().optional(),
   slots: z.array(slotSchema).min(1, 'Add at least one role'),
 });
 
@@ -60,6 +60,7 @@ export function CreateEventForm({
   });
 
   const slots = watch('slots');
+  const [showEndDate, setShowEndDate] = useState(false);
 
   const addSlot = () => {
     setValue('slots', [
@@ -87,6 +88,7 @@ export function CreateEventForm({
     setIsSubmitting(true);
     try {
       const eventDate = data.start_date.split('T')[0];
+      const endDateVal = data.end_date?.trim().split('T')[0];
       const res = await fetch('/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,13 +99,17 @@ export function CreateEventForm({
           description: data.description || null,
           location: data.location || null,
           start_date: `${eventDate}T00:00:00Z`,
-          end_date: `${data.end_date.split('T')[0] || eventDate}T23:59:59Z`,
+          end_date: endDateVal ? `${endDateVal}T23:59:59Z` : null,
           published: true,
           slots: data.slots.map((s) => ({
             role_name: s.role_name,
             role_description: s.role_description || null,
-            start_time: `${eventDate}T${s.start_time}:00Z`,
-            end_time: `${eventDate}T${s.end_time}:00Z`,
+            start_time: s.start_time?.trim()
+              ? `${eventDate}T${s.start_time}:00Z`
+              : null,
+            end_time: s.end_time?.trim()
+              ? `${eventDate}T${s.end_time}:00Z`
+              : null,
             capacity: s.capacity,
             instructions: s.instructions || null,
           })),
@@ -129,7 +135,7 @@ export function CreateEventForm({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-              Title
+              Title <span className="text-coral">*</span>
             </label>
             <input
               {...register('title')}
@@ -153,7 +159,7 @@ export function CreateEventForm({
           </div>
           <div>
             <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-              Location
+              Location <span className="text-coral">*</span>
             </label>
             <input
               {...register('location')}
@@ -161,15 +167,15 @@ export function CreateEventForm({
               placeholder="Arcadia High School Track"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                Start Date
+                Start Date <span className="text-coral">*</span>
               </label>
               <input
                 {...register('start_date')}
                 type="date"
-                className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                className="w-full max-w-xs rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
               />
               {errors.start_date && (
                 <p className="mt-1 text-sm text-coral font-body">
@@ -177,21 +183,41 @@ export function CreateEventForm({
                 </p>
               )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                End Date
-              </label>
-              <input
-                {...register('end_date')}
-                type="date"
-                className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
-              />
-              {errors.end_date && (
-                <p className="mt-1 text-sm text-coral font-body">
-                  {errors.end_date.message}
-                </p>
-              )}
-            </div>
+            {showEndDate ? (
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                  End Date
+                </label>
+                <input
+                  {...register('end_date')}
+                  type="date"
+                  className="w-full max-w-xs rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                />
+                {errors.end_date && (
+                  <p className="mt-1 text-sm text-coral font-body">
+                    {errors.end_date.message}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEndDate(false);
+                    setValue('end_date', '');
+                  }}
+                  className="mt-1 text-sm text-muted hover:text-charcoal hover:underline font-body"
+                >
+                  Remove end date
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowEndDate(true)}
+                className="text-sm text-muted hover:text-charcoal hover:underline font-body"
+              >
+                + Add end date
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -232,7 +258,7 @@ export function CreateEventForm({
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                    Role name
+                    Role name <span className="text-coral">*</span>
                   </label>
                   <input
                     {...register(`slots.${index}.role_name`)}
@@ -247,7 +273,7 @@ export function CreateEventForm({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                    Capacity
+                    Capacity <span className="text-coral">*</span>
                   </label>
                   <input
                     type="number"
@@ -260,33 +286,23 @@ export function CreateEventForm({
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                    Start time
+                    Start time <span className="text-muted font-normal">(optional)</span>
                   </label>
                   <input
                     type="time"
                     {...register(`slots.${index}.start_time`)}
                     className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                   />
-                  {errors.slots?.[index]?.start_time && (
-                    <p className="mt-1 text-sm text-coral font-body">
-                      {errors.slots[index]?.start_time?.message}
-                    </p>
-                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                    End time
+                    End time <span className="text-muted font-normal">(optional)</span>
                   </label>
                   <input
                     type="time"
                     {...register(`slots.${index}.end_time`)}
                     className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                   />
-                  {errors.slots?.[index]?.end_time && (
-                    <p className="mt-1 text-sm text-coral font-body">
-                      {errors.slots[index]?.end_time?.message}
-                    </p>
-                  )}
                 </div>
               </div>
               <div>
