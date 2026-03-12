@@ -16,8 +16,10 @@ export async function sendSignupConfirmation(params: {
   const { signup, slot, event } = params;
   const cancelUrl = `${APP_URL}/signup/cancel?token=${signup.cancel_token}`;
 
-  const startTime = format(new Date(slot.start_time), 'h:mm a');
-  const endTime = format(new Date(slot.end_time), 'h:mm a');
+  const timeDisplay =
+    slot.start_time && slot.end_time
+      ? `${format(new Date(slot.start_time), 'h:mm a')} – ${format(new Date(slot.end_time), 'h:mm a')}`
+      : 'All day';
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
@@ -36,7 +38,7 @@ export async function sendSignupConfirmation(params: {
   
   <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin: 24px 0;">
     <p style="margin: 0 0 8px;"><strong>Role:</strong> ${slot.role_name}</p>
-    <p style="margin: 0 0 8px;"><strong>Time:</strong> ${startTime} – ${endTime}</p>
+    <p style="margin: 0 0 8px;"><strong>Time:</strong> ${timeDisplay}</p>
     <p style="margin: 0 0 8px;"><strong>Event:</strong> ${event.title}</p>
     <p style="margin: 0;"><strong>Location:</strong> ${event.location || 'TBD'}</p>
   </div>
