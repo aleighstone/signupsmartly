@@ -3,7 +3,7 @@ import { ImageResponse } from 'next/og';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-export const alt = 'SignupSmartly — Organize volunteers simply';
+export const alt = 'SignupSmartly — Organize volunteers smartly';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -50,7 +50,7 @@ export default async function Image() {
             fontFamily: 'system-ui, sans-serif',
           }}
         >
-          Organize volunteers simply
+          Organize volunteers smartly
         </div>
       </div>
     ),

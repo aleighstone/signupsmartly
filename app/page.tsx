@@ -70,7 +70,7 @@ export default function Home() {
 
       <footer className="border-t border-charcoal/10 py-6">
         <div className="text-center text-sm text-muted space-y-1 font-body">
-          <p>SignupSmartly — organize volunteers simply.</p>
+          <p>SignupSmartly — organize volunteers smartly.</p>
           <p>
             Brought to you by{' '}
             <a
