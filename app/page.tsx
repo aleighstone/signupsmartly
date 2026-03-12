@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { Logo } from '@/components/Logo';
 
 export default function Home() {
@@ -9,16 +8,10 @@ export default function Home() {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
           <Logo />
           <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-muted hover:text-charcoal font-body"
-            >
+            <Link href="/login" className="btn-secondary">
               Sign in
             </Link>
-            <Link
-              href="/signup"
-              className="rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover transition-colors font-body"
-            >
+            <Link href="/signup" className="btn-primary">
               Get started
             </Link>
           </div>
@@ -27,38 +20,26 @@ export default function Home() {
 
       <section className="flex-1 flex flex-col items-center justify-center px-4 py-16 sm:py-24">
         <div className="max-w-2xl text-center">
-          <div className="flex justify-center mb-8">
-            <Image
-              src="/under-construction.png"
-              alt="Under construction"
-              width={600}
-              height={120}
-              className="max-w-full h-auto"
-              priority
-            />
-          </div>
           <h1 className="text-4xl font-semibold tracking-tight text-charcoal sm:text-5xl font-heading">
-            Volunteer signups,
-            <br />
-            <span className="text-muted">without the noise</span>
+            Create smart signups, without the noise
           </h1>
 
           <p className="mt-6 text-lg text-muted leading-relaxed font-body">
-            A cleaner way to coordinate volunteers for sports teams, schools,
-            and community events. Create events, add slots, share a link.
-            No ads, no clutter.
+            A cleaner way to coordinate volunteer and sign up lists for community
+            events, classrooms, and sports. Create events, add slots, share a
+            link. No ads, no clutter.
           </p>
 
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
               href="/signup"
-              className="w-full rounded-xl bg-sage px-6 py-3.5 text-base font-medium text-white hover:bg-sage-hover transition-colors sm:w-auto font-body"
+              className="btn-primary-lg w-full sm:w-auto"
             >
-              Create your first event
+              Create your first sign up
             </Link>
             <Link
               href="/login"
-              className="w-full rounded-xl border-2 border-charcoal bg-transparent px-6 py-3.5 text-base font-medium text-charcoal hover:bg-charcoal/5 transition-colors sm:w-auto font-body"
+              className="btn-secondary-lg w-full sm:w-auto"
             >
               Sign in
             </Link>
@@ -70,8 +51,8 @@ export default function Home() {
                 For organizers
               </h2>
               <p className="mt-2 text-sm text-muted font-body">
-                Create events, define time slots and roles, and share one link.
-                See coverage at a glance and export rosters.
+                Create events, define what you need, and share one link. See
+                coverage at a glance and export rosters.
               </p>
             </div>
             <div className="rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft">

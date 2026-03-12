@@ -37,7 +37,7 @@ function SlotCard({
       <button
         type="button"
         onClick={onSignUp}
-        className="shrink-0 rounded-xl bg-sage px-4 py-2.5 text-sm font-medium text-white hover:bg-sage-hover focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 min-h-[44px] font-body transition-colors"
+        className="btn-primary shrink-0"
       >
         Sign up
       </button>

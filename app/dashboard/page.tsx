@@ -71,16 +71,10 @@ export default async function DashboardPage() {
             Sign in to view and manage your events.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href="/signup"
-              className="inline-flex min-h-[44px] min-w-[140px] items-center justify-center rounded-xl bg-sage px-5 py-2.5 text-sm font-medium text-white hover:bg-sage-hover transition-colors font-body"
-            >
+            <Link href="/signup" className="btn-primary-lg">
               Create your first event
             </Link>
-            <Link
-              href="/login"
-              className="inline-flex min-h-[44px] min-w-[140px] items-center justify-center rounded-xl border-2 border-charcoal bg-transparent px-5 py-2.5 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors font-body"
-            >
+            <Link href="/login" className="btn-secondary-lg">
               Sign in
             </Link>
           </div>
@@ -88,10 +82,7 @@ export default async function DashboardPage() {
       ) : events.length === 0 ? (
         <div className="mt-8 rounded-xl border border-dashed border-charcoal/20 bg-surface p-8 text-center shadow-soft">
           <p className="text-muted font-body">No events yet.</p>
-          <Link
-            href="/create-event"
-            className="mt-4 inline-block rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover transition-colors"
-          >
+          <Link href="/create-event" className="mt-4 btn-primary">
             Create your first event
           </Link>
         </div>
@@ -128,13 +119,13 @@ export default async function DashboardPage() {
                   <div className="flex items-center gap-3">
                     <Link
                       href={`/event/${event.id}`}
-                      className="inline-flex items-center justify-center rounded-xl border-2 border-charcoal bg-transparent px-4 py-2 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors leading-none"
+                      className="btn-secondary"
                     >
                       View Event
                     </Link>
                     <Link
                       href={`/dashboard/event/${event.id}/roster`}
-                      className="inline-flex items-center justify-center rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover transition-colors leading-none"
+                      className="btn-primary"
                     >
                       View Roster
                     </Link>

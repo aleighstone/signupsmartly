@@ -39,6 +39,23 @@ h1, h2, h3 {
   font-family: var(--font-quicksand), var(--font-heading), sans-serif;
 }
 
+/* Buttons: primary and secondary share identical dimensions (transparent border on primary
+   matches secondary's border so both have same box size) */
+@layer components {
+  .btn-primary {
+    @apply inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded-xl border-2 border-transparent bg-sage px-5 py-2.5 text-sm font-medium text-white hover:bg-sage-hover focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 transition-colors font-body;
+  }
+  .btn-secondary {
+    @apply inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded-xl border-2 border-charcoal bg-transparent px-5 py-2.5 text-sm font-medium text-charcoal hover:bg-charcoal/5 focus:outline-none focus:ring-2 focus:ring-charcoal focus:ring-offset-2 transition-colors font-body;
+  }
+  .btn-primary-lg {
+    @apply inline-flex min-h-[48px] min-w-[140px] items-center justify-center rounded-xl border-2 border-transparent bg-sage px-6 py-3.5 text-base font-medium text-white hover:bg-sage-hover focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 transition-colors font-body;
+  }
+  .btn-secondary-lg {
+    @apply inline-flex min-h-[48px] min-w-[140px] items-center justify-center rounded-xl border-2 border-charcoal bg-transparent px-6 py-3.5 text-base font-medium text-charcoal hover:bg-charcoal/5 focus:outline-none focus:ring-2 focus:ring-charcoal focus:ring-offset-2 transition-colors font-body;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

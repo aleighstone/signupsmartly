@@ -90,14 +90,11 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
             href={calendarUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-xl bg-sage px-4 py-3 text-sm font-medium text-white hover:bg-sage-hover focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 min-h-[44px] transition-colors font-body"
+            className="btn-primary-lg"
           >
             Add to Calendar
           </a>
-          <Link
-            href={cancelUrl}
-            className="inline-flex items-center justify-center rounded-xl border-2 border-charcoal bg-transparent px-4 py-3 text-sm font-medium text-charcoal hover:bg-charcoal/5 focus:outline-none focus:ring-2 focus:ring-charcoal focus:ring-offset-2 min-h-[44px] transition-colors font-body"
-          >
+          <Link href={cancelUrl} className="btn-secondary-lg">
             Cancel signup
           </Link>
         </div>

@@ -18,10 +18,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             >
               Dashboard
             </Link>
-            <Link
-              href="/create-event"
-              className="rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover transition-colors"
-            >
+            <Link href="/create-event" className="btn-primary">
               Create Event
             </Link>
           </div>
