@@ -3,23 +3,40 @@
 @tailwind utilities;
 
 :root {
-  --background: #FAF9F6;
-  --foreground: #27272A;
-  --muted: #71717A;
-  --sage: #4ADE80;
-  --sage-hover: #22C55E;
-  --coral: #F87171;
+  --bg-main: #FAF9F6;       /* Warm Sand */
+  --bg-surface: #FFFFFF;    /* Pure White */
+  --text-primary: #27272A;  /* Deep Charcoal */
+  --text-muted: #71717A;    /* Medium Gray */
+  --brand-primary: #6CBF6C; /* Softened Sage */
+  --brand-hover: #52A352;   /* Deepened Soft Sage */
+  --brand-accent: #F87171;  /* Coral Blush */
+
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+
+  --font-heading: 'Quicksand', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  /* Legacy aliases for compatibility */
+  --background: var(--bg-main);
+  --foreground: var(--text-primary);
+  --muted: var(--text-muted);
+  --sage: var(--brand-primary);
+  --sage-hover: var(--brand-hover);
+  --coral: var(--brand-accent);
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
-  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  background: var(--bg-main);
+  font-family: var(--font-inter), var(--font-body), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3 {
-  font-family: var(--font-quicksand), sans-serif;
+  font-family: var(--font-quicksand), var(--font-heading), sans-serif;
 }
 
 @layer utilities {

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signup Smartly | Style Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    /* --- CSS VARIABLES (The Source of Truth) --- */
+    :root {
+      --bg-main: #FAF9F6;       /* Warm Sand */
+      --bg-surface: #FFFFFF;    /* Pure White */
+      --text-primary: #27272A;  /* Deep Charcoal */
+      --text-muted: #71717A;    /* Medium Gray */
+      --brand-primary: #6CBF6C; /* Softened Sage */
+      --brand-hover: #52A352;   /* Deepened Soft Sage */
+      --brand-accent: #F87171;  /* Coral Blush */
+
+      --radius-md: 8px;
+      --radius-lg: 12px;
+
+      --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+
+      --font-heading: 'Quicksand', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    /* --- BASE STYLES --- */
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      margin: 0;
+      padding: 40px 20px;
+    }
+
+    h1, h2, h3 {
+      font-family: var(--font-heading);
+      color: var(--text-primary);
+      margin-top: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      border-bottom: 2px solid #E4E4E7;
+      padding-bottom: 10px;
+      margin-bottom: 30px;
+      margin-top: 50px;
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .section-title:first-of-type { margin-top: 0; }
+
+    /* --- COLOR SWATCHES --- */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 20px;
+    }
+
+    .swatch {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-soft);
+      background: var(--bg-surface);
+    }
+
+    .swatch-color {
+      height: 100px;
+      width: 100%;
+    }
+
+    .swatch-details {
+      padding: 15px;
+      font-size: 0.85rem;
+    }
+
+    .swatch-details strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* --- TYPOGRAPHY --- */
+    .type-specimen {
+      background: var(--bg-surface);
+      padding: 30px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .type-specimen h1 { font-size: 2.5rem; margin-bottom: 10px; }
+    .type-specimen h2 { font-size: 2rem; margin-bottom: 10px; }
+    .type-specimen h3 { font-size: 1.5rem; margin-bottom: 10px; }
+    .type-specimen p { margin-bottom: 0; color: var(--text-muted); }
+
+    /* --- COMPONENTS --- */
+    .component-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    @media (max-width: 640px) {
+      .component-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--bg-surface);
+      padding: 30px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-primary {
+      background-color: var(--brand-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--brand-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: var(--text-primary);
+      border: 2px solid var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--text-primary);
+      color: white;
+    }
+
+    /* Inputs */
+    .input-group { margin-bottom: 20px; }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #D4D4D8;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      box-sizing: border-box;
+      background-color: var(--bg-surface);
+      transition: border-color 0.2s;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 3px rgba(108, 191, 108, 0.2);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-accent {
+      background-color: rgba(248, 113, 113, 0.15);
+      color: var(--brand-accent);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div style="text-align: center; margin-bottom: 60px;">
+    <h1 style="font-size: 3rem; margin-bottom: 10px;">Signup Smartly</h1>
+    <p style="color: var(--text-muted); font-size: 1.2rem;">Design System &amp; Style Guide: Focused Organic</p>
+  </div>
+
+  <h2 class="section-title">Color Palette</h2>
+  <div class="color-grid">
+    <div class="swatch">
+      <div class="swatch-color" style="background-color: var(--bg-main); border-bottom: 1px solid #E4E4E7;"></div>
+      <div class="swatch-details">
+        <strong>Warm Sand</strong>
+        #FAF9F6<br>Background
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background-color: var(--text-primary);"></div>
+      <div class="swatch-details">
+        <strong>Deep Charcoal</strong>
+        #27272A<br>Text Primary
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background-color: var(--brand-primary);"></div>
+      <div class="swatch-details">
+        <strong>Softened Sage</strong>
+        #6CBF6C<br>Primary Action
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background-color: var(--brand-hover);"></div>
+      <div class="swatch-details">
+        <strong>Deepened Sage</strong>
+        #52A352<br>Primary Hover
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background-color: var(--brand-accent);"></div>
+      <div class="swatch-details">
+        <strong>Coral Blush</strong>
+        #F87171<br>Accent / Alert
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Typography</h2>
+  <div class="type-specimen">
+    <h1>Heading 1 (Quicksand Bold)</h1>
+    <h2>Heading 2 (Quicksand Bold)</h2>
+    <h3>Heading 3 (Quicksand Bold)</h3>
+    <p style="margin-top: 20px;"><strong>Body Text (Inter Regular):</strong> Productivity isn't about doing more things; it's about doing the right things efficiently. Signup Smartly is designed to reduce friction and help teams organize their data seamlessly. Notice how this text is highly legible for long-form reading, while the headings provide a friendly, organic structure.</p>
+  </div>
+
+  <h2 class="section-title">UI Components</h2>
+  <div class="component-grid">
+    <div class="card">
+      <h3 style="margin-bottom: 20px;">Interactive Elements</h3>
+      <div style="margin-bottom: 20px;">
+        <button class="btn btn-primary">Primary Button</button>
+        <button class="btn btn-secondary" style="margin-left: 10px;">Secondary</button>
+      </div>
+      <div class="input-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" class="input-field" placeholder="alex@example.com">
+      </div>
+    </div>
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+        <h3 style="margin: 0;">Project Alpha</h3>
+        <span class="badge badge-accent">High Priority</span>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
+        Review the latest user signups and categorize them by their referral source before the Friday sync.
+      </p>
+      <button class="btn btn-primary" style="width: 100%;">View Details</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
