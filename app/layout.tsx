@@ -19,18 +19,18 @@ const metadataBase =
 
 export const metadata: Metadata = {
   metadataBase: new URL(metadataBase),
-  title: "SignupSmartly — Organize volunteers simply",
+  title: "SignupSmartly — Organize volunteers smartly",
   description:
     "A modern, ad-free way to coordinate volunteer roles and time slots for events",
   openGraph: {
-    title: "SignupSmartly — Organize volunteers simply",
+    title: "SignupSmartly — Organize volunteers smartly",
     description:
       "A modern, ad-free way to coordinate volunteer roles and time slots for events",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SignupSmartly — Organize volunteers simply",
+    title: "SignupSmartly — Organize volunteers smartly",
     description:
       "A modern, ad-free way to coordinate volunteer roles and time slots for events",
   },
@@ -49,3 +49,4 @@ export default function RootLayout({
     </html>
   );
 }
+
