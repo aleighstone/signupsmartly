@@ -10,10 +10,10 @@ export function EventHeader({ event }: EventHeaderProps) {
 
   return (
     <header className="space-y-2">
-      <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
+      <h1 className="text-2xl font-semibold tracking-tight text-charcoal sm:text-3xl font-heading">
         {event.title}
       </h1>
-      <dl className="flex flex-col gap-1 text-neutral-600">
+      <dl className="flex flex-col gap-1 text-muted font-body">
         <div>
           <dt className="sr-only">Date</dt>
           <dd>{dateRange}</dd>
@@ -26,7 +26,7 @@ export function EventHeader({ event }: EventHeaderProps) {
         )}
       </dl>
       {event.description && (
-        <p className="text-neutral-600 text-sm leading-relaxed max-w-2xl">
+        <p className="text-muted text-sm leading-relaxed max-w-2xl font-body">
           {event.description}
         </p>
       )}

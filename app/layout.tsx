@@ -1,21 +1,39 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Quicksand, Inter } from "next/font/google";
 import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+const quicksand = Quicksand({
+  subsets: ["latin"],
+  variable: "--font-quicksand",
+  weight: ["400", "500", "600", "700"],
 });
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  weight: ["400", "500", "600"],
+});
+
+const metadataBase =
+  process.env.NEXT_PUBLIC_APP_URL || 'https://www.signupsmartly.com';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(metadataBase),
   title: "SignupSmartly — Organize volunteers simply",
-  description: "A modern, ad-free way to coordinate volunteer roles and time slots for events",
+  description:
+    "A modern, ad-free way to coordinate volunteer roles and time slots for events",
+  openGraph: {
+    title: "SignupSmartly — Organize volunteers simply",
+    description:
+      "A modern, ad-free way to coordinate volunteer roles and time slots for events",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SignupSmartly — Organize volunteers simply",
+    description:
+      "A modern, ad-free way to coordinate volunteer roles and time slots for events",
+  },
 };
 
 export default function RootLayout({
@@ -24,10 +42,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="en" className={`${quicksand.variable} ${inter.variable}`}>
+      <body className="antialiased font-body text-charcoal bg-sand">
         {children}
       </body>
     </html>

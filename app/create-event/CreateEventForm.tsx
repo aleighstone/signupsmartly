@@ -122,72 +122,72 @@ export function CreateEventForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-8">
-      <section className="rounded-xl border border-neutral-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-neutral-900 mb-4">
+      <section className="rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft">
+        <h2 className="text-lg font-semibold text-charcoal mb-4 font-heading">
           Event Details
         </h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
+            <label className="block text-sm font-medium text-charcoal mb-1 font-body">
               Title
             </label>
             <input
               {...register('title')}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2"
+              className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
               placeholder="Spring Track Meet #3"
             />
             {errors.title && (
-              <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
+              <p className="mt-1 text-sm text-coral font-body">{errors.title.message}</p>
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
+            <label className="block text-sm font-medium text-charcoal mb-1 font-body">
               Description
             </label>
             <textarea
               {...register('description')}
               rows={3}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2"
+              className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
               placeholder="Optional description"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
+            <label className="block text-sm font-medium text-charcoal mb-1 font-body">
               Location
             </label>
             <input
               {...register('location')}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2"
+              className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
               placeholder="Arcadia High School Track"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                 Start Date
               </label>
               <input
                 {...register('start_date')}
                 type="date"
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2"
+                className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
               />
               {errors.start_date && (
-                <p className="mt-1 text-sm text-red-600">
+                <p className="mt-1 text-sm text-coral font-body">
                   {errors.start_date.message}
                 </p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                 End Date
               </label>
               <input
                 {...register('end_date')}
                 type="date"
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2"
+                className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
               />
               {errors.end_date && (
-                <p className="mt-1 text-sm text-red-600">
+                <p className="mt-1 text-sm text-coral font-body">
                   {errors.end_date.message}
                 </p>
               )}
@@ -198,13 +198,13 @@ export function CreateEventForm({
 
       <section className="rounded-xl border border-neutral-200 bg-white p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-neutral-900">
+          <h2 className="text-lg font-semibold text-charcoal font-heading">
             Volunteer Roles
           </h2>
           <button
             type="button"
             onClick={addSlot}
-            className="text-sm font-medium text-neutral-900 hover:text-neutral-600"
+            className="text-sm font-medium text-charcoal hover:text-muted transition-colors"
           >
             + Add Slot
           </button>
@@ -213,17 +213,17 @@ export function CreateEventForm({
           {slots.map((_, index) => (
             <div
               key={index}
-              className="rounded-lg border border-neutral-200 p-4 space-y-4"
+              className="rounded-xl border border-charcoal/10 p-4 space-y-4 bg-sand/30"
             >
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-neutral-500">
+                <span className="text-sm font-medium text-muted font-body">
                   Role {index + 1}
                 </span>
                 {slots.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeSlot(index)}
-                    className="text-sm text-red-600 hover:text-red-700"
+                    className="text-sm text-coral hover:text-coral/80 transition-colors"
                   >
                     Remove
                   </button>
@@ -231,72 +231,72 @@ export function CreateEventForm({
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                     Role name
                   </label>
                   <input
                     {...register(`slots.${index}.role_name`)}
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2"
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                     placeholder="Timer"
                   />
                   {errors.slots?.[index]?.role_name && (
-                    <p className="mt-1 text-sm text-red-600">
+                    <p className="mt-1 text-sm text-coral font-body">
                       {errors.slots[index]?.role_name?.message}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                     Capacity
                   </label>
                   <input
                     type="number"
                     min={1}
                     {...register(`slots.${index}.capacity`, { valueAsNumber: true })}
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2"
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                   />
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                     Start time
                   </label>
                   <input
                     type="time"
                     {...register(`slots.${index}.start_time`)}
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2"
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                   />
                   {errors.slots?.[index]?.start_time && (
-                    <p className="mt-1 text-sm text-red-600">
+                    <p className="mt-1 text-sm text-coral font-body">
                       {errors.slots[index]?.start_time?.message}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                     End time
                   </label>
                   <input
                     type="time"
                     {...register(`slots.${index}.end_time`)}
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2"
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                   />
                   {errors.slots?.[index]?.end_time && (
-                    <p className="mt-1 text-sm text-red-600">
+                    <p className="mt-1 text-sm text-coral font-body">
                       {errors.slots[index]?.end_time?.message}
                     </p>
                   )}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                   Instructions (optional)
                 </label>
                 <textarea
                   {...register(`slots.${index}.instructions`)}
                   rows={2}
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2"
+                  className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                   placeholder="Any notes for volunteers"
                 />
               </div>
@@ -304,14 +304,14 @@ export function CreateEventForm({
           ))}
         </div>
         {errors.slots?.root && (
-          <p className="mt-2 text-sm text-red-600">{errors.slots.root.message}</p>
+          <p className="mt-2 text-sm text-coral font-body">{errors.slots.root.message}</p>
         )}
       </section>
 
       <button
         type="submit"
         disabled={isSubmitting}
-        className="rounded-lg bg-neutral-900 px-6 py-3 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
+        className="rounded-xl bg-sage px-6 py-3 text-sm font-medium text-white hover:bg-sage-hover disabled:opacity-60 transition-colors font-body"
       >
         {isSubmitting ? 'Creating…' : 'Create Event'}
       </button>

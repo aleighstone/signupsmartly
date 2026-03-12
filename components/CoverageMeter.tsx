@@ -16,26 +16,26 @@ export function CoverageMeter({
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-neutral-700">Volunteer Coverage</span>
-        <span className="text-neutral-500 tabular-nums">{percentage}%</span>
+      <div className="flex items-center justify-between text-sm font-body">
+        <span className="font-medium text-charcoal">Volunteer Coverage</span>
+        <span className="text-muted tabular-nums">{percentage}%</span>
       </div>
       <div
-        className={`w-full bg-neutral-200 rounded-full overflow-hidden ${barHeight}`}
+        className={`w-full bg-charcoal/10 rounded-full overflow-hidden ${barHeight}`}
         role="progressbar"
         aria-valuenow={percentage}
         aria-valuemin={0}
         aria-valuemax={100}
       >
         <div
-          className="h-full bg-emerald-600 rounded-full transition-all duration-300"
+          className="h-full bg-sage rounded-full transition-all duration-300"
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-muted font-body">
         {filled} of {total} roles filled
         {remaining > 0 && (
-          <span className="ml-1 text-neutral-600 font-medium">
+          <span className="ml-1 text-charcoal font-medium">
             · {remaining} still needed
           </span>
         )}

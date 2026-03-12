@@ -65,38 +65,38 @@ export function RosterActions({ event, rows }: RosterActionsProps) {
       <button
         type="button"
         onClick={exportCsv}
-        className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+        className="rounded-xl border-2 border-charcoal px-4 py-2 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors font-body"
       >
         Export CSV
       </button>
       <button
         type="button"
         onClick={() => setRecapOpen(!recapOpen)}
-        className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+        className="rounded-xl border-2 border-charcoal px-4 py-2 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors font-body"
       >
         {recapOpen ? 'Hide Recap' : 'Generate Volunteer Recap'}
       </button>
 
       {recapOpen && (
-        <div className="mt-4 rounded-xl border border-neutral-200 bg-white p-4">
-          <h3 className="text-sm font-medium text-neutral-700 mb-2">
+        <div className="mt-4 rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft">
+          <h3 className="text-sm font-medium text-charcoal mb-2 font-body">
             Volunteer Recap
           </h3>
-          <pre className="whitespace-pre-wrap rounded-lg bg-neutral-50 p-4 text-sm text-neutral-800 font-sans max-h-64 overflow-y-auto">
+          <pre className="whitespace-pre-wrap rounded-xl bg-sand/50 p-4 text-sm text-charcoal font-body max-h-64 overflow-y-auto">
             {recapText}
           </pre>
           <div className="mt-3 flex gap-2">
             <button
               type="button"
               onClick={copyRecap}
-              className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+              className="rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover transition-colors"
             >
               {recapCopied ? 'Copied!' : 'Copy Recap'}
             </button>
             <a
               href={`data:text/plain;charset=utf-8,${encodeURIComponent(recapText)}`}
               download={`${event.title.replace(/\s+/g, '-')}-recap.txt`}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              className="rounded-xl border-2 border-charcoal px-4 py-2 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors font-body"
             >
               Download Text
             </a>

@@ -63,26 +63,26 @@ export default async function DashboardPage() {
 
   return (
     <AppLayout>
-      <h1 className="text-2xl font-semibold text-neutral-900">Your Events</h1>
+      <h1 className="text-2xl font-semibold text-charcoal font-heading">Your Events</h1>
 
       {!authUser ? (
-        <div className="mt-8 rounded-xl border border-dashed border-neutral-300 bg-white p-8 text-center">
-          <p className="text-neutral-600">
+        <div className="mt-8 rounded-xl border border-dashed border-charcoal/20 bg-surface p-8 text-center shadow-soft">
+          <p className="text-muted font-body">
             Sign in to view and manage your events.
           </p>
           <Link
             href="/login"
-            className="mt-4 inline-block rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+            className="mt-4 inline-block rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover transition-colors"
           >
             Sign in
           </Link>
         </div>
       ) : events.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed border-neutral-300 bg-white p-8 text-center">
-          <p className="text-neutral-600">No events yet.</p>
+        <div className="mt-8 rounded-xl border border-dashed border-charcoal/20 bg-surface p-8 text-center shadow-soft">
+          <p className="text-muted font-body">No events yet.</p>
           <Link
             href="/create-event"
-            className="mt-4 inline-block rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+            className="mt-4 inline-block rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover transition-colors"
           >
             Create your first event
           </Link>
@@ -98,14 +98,14 @@ export default async function DashboardPage() {
             return (
               <li
                 key={event.id}
-                className="rounded-xl border border-neutral-200 bg-white p-5"
+                className="rounded-xl border border-charcoal/10 bg-surface p-5 shadow-soft"
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h2 className="font-semibold text-neutral-900">
+                    <h2 className="font-semibold text-charcoal font-heading">
                       {event.title}
                     </h2>
-                    <p className="text-sm text-neutral-500">
+                    <p className="text-sm text-muted font-body">
                       {formatEventDateRange(event.start_date, event.end_date)}
                     </p>
                     <div className="mt-3 max-w-xs">
@@ -120,13 +120,13 @@ export default async function DashboardPage() {
                   <div className="flex gap-3">
                     <Link
                       href={`/event/${event.id}`}
-                      className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+                      className="rounded-xl border-2 border-charcoal bg-transparent px-4 py-2 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors"
                     >
                       View Event
                     </Link>
                     <Link
                       href={`/dashboard/event/${event.id}/roster`}
-                      className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+                      className="rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover transition-colors"
                     >
                       View Roster
                     </Link>

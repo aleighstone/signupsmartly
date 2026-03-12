@@ -24,13 +24,13 @@ function SlotCard({
     remaining === 1 ? '1 spot remaining' : `${remaining} spots remaining`;
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
-        <h3 className="font-medium text-neutral-900">{slot.role_name}</h3>
-        <p className="text-sm text-neutral-500">{timeRange}</p>
-        <p className="mt-1 text-sm text-neutral-600">{spotsText}</p>
+        <h3 className="font-medium text-charcoal font-body">{slot.role_name}</h3>
+        <p className="text-sm text-muted font-body">{timeRange}</p>
+        <p className="mt-1 text-sm text-muted font-body">{spotsText}</p>
         {slot.instructions && (
-          <p className="mt-1 text-sm text-neutral-500 line-clamp-2">
+          <p className="mt-1 text-sm text-muted line-clamp-2 font-body">
             {slot.instructions}
           </p>
         )}
@@ -38,7 +38,7 @@ function SlotCard({
       <button
         type="button"
         onClick={onSignUp}
-        className="shrink-0 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 min-h-[44px]"
+        className="shrink-0 rounded-xl bg-sage px-4 py-2.5 text-sm font-medium text-white hover:bg-sage-hover focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 min-h-[44px] font-body transition-colors"
       >
         Sign up
       </button>
@@ -55,12 +55,12 @@ export function SlotList({ slots, onSignUp }: SlotListProps) {
   return (
     <div className="space-y-8">
       <section>
-        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-neutral-900">
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-charcoal font-heading">
           <span aria-hidden>⚡</span>
           Still Needed
         </h2>
         {openSlots.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-neutral-300 py-8 text-center text-neutral-500">
+          <p className="rounded-xl border border-dashed border-charcoal/20 py-8 text-center text-muted font-body">
             All roles are filled. Thank you!
           </p>
         ) : (
@@ -83,7 +83,7 @@ export function SlotList({ slots, onSignUp }: SlotListProps) {
           <button
             type="button"
             onClick={() => setFilledExpanded(!filledExpanded)}
-            className="mb-4 flex w-full items-center justify-between gap-2 text-left text-lg font-semibold text-neutral-700 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 rounded-lg py-1"
+            className="mb-4 flex w-full items-center justify-between gap-2 text-left text-lg font-semibold text-muted hover:text-charcoal focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 rounded-xl py-1 font-heading transition-colors"
             aria-expanded={filledExpanded}
           >
             <span className="flex items-center gap-2">
@@ -91,7 +91,7 @@ export function SlotList({ slots, onSignUp }: SlotListProps) {
               Filled Roles
             </span>
             <span
-              className={`shrink-0 text-neutral-400 transition-transform ${
+              className={`shrink-0 text-muted transition-transform ${
                 filledExpanded ? 'rotate-180' : ''
               }`}
             >
@@ -111,13 +111,13 @@ export function SlotList({ slots, onSignUp }: SlotListProps) {
                 return (
                   <li
                     key={slot.id}
-                    className="rounded-xl border border-neutral-200 bg-neutral-50/50 px-4 py-3"
+                    className="rounded-xl border border-charcoal/10 bg-surface/60 px-4 py-3 shadow-soft"
                   >
-                    <p className="font-medium text-neutral-800">
+                    <p className="font-medium text-charcoal font-body">
                       {slot.role_name}
                     </p>
-                    <p className="text-sm text-neutral-500">{timeRange}</p>
-                    <p className="mt-1 text-sm text-neutral-600">{names}</p>
+                    <p className="text-sm text-muted font-body">{timeRange}</p>
+                    <p className="mt-1 text-sm text-muted font-body">{names}</p>
                   </li>
                 );
               })}

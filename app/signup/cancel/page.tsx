@@ -29,17 +29,17 @@ export default async function CancelPage({ searchParams }: PageProps) {
 
   if (signup.cancelled) {
     return (
-      <main className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-4">
+      <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-md text-center space-y-6">
-          <h1 className="text-2xl font-semibold text-neutral-900">
+          <h1 className="text-2xl font-semibold text-charcoal font-heading">
             Already cancelled
           </h1>
-          <p className="text-neutral-600">
+          <p className="text-muted font-body">
             This signup has already been cancelled.
           </p>
           <Link
             href="/"
-            className="inline-flex items-center justify-center rounded-lg bg-neutral-900 px-4 py-3 text-sm font-medium text-white hover:bg-neutral-800"
+            className="inline-flex items-center justify-center rounded-xl bg-sage px-4 py-3 text-sm font-medium text-white hover:bg-sage-hover transition-colors font-body"
           >
             Go home
           </Link>
@@ -52,13 +52,13 @@ export default async function CancelPage({ searchParams }: PageProps) {
   const event = slot?.event;
 
   return (
-    <main className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-4">
+    <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-neutral-900">
+          <h1 className="text-2xl font-semibold text-charcoal font-heading">
             Cancel signup?
           </h1>
-          <p className="mt-2 text-neutral-600">
+          <p className="mt-2 text-muted font-body">
             You&apos;re cancelling your spot as <strong>{slot?.role_name}</strong>{' '}
             for {event?.title}.
           </p>

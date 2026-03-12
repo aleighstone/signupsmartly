@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Logo } from '@/components/Logo';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -6,25 +7,20 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <nav className="border-b border-neutral-200 bg-white">
+    <div className="min-h-screen bg-sand font-body">
+      <nav className="border-b border-charcoal/10 bg-surface shadow-soft">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link
-            href="/"
-            className="text-lg font-semibold text-neutral-900 hover:text-neutral-700"
-          >
-            SignupSmartly
-          </Link>
+          <Logo className="hover:text-muted" />
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="text-sm font-medium text-neutral-600 hover:text-neutral-900"
+              className="text-sm font-medium text-muted hover:text-charcoal transition-colors"
             >
               Dashboard
             </Link>
             <Link
               href="/create-event"
-              className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+              className="rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover transition-colors"
             >
               Create Event
             </Link>

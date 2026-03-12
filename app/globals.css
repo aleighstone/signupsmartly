@@ -3,15 +3,23 @@
 @tailwind utilities;
 
 :root {
-  --background: #fafafa;
-  --foreground: #171717;
+  --background: #FAF9F6;
+  --foreground: #27272A;
+  --muted: #71717A;
+  --sage: #4ADE80;
+  --sage-hover: #22C55E;
+  --coral: #F87171;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-quicksand), sans-serif;
 }
 
 @layer utilities {

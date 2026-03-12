@@ -33,11 +33,11 @@ export function CancelForm({ cancelToken }: CancelFormProps) {
 
   if (cancelled) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center space-y-4">
-        <p className="text-neutral-700 font-medium">Your signup has been cancelled.</p>
+      <div className="rounded-xl border border-charcoal/10 bg-surface p-6 text-center space-y-4 shadow-soft">
+        <p className="text-charcoal font-medium font-body">Your signup has been cancelled.</p>
         <Link
           href="/"
-          className="inline-flex items-center justify-center rounded-lg bg-neutral-900 px-4 py-3 text-sm font-medium text-white hover:bg-neutral-800"
+          className="inline-flex items-center justify-center rounded-xl bg-sage px-4 py-3 text-sm font-medium text-white hover:bg-sage-hover transition-colors font-body"
         >
           Go home
         </Link>
@@ -50,13 +50,13 @@ export function CancelForm({ cancelToken }: CancelFormProps) {
       <button
         onClick={handleCancel}
         disabled={isSubmitting}
-        className="flex-1 rounded-lg bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-60"
+        className="flex-1 rounded-xl bg-coral px-4 py-3 text-sm font-medium text-white hover:bg-coral/90 focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 disabled:opacity-60 transition-colors font-body"
       >
         {isSubmitting ? 'Cancelling…' : 'Yes, cancel my signup'}
       </button>
       <Link
         href="/"
-        className="flex-1 rounded-lg border border-neutral-300 px-4 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50 text-center focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+        className="flex-1 rounded-xl border-2 border-charcoal bg-transparent px-4 py-3 text-sm font-medium text-charcoal hover:bg-charcoal/5 text-center focus:outline-none focus:ring-2 focus:ring-charcoal focus:ring-offset-2 transition-colors font-body"
       >
         Keep my signup
       </Link>

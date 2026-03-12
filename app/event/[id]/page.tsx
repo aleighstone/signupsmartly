@@ -19,11 +19,11 @@ export default async function EventPage({ params }: PageProps) {
   const coverage = getEventCoverage(eventData);
 
   return (
-    <main className="min-h-screen bg-neutral-50">
+    <main className="min-h-screen bg-sand">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
         <EventHeader event={eventData} />
 
-        <div className="mt-8 rounded-xl border border-neutral-200 bg-white p-4">
+        <div className="mt-8 rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft">
           <CoverageMeter
             filled={coverage.filled}
             total={coverage.total}
@@ -35,8 +35,8 @@ export default async function EventPage({ params }: PageProps) {
           <EventPageClient event={eventData} />
         </div>
 
-        <p className="mt-12 text-center text-sm text-neutral-400">
-          <Link href="/" className="hover:text-neutral-600">
+        <p className="mt-12 text-center text-sm text-muted">
+          <Link href="/" className="hover:text-charcoal transition-colors">
             Organized with SignupSmartly
           </Link>
         </p>

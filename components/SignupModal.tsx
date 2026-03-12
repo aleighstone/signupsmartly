@@ -42,12 +42,12 @@ export function SignupModal({
       aria-labelledby="signup-modal-title"
     >
       <div
-        className="absolute inset-0 bg-neutral-900/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <h2 id="signup-modal-title" className="text-lg font-semibold text-neutral-900 mb-4">
+      <div className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md">
+        <h2 id="signup-modal-title" className="text-lg font-semibold text-charcoal mb-4 font-heading">
           Sign up to volunteer
         </h2>
         <SignupForm
