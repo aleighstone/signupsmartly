@@ -6,7 +6,7 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 
 ## User Types
 
-1. **Organizers** — Create events, manage rosters, see coverage
+1. **Organizers** — Create signups (scheduled or simple list), manage signups, see coverage
 2. **Volunteers** — View open slots, sign up (no account required), cancel via email link
 
 ---
@@ -26,10 +26,11 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 
 ### Event Page (`/event/[id]`)
 
-- Event header (title, description, location, dates)
-- Coverage meter (filled vs total roles, percentage, "still needed" count)
-- Slot list: "Still Needed" (open slots) and "Filled Roles"
-- Per slot: role name, time (or "All day" if no times), spots remaining, optional instructions
+- Event header (title, description, location, dates — "No date" when start_date is null for simple lists)
+- Coverage meter: label "Coverage"; for scheduled "X of Y roles filled", for simple "X of Y items filled"
+- Slot list: "Still Needed" (open slots) and "Filled Roles" or "Filled Items" (simple)
+- **Scheduled slots:** role name, time (or "All day"), spots remaining, optional instructions
+- **Simple list slots:** item name, items remaining, optional description; no time display; sorted alphabetically by item name
 - Sign up button opens modal
 - Link: "Organized with SignupSmartly"
 - Dynamic: no caching so signup counts update immediately
@@ -42,7 +43,8 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 ### Signup Confirmation (`/signup/confirm?id=...`)
 
 - "You're signed up!"
-- Shows: role, time, event, location
+- **Scheduled:** Shows role, time, event, location
+- **Simple list:** Shows item (not role), event, location; no time row
 - "Add to Calendar" (Google Calendar)
 - "Cancel signup"
 - "← Back to Event Page"
@@ -67,39 +69,39 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 
 ### Dashboard (`/dashboard`)
 
-- **Logged out:** "Create your first event" + "Sign in"
-- **Logged in, no events:** "Create your first event"
-- **Logged in, has events:** List of events with title, date range, coverage meter, "View Event", "View Roster"
+- **Title:** "Your Signups"
+- **Logged out:** "Sign in to view and manage your events" + "Create your first event", "Sign in"
+- **Logged in, no events:** "Nothing to see here." + "Create your first signup"
+- **Logged in, has events:** List of signups with title, date range, coverage meter; "View My Signups" (primary), "Signup Page" (secondary, opens in new tab)
 
-### Create Event (`/create-event`)
+### Create Signup (`/create-event`)
 
-**Event Details (required*):**
+- **Page title:** "Create Signup"
+- **Nav button:** "Create Signup"
+- **Signup type selector:** Inline "I need to [dropdown] [help]" — dropdown options: "organize by schedule", "request items in a simple list"; help (?) opens modal explaining both types; small charcoal circle with white ? for help button
+- **Submit button:** "Create Signup"
 
-- Title*
-- Description
-- Location*
-- Start date*
-- End date (optional; "Add end date" link to reveal)
+**Scheduled (organize by schedule):**
 
-**Volunteer Roles (at least one):**
+- Event Details: Title*, Description, Location*
+- Scheduled spots (at least one): Date*, Start time (optional), End time (optional), Spot name*, Need*, Instructions (optional)
+- Add/remove spots
 
-- Role name*
-- Capacity*
-- Start time (optional)
-- End time (optional)
-- Instructions (optional)
+**Simple list (request items):**
 
-- Add/remove slots
-- Asterisks indicate required fields
-- Submit publishes event
+- Signup Details: Title*, Description, Location (optional), Date (optional)
+- Items (at least one): Item name*, Description (optional), Need*
+- Add/remove items
 
-### Event Roster (`/dashboard/event/[id]/roster`)
+### Signups Page (`/dashboard/event/[id]/signups`)
 
+- Path renamed from `/roster` (redirect in place)
 - Back to Dashboard
 - Event title, date range, coverage meter
-- Table: Role, Volunteer Name, Email, Time, Comment, Signup Timestamp
-- Export CSV
-- Generate Volunteer Recap (copy or download text)
+- **Scheduled:** Table: Role, Volunteer Name, Email, Time, Comment, Signup Timestamp
+- **Simple list:** Table: Item (not Role), Volunteer Name, Email, Comment, Signup Timestamp — no Time column
+- Export CSV (columns adapt by signup type)
+- *(Generate Volunteer Recap removed; may return later)*
 
 ---
 
@@ -119,8 +121,8 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 
 - **Organizations** — name, timezone
 - **Users** — organizers (auth)
-- **Events** — title, description, location, start_date, end_date (optional), published
-- **Slots** — role_name, capacity, start_time (optional), end_time (optional), instructions
+- **Events** — title, description, location, start_date (optional for simple), end_date (optional), signup_type ('scheduled' | 'simple'), published
+- **Slots** — role_name (item name for simple), role_description, capacity, start_time (optional; null for simple), end_time (optional; null for simple), instructions
 - **Signups** — name, email, comment, cancel_token, cancelled
 
 ---
@@ -146,5 +148,6 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 
 ## Email
 
-- Signup confirmation: role, time, event, location, Add to Calendar link, Cancel link
-- Time shows "All day" when slot has no start/end time
+- Signup confirmation: **scheduled** — Role, Time, event, location; **simple list** — Item (not Role), event, location (no Time row)
+- Add to Calendar link, Cancel link
+- Time shows "All day" when slot has no start/end time (scheduled only)

@@ -80,13 +80,22 @@ export async function POST(request: Request) {
     if (slotsError) throw slotsError;
 
     return NextResponse.json({ id: eventRow.id });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Create event error:', err);
+    const message =
+      err && typeof err === 'object' && 'message' in err
+        ? String((err as { message: unknown }).message)
+        : 'Failed to create event';
+    const details =
+      err && typeof err === 'object' && 'details' in err
+        ? (err as { details: unknown }).details
+        : undefined;
+    const code =
+      err && typeof err === 'object' && 'code' in err
+        ? (err as { code: unknown }).code
+        : undefined;
     return NextResponse.json(
-      {
-        error:
-          err instanceof Error ? err.message : 'Failed to create event',
-      },
+      { error: message, ...(details && { details }), ...(code && { code }) },
       { status: 500 }
     );
   }

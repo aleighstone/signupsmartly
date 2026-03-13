@@ -239,7 +239,11 @@ export function CreateEventForm({
         }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Failed to create');
+      if (!res.ok) {
+        const msg = json.error || 'Failed to create';
+        const extra = json.details || json.code ? ` — ${JSON.stringify({ details: json.details, code: json.code })}` : '';
+        throw new Error(`${msg}${extra}`);
+      }
       router.push('/dashboard');
       router.refresh();
     } catch (err) {
