@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AddSignupModal } from './AddSignupModal';
-import { formatTimeRange } from '@/lib/calendar';
 
 type TableRow = {
   slotId: string;
