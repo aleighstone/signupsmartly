@@ -35,12 +35,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
     }
 
-    const { data: event } = await supabase
+    const { data: eventData } = await supabase
       .from('events')
       .select('organization_id')
       .eq('id', slot.event_id)
       .single();
 
+    const event = eventData as { organization_id: string } | null;
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
