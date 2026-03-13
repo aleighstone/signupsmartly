@@ -99,7 +99,10 @@ export async function POST(request: Request) {
       instructions: s.instructions ?? null,
     }));
 
-    const { error: slotsError } = await supabase.from('template_slots').insert(slotsToInsert);
+    const { error: slotsError } = await supabase
+      .from('template_slots')
+      // @ts-expect-error Supabase schema does not include template_slots
+      .insert(slotsToInsert);
     if (slotsError) throw slotsError;
 
     return NextResponse.json({ id: t.id, name });
