@@ -1,12 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-type SignupType = 'scheduled' | 'simple';
+type SignupType = 'scheduled' | 'simple' | 'template';
+
+interface Template {
+  id: string;
+  name: string;
+  signup_type: 'scheduled' | 'simple';
+  description: string | null;
+  location: string | null;
+  template_slots: Array<{
+    id: string;
+    slot_name: string;
+    capacity: number;
+    start_time: string | null;
+    end_time: string | null;
+    instructions: string | null;
+  }>;
+}
 
 const scheduledSlotSchema = z.object({
   spot_date: z.string().min(1, 'Date required'),
@@ -93,6 +109,126 @@ function SignupTypeHelpModal({
   );
 }
 
+function SaveAsTemplateModal({
+  isOpen,
+  onClose,
+  signupTitle,
+  signupType,
+  description,
+  location,
+  slots,
+  organizationId,
+  onSaved,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  signupTitle: string;
+  signupType: 'scheduled' | 'simple';
+  description: string | null;
+  location: string | null;
+  slots: Array<{
+    role_name: string;
+    role_description?: string | null;
+    capacity: number;
+    start_time?: string;
+    end_time?: string;
+    instructions?: string | null;
+  }>;
+  organizationId: string;
+  onSaved: () => void;
+}) {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [templateName, setTemplateName] = useState(`${signupTitle} Template`);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setStep(1);
+      setTemplateName(`${signupTitle} Template`);
+    }
+  }, [isOpen, signupTitle]);
+
+  const handleClose = () => {
+    onClose();
+    onSaved();
+  };
+
+  const handleSaveTemplate = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organization_id: organizationId,
+          name: templateName.trim(),
+          signup_type: signupType,
+          description: description || null,
+          location: location || null,
+          slots: slots.map((s) => ({
+            slot_name: s.role_name,
+            capacity: s.capacity,
+            start_time: signupType === 'scheduled' ? (s.start_time || null) : null,
+            end_time: signupType === 'scheduled' ? (s.end_time || null) : null,
+            instructions: s.instructions || s.role_description || null,
+          })),
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save template');
+      setStep(3);
+    } catch {
+      alert('Failed to save template');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm" onClick={handleClose} aria-hidden="true" />
+      <div className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md">
+        {step === 1 && (
+          <>
+            <h2 className="text-lg font-semibold text-charcoal font-heading">{signupTitle} created!</h2>
+            <p className="mt-2 text-sm text-charcoal font-body">Do you want to save this signup as a template to reuse later?</p>
+            <div className="mt-6 flex gap-3">
+              <button type="button" onClick={() => setStep(2)} className="btn-primary">Save as Template</button>
+              <button type="button" onClick={handleClose} className="btn-secondary">Close</button>
+            </div>
+          </>
+        )}
+        {step === 2 && (
+          <>
+            <h2 className="text-lg font-semibold text-charcoal font-heading">Name your template</h2>
+            <input
+              type="text"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              className="mt-4 w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+              placeholder="Template name"
+            />
+            <div className="mt-6 flex gap-3">
+              <button type="button" onClick={handleSaveTemplate} disabled={isSaving || !templateName.trim()} className="btn-primary">Save</button>
+              <button type="button" onClick={() => setStep(1)} className="btn-secondary">Back</button>
+            </div>
+          </>
+        )}
+        {step === 3 && (
+          <>
+            <h2 className="text-lg font-semibold text-charcoal font-heading">{templateName} saved!</h2>
+            <p className="mt-2 text-sm text-charcoal font-body">You can select this template the next time you create a new signup.</p>
+            <div className="mt-6">
+              <button type="button" onClick={handleClose} className="btn-primary">Close</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 interface CreateEventFormProps {
   organizationId: string;
   createdBy: string;
@@ -106,6 +242,22 @@ export function CreateEventForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signupType, setSignupType] = useState<SignupType>('scheduled');
   const [helpOpen, setHelpOpen] = useState(false);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [lastCreated, setLastCreated] = useState<{
+    title: string;
+    signupType: 'scheduled' | 'simple';
+    description: string | null;
+    location: string | null;
+    slots: Array<{ role_name: string; role_description?: string | null; capacity: number; start_time?: string; end_time?: string; instructions?: string | null }>;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/templates?organization_id=${organizationId}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then(setTemplates)
+      .catch(() => setTemplates([]));
+  }, [organizationId]);
 
   const scheduledForm = useForm<ScheduledFormData>({
     resolver: zodResolver(scheduledFormSchema),
@@ -165,6 +317,44 @@ export function CreateEventForm({
     simpleForm.setValue('slots', simpleSlots.filter((_, i) => i !== index));
   };
 
+  const goToDashboard = () => {
+    router.push('/dashboard');
+    router.refresh();
+  };
+
+  const handleLoadTemplate = (t: Template) => {
+    setSignupType(t.signup_type);
+    if (t.signup_type === 'scheduled') {
+      scheduledForm.reset({
+        title: '',
+        description: t.description || '',
+        location: t.location || '',
+        slots: t.template_slots.map((s) => ({
+          spot_date: '',
+          role_name: s.slot_name,
+          start_time: s.start_time?.includes('T') ? s.start_time.slice(11, 16) : (s.start_time || ''),
+          end_time: s.end_time?.includes('T') ? s.end_time.slice(11, 16) : (s.end_time || ''),
+          capacity: s.capacity,
+          instructions: s.instructions || '',
+        })),
+      });
+    } else {
+      simpleForm.reset({
+        title: '',
+        description: t.description || '',
+        location: t.location || '',
+        start_date: '',
+        slots: t.template_slots.map((s) => ({
+          role_name: s.slot_name,
+          role_description: s.instructions || '',
+          capacity: s.capacity,
+        })),
+      });
+    }
+    setSignupType(t.signup_type);
+    setTimeout(() => document.querySelector<HTMLInputElement>('[name="title"]')?.focus(), 0);
+  };
+
   const onSubmitScheduled = async (data: ScheduledFormData) => {
     setIsSubmitting(true);
     try {
@@ -202,8 +392,20 @@ export function CreateEventForm({
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to create');
-      router.push('/dashboard');
-      router.refresh();
+      setLastCreated({
+        title: data.title,
+        signupType: 'scheduled',
+        description: data.description || null,
+        location: data.location || null,
+        slots: data.slots.map((s) => ({
+          role_name: s.role_name,
+          capacity: s.capacity,
+          start_time: s.start_time || undefined,
+          end_time: s.end_time || undefined,
+          instructions: s.instructions || undefined,
+        })),
+      });
+      setSaveModalOpen(true);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -244,8 +446,18 @@ export function CreateEventForm({
         const extra = json.details || json.code ? ` — ${JSON.stringify({ details: json.details, code: json.code })}` : '';
         throw new Error(`${msg}${extra}`);
       }
-      router.push('/dashboard');
-      router.refresh();
+      setLastCreated({
+        title: data.title,
+        signupType: 'simple',
+        description: data.description || null,
+        location: data.location || null,
+        slots: data.slots.map((s) => ({
+          role_name: s.role_name,
+          role_description: s.role_description || undefined,
+          capacity: s.capacity,
+        })),
+      });
+      setSaveModalOpen(true);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -256,11 +468,24 @@ export function CreateEventForm({
   return (
     <>
       <SignupTypeHelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
+      {lastCreated && (
+        <SaveAsTemplateModal
+          isOpen={saveModalOpen}
+          onClose={() => setSaveModalOpen(false)}
+          signupTitle={lastCreated.title}
+          signupType={lastCreated.signupType}
+          description={lastCreated.description}
+          location={lastCreated.location}
+          slots={lastCreated.slots}
+          organizationId={organizationId}
+          onSaved={goToDashboard}
+        />
+      )}
 
       <div className="mt-6 space-y-6">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-charcoal font-body">
-            I need to
+            I want to
           </span>
           <select
             value={signupType}
@@ -274,6 +499,7 @@ export function CreateEventForm({
           >
             <option value="scheduled">organize by schedule</option>
             <option value="simple">request items in a simple list</option>
+            {templates.length > 0 && <option value="template">use one of my templates</option>}
           </select>
           <button
             type="button"
@@ -287,7 +513,31 @@ export function CreateEventForm({
           </button>
         </div>
 
-        {signupType === 'scheduled' ? (
+        {signupType === 'template' ? (
+          <div className="rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft">
+            <h2 className="text-lg font-semibold text-charcoal mb-4 font-heading">Choose a template</h2>
+            {templates.length === 0 ? (
+              <p className="text-sm text-muted font-body">No templates yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {templates.map((t) => (
+                  <li key={t.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleLoadTemplate(t)}
+                      className="flex w-full items-center justify-between rounded-xl border border-charcoal/10 bg-sand/30 px-4 py-3 text-left hover:bg-charcoal/5 transition-colors"
+                    >
+                      <span className="font-medium text-charcoal font-body">{t.name}</span>
+                      <span className="rounded-full bg-charcoal/10 px-2 py-0.5 text-xs font-medium text-charcoal font-body">
+                        {t.signup_type === 'scheduled' ? 'Scheduled' : 'Simple List'}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : signupType === 'scheduled' ? (
           <form
             onSubmit={scheduledForm.handleSubmit(onSubmitScheduled)}
             className="space-y-8"

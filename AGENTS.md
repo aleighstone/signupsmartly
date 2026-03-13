@@ -12,6 +12,10 @@
 - **Project path:** `/Users/allisonstone/Documents/signupsmartly`
 - SignupSmartly has its **own git repository** and deploys from this repo, not from digitaleigh-dev.
 
+## Deployment
+
+- **Always share the deploy commands** after making changes so the user can push to production.
+
 ## History
 
 - SignupSmartly was originally created as a subfolder under `digitaleigh-dev`.

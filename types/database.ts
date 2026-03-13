@@ -151,6 +151,67 @@ export interface Database {
           created_at?: string;
         };
       };
+      templates: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          signup_type: 'scheduled' | 'simple';
+          description: string | null;
+          location: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          signup_type: 'scheduled' | 'simple';
+          description?: string | null;
+          location?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          name?: string;
+          signup_type?: 'scheduled' | 'simple';
+          description?: string | null;
+          location?: string | null;
+          created_at?: string;
+        };
+      };
+      template_slots: {
+        Row: {
+          id: string;
+          template_id: string;
+          slot_name: string;
+          capacity: number;
+          start_time: string | null;
+          end_time: string | null;
+          instructions: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          template_id: string;
+          slot_name: string;
+          capacity?: number;
+          start_time?: string | null;
+          end_time?: string | null;
+          instructions?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          template_id?: string;
+          slot_name?: string;
+          capacity?: number;
+          start_time?: string | null;
+          end_time?: string | null;
+          instructions?: string | null;
+          created_at?: string;
+        };
+      };
       signups: {
         Row: {
           id: string;
