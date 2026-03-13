@@ -19,7 +19,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               Dashboard
             </Link>
             <Link href="/create-event" className="btn-primary">
-              Create Event
+              Create Signup
             </Link>
           </div>
         </div>

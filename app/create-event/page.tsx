@@ -42,7 +42,7 @@ export default async function CreateEventPage() {
 
   return (
     <AppLayout>
-      <h1 className="text-2xl font-semibold text-charcoal font-heading">Create Event</h1>
+      <h1 className="text-2xl font-semibold text-charcoal font-heading">Create Signup</h1>
       <CreateEventForm organizationId={orgId} createdBy={userId} />
     </AppLayout>
   );

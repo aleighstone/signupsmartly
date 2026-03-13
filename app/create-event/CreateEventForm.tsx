@@ -261,7 +261,7 @@ export function CreateEventForm({
           <select
             value={signupType}
             onChange={(e) => setSignupType(e.target.value as SignupType)}
-            className="min-w-[220px] appearance-none rounded-xl border border-charcoal/20 bg-surface bg-right bg-no-repeat bg-[length:12px_12px] pr-9 pl-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+            className="min-w-[220px] appearance-none rounded-xl border border-charcoal/20 bg-surface bg-right bg-no-repeat bg-[length:16px_16px] pl-3 pr-12 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
             style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")" }}
             aria-label="Signup type"
           >
@@ -453,7 +453,7 @@ export function CreateEventForm({
               disabled={isSubmitting}
               className="rounded-xl bg-sage px-6 py-3 text-sm font-medium text-white hover:bg-sage-hover disabled:opacity-60 transition-colors font-body"
             >
-              {isSubmitting ? 'Creating…' : 'Create Event'}
+              {isSubmitting ? 'Creating…' : 'Create Signup'}
             </button>
           </form>
         ) : (
@@ -596,7 +596,7 @@ export function CreateEventForm({
               disabled={isSubmitting}
               className="rounded-xl bg-sage px-6 py-3 text-sm font-medium text-white hover:bg-sage-hover disabled:opacity-60 transition-colors font-body"
             >
-              {isSubmitting ? 'Creating…' : 'Create Event'}
+              {isSubmitting ? 'Creating…' : 'Create Signup'}
             </button>
           </form>
         )}
