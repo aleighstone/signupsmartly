@@ -9,14 +9,15 @@ export function generateAddToCalendarUrl(params: {
   const { event, slot, volunteerName } = params;
 
   // Use slot times if present, else event date range
+  const eventStart = event.start_date ?? new Date().toISOString();
   const start = slot.start_time
     ? new Date(slot.start_time)
-    : new Date(event.start_date);
+    : new Date(eventStart);
   const end = slot.end_time
     ? new Date(slot.end_time)
     : event.end_date
       ? new Date(event.end_date)
-      : new Date(new Date(event.start_date).setHours(23, 59, 59, 999));
+      : new Date(new Date(eventStart).setHours(23, 59, 59, 999));
 
   const formatForGoogle = (d: Date) =>
     d.toISOString().replace(/-|:|\.\d\d\d/g, '');
