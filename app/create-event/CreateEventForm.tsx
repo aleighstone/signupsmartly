@@ -254,28 +254,28 @@ export function CreateEventForm({
       <SignupTypeHelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <div className="mt-6 space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-charcoal font-body">
             I need to
-          </label>
-          <div className="flex items-center gap-2">
-            <select
-              value={signupType}
-              onChange={(e) => setSignupType(e.target.value as SignupType)}
-              className="rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
-            >
-              <option value="scheduled">organize by schedule</option>
-              <option value="simple">request items in a simple list</option>
-            </select>
-            <button
-              type="button"
-              onClick={() => setHelpOpen(true)}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-charcoal/20 text-muted hover:text-charcoal hover:border-charcoal/30 transition-colors"
-              aria-label="Help"
-            >
-              ?
-            </button>
-          </div>
+          </span>
+          <select
+            value={signupType}
+            onChange={(e) => setSignupType(e.target.value as SignupType)}
+            className="min-w-[220px] appearance-none rounded-xl border border-charcoal/20 bg-surface bg-right bg-no-repeat bg-[length:12px_12px] pr-9 pl-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+            style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")" }}
+            aria-label="Signup type"
+          >
+            <option value="scheduled">organize by schedule</option>
+            <option value="simple">request items in a simple list</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => setHelpOpen(true)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-charcoal/20 text-sm text-muted hover:text-charcoal hover:border-charcoal/30 hover:bg-charcoal/5 transition-colors font-body"
+            aria-label="Help"
+          >
+            ?
+          </button>
         </div>
 
         {signupType === 'scheduled' ? (
@@ -294,7 +294,7 @@ export function CreateEventForm({
                   </label>
                   <input
                     {...scheduledForm.register('title')}
-                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                     placeholder="Falcons track meet #2"
                   />
                   {scheduledForm.formState.errors.title && (
@@ -310,7 +310,7 @@ export function CreateEventForm({
                   <textarea
                     {...scheduledForm.register('description')}
                     rows={3}
-                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                     placeholder="optional"
                   />
                 </div>
@@ -320,7 +320,7 @@ export function CreateEventForm({
                   </label>
                   <input
                     {...scheduledForm.register('location')}
-                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                     placeholder="Sunny High School track"
                   />
                   {scheduledForm.formState.errors.location && (
@@ -372,7 +372,7 @@ export function CreateEventForm({
                       <input
                         type="date"
                         {...scheduledForm.register(`slots.${index}.spot_date`)}
-                        className="w-full max-w-xs rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                        className="w-full max-w-xs rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                       />
                       {scheduledForm.formState.errors.slots?.[index]?.spot_date && (
                         <p className="mt-1 text-sm text-coral font-body">
@@ -388,7 +388,7 @@ export function CreateEventForm({
                         <input
                           type="time"
                           {...scheduledForm.register(`slots.${index}.start_time`)}
-                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                         />
                       </div>
                       <div>
@@ -398,7 +398,7 @@ export function CreateEventForm({
                         <input
                           type="time"
                           {...scheduledForm.register(`slots.${index}.end_time`)}
-                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                         />
                       </div>
                     </div>
@@ -408,9 +408,9 @@ export function CreateEventForm({
                           Spot name <span className="text-coral">*</span>
                         </label>
                         <input
-                          {...scheduledForm.register(`slots.${index}.role_name`)}
-                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
-                          placeholder="Announcer"
+                        {...scheduledForm.register(`slots.${index}.role_name`)}
+                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
+                        placeholder="Announcer"
                         />
                         {scheduledForm.formState.errors.slots?.[index]?.role_name && (
                           <p className="mt-1 text-sm text-coral font-body">
@@ -428,7 +428,7 @@ export function CreateEventForm({
                           {...scheduledForm.register(`slots.${index}.capacity`, {
                             valueAsNumber: true,
                           })}
-                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                         />
                       </div>
                     </div>
@@ -439,7 +439,7 @@ export function CreateEventForm({
                       <textarea
                         {...scheduledForm.register(`slots.${index}.instructions`)}
                         rows={2}
-                        className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                        className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                         placeholder="Any notes for volunteers"
                       />
                     </div>
@@ -472,7 +472,7 @@ export function CreateEventForm({
                   </label>
                   <input
                     {...simpleForm.register('title')}
-                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                     placeholder="Potluck items"
                   />
                   {simpleForm.formState.errors.title && (
@@ -488,7 +488,7 @@ export function CreateEventForm({
                   <textarea
                     {...simpleForm.register('description')}
                     rows={3}
-                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                     placeholder="optional"
                   />
                 </div>
@@ -498,18 +498,18 @@ export function CreateEventForm({
                   </label>
                   <input
                     {...simpleForm.register('location')}
-                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                     placeholder="optional"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                    Date
+                    Date <span className="text-muted font-normal">(optional)</span>
                   </label>
                   <input
                     type="date"
                     {...simpleForm.register('start_date')}
-                    className="w-full max-w-xs rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                    className="w-full max-w-xs rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                   />
                 </div>
               </div>
@@ -554,7 +554,7 @@ export function CreateEventForm({
                       </label>
                       <input
                         {...simpleForm.register(`slots.${index}.role_name`)}
-                        className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                        className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                         placeholder="Entree"
                       />
                       {simpleForm.formState.errors.slots?.[index]?.role_name && (
@@ -570,7 +570,7 @@ export function CreateEventForm({
                       <textarea
                         {...simpleForm.register(`slots.${index}.role_description`)}
                         rows={2}
-                        className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                        className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                       />
                     </div>
                     <div>
@@ -583,7 +583,7 @@ export function CreateEventForm({
                         {...simpleForm.register(`slots.${index}.capacity`, {
                           valueAsNumber: true,
                         })}
-                        className="w-full max-w-[100px] rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                        className="w-full max-w-[100px] rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                       />
                     </div>
                   </div>

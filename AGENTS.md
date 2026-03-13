@@ -1,5 +1,11 @@
 # SignupSmartly – Agent Notes
 
+## Front-end standards
+
+- Act as a **professional front-end engineer** on all UI work.
+- Always respect the **design system**: colors (charcoal, muted, sage, coral, surface, sand), typography (font-heading, font-body), spacing (consistent padding, gaps), borders (charcoal/10, charcoal/20), shadows (shadow-soft, shadow-soft-md).
+- Ensure **A+ UI and UX**: consistent sizing, alignment, focus states, and clear visual hierarchy. Form fields, buttons, and interactive elements should feel cohesive and polished.
+
 ## Project context
 
 - **SignupSmartly is an independent project.** It has nothing to do with `digitaleigh-dev`.
