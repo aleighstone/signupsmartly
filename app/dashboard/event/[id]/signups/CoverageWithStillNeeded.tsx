@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { CoverageMeter } from '@/components/CoverageMeter';
 
 interface SlotNeedingFill {
   role_name: string;
