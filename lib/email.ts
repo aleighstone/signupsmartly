@@ -14,6 +14,9 @@ export async function sendSignupConfirmation(params: {
   event: Event;
 }) {
   const { signup, slot, event } = params;
+  if (!signup.email) {
+    throw new Error('Cannot send confirmation: signup has no email');
+  }
   const cancelUrl = `${APP_URL}/signup/cancel?token=${signup.cancel_token}`;
   const isSimple = event.signup_type === 'simple';
 
