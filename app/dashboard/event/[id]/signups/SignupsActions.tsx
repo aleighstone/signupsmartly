@@ -11,19 +11,20 @@ interface SignupsActionsProps {
     time: string | null;
     comment: string | null;
     createdAt: string;
+    source: 'volunteer' | 'organizer';
   }[];
   isSimple: boolean;
 }
 
 export function SignupsActions({ event, rows, isSimple }: SignupsActionsProps) {
   const csvHeaders = isSimple
-    ? ['Item', 'Volunteer Name', 'Email', 'Comment', 'Signup Timestamp']
-    : ['Role', 'Volunteer Name', 'Email', 'Time', 'Comment', 'Signup Timestamp'];
+    ? ['Item', 'Name', 'Email', 'Comment', 'Signup Timestamp', 'Source']
+    : ['Spot', 'Name', 'Email', 'Time', 'Comment', 'Signup Timestamp', 'Source'];
 
   const csvRows = rows.map((r) =>
     isSimple
-      ? [r.role, r.name, r.email, r.comment || '', r.createdAt]
-      : [r.role, r.name, r.email, r.time || '', r.comment || '', r.createdAt]
+      ? [r.role, r.name, r.email, r.comment || '', r.createdAt, r.source]
+      : [r.role, r.name, r.email, r.time || '', r.comment || '', r.createdAt, r.source]
   );
 
   const csvContent = [csvHeaders, ...csvRows]

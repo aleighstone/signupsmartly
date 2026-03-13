@@ -217,30 +217,33 @@ export interface Database {
           id: string;
           slot_id: string;
           name: string;
-          email: string;
+          email: string | null;
           comment: string | null;
           cancelled: boolean;
           cancel_token: string;
+          source: 'volunteer' | 'organizer';
           created_at: string;
         };
         Insert: {
           id?: string;
           slot_id: string;
           name: string;
-          email: string;
+          email?: string | null;
           comment?: string | null;
           cancelled?: boolean;
           cancel_token?: string;
+          source?: 'volunteer' | 'organizer';
           created_at?: string;
         };
         Update: {
           id?: string;
           slot_id?: string;
           name?: string;
-          email?: string;
+          email?: string | null;
           comment?: string | null;
           cancelled?: boolean;
           cancel_token?: string;
+          source?: 'volunteer' | 'organizer';
           created_at?: string;
         };
       };

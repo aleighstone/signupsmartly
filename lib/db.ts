@@ -81,6 +81,30 @@ export async function createSignup(params: {
       name: params.name,
       email: params.email,
       comment: params.comment || null,
+      source: 'volunteer',
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Signup;
+}
+
+export async function createOrganizerSignup(params: {
+  slotId: string;
+  name: string;
+  email?: string | null;
+  comment?: string | null;
+}) {
+  const { data, error } = await supabase
+    .from('signups')
+    // @ts-expect-error Supabase Insert type inference
+    .insert({
+      slot_id: params.slotId,
+      name: params.name,
+      email: params.email ?? null,
+      comment: params.comment ?? null,
+      source: 'organizer',
     })
     .select()
     .single();

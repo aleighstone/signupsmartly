@@ -6,10 +6,36 @@ import { AppLayout } from '@/components/AppLayout';
 import { CoverageWithStillNeeded } from './CoverageWithStillNeeded';
 import { formatEventDateRange, formatTimeRange } from '@/lib/calendar';
 import { SignupsActions } from './SignupsActions';
+import { SignupsTable } from './SignupsTable';
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
+
+type TableRow = {
+  slotId: string;
+  role: string;
+  time: string | null;
+  isEmpty: boolean;
+  signup?: {
+    id: string;
+    name: string;
+    email: string | null;
+    comment: string | null;
+    createdAt: string;
+    source: 'volunteer' | 'organizer';
+  };
+};
+
+type CsvRow = {
+  role: string;
+  name: string;
+  email: string;
+  time: string | null;
+  comment: string | null;
+  createdAt: string;
+  source: 'volunteer' | 'organizer';
+};
 
 export default async function SignupsPage({ params }: PageProps) {
   const { id } = await params;
@@ -24,44 +50,51 @@ export default async function SignupsPage({ params }: PageProps) {
   const coverage = getEventCoverage(eventData);
   const isSimple = eventData.signup_type === 'simple';
 
-  type Row = {
-    role: string;
-    name: string;
-    email: string;
-    time: string | null;
-    comment: string | null;
-    createdAt: string;
-  };
-
-  const rows: Row[] = [];
+  const tableRows: TableRow[] = [];
+  const csvRows: CsvRow[] = [];
 
   for (const slot of eventData.slots) {
+    const slotTime = isSimple ? null : formatTimeRange(slot.start_time, slot.end_time);
+    const signupSource = (s: { source?: 'volunteer' | 'organizer' }) => s.source ?? 'volunteer';
+
     for (const signup of slot.signups) {
-      rows.push({
+      tableRows.push({
+        slotId: slot.id,
+        role: slot.role_name,
+        time: slotTime,
+        isEmpty: false,
+        signup: {
+          id: signup.id,
+          name: signup.name,
+          email: signup.email,
+          comment: signup.comment,
+          createdAt: new Date(signup.created_at).toLocaleString(),
+          source: signupSource(signup),
+        },
+      });
+      csvRows.push({
         role: slot.role_name,
         name: signup.name,
-        email: signup.email,
-        time: isSimple ? null : formatTimeRange(slot.start_time, slot.end_time),
+        email: signup.email ?? '',
+        time: slotTime,
         comment: signup.comment,
         createdAt: new Date(signup.created_at).toLocaleString(),
+        source: signupSource(signup),
       });
     }
-    if (slot.signups.length === 0) {
-      rows.push({
+    const emptyCount = Math.max(0, slot.capacity - slot.signups.length);
+    for (let i = 0; i < emptyCount; i++) {
+      tableRows.push({
+        slotId: slot.id,
         role: slot.role_name,
-        name: '—',
-        email: '—',
-        time: isSimple ? null : formatTimeRange(slot.start_time, slot.end_time),
-        comment: null,
-        createdAt: '—',
+        time: slotTime,
+        isEmpty: true,
       });
     }
   }
 
-  rows.sort(
-    (a, b) =>
-      a.role.localeCompare(b.role) || a.name.localeCompare(b.name)
-  );
+  tableRows.sort((a, b) => a.role.localeCompare(b.role));
+  csvRows.sort((a, b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name));
 
   const slotsNeedingFill = eventData.slots
     .map((slot) => {
@@ -100,63 +133,10 @@ export default async function SignupsPage({ params }: PageProps) {
             />
           </div>
         </div>
-        <SignupsActions event={eventData} rows={rows} isSimple={isSimple} />
+        <SignupsActions event={eventData} rows={csvRows} isSimple={isSimple} />
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-charcoal/10 bg-surface shadow-soft">
-        <table className="min-w-full divide-y divide-charcoal/10">
-          <thead>
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
-                {isSimple ? 'Item' : 'Spot'}
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
-                Name
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
-                Email
-              </th>
-              {!isSimple && (
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
-                  Time
-                </th>
-              )}
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
-                Comment
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
-                Signup Timestamp
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-charcoal/10">
-            {rows.map((row, i) => (
-              <tr key={i}>
-                <td className="px-4 py-3 text-sm text-charcoal font-body break-words">
-                  {row.role}
-                </td>
-                <td className="px-4 py-3 text-sm text-charcoal font-body break-words">
-                  {row.name}
-                </td>
-                <td className="px-4 py-3 text-sm text-muted font-body break-words">
-                  {row.email}
-                </td>
-                {!isSimple && (
-                  <td className="px-4 py-3 text-sm text-muted font-body">
-                    {row.time}
-                  </td>
-                )}
-                <td className="px-4 py-3 text-sm text-muted font-body break-words">
-                  {row.comment || '—'}
-                </td>
-                <td className="px-4 py-3 text-sm text-muted">
-                  {row.createdAt}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <SignupsTable rows={tableRows} slots={eventData.slots.map((s) => ({ id: s.id, role_name: s.role_name }))} isSimple={isSimple} />
     </AppLayout>
   );
 }
