@@ -38,10 +38,11 @@ export async function GET(
       return NextResponse.json({ error: 'Template not found' }, { status: 404 });
     }
 
+    const t = template as { organization_id: string };
     const { data: membership } = await supabase
       .from('organization_members')
       .select('id')
-      .eq('organization_id', template.organization_id)
+      .eq('organization_id', t.organization_id)
       .in('role', ['owner', 'organizer', 'viewer'])
       .limit(1)
       .single();
