@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { getEventWithSlotsForDashboard, getEventCoverage } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
-import { CoverageMeter } from '@/components/CoverageMeter';
+import { CoverageWithStillNeeded } from './CoverageWithStillNeeded';
 import { formatEventDateRange, formatTimeRange } from '@/lib/calendar';
 import { SignupsActions } from './SignupsActions';
 
@@ -63,6 +63,14 @@ export default async function SignupsPage({ params }: PageProps) {
       a.role.localeCompare(b.role) || a.name.localeCompare(b.name)
   );
 
+  const slotsNeedingFill = eventData.slots
+    .map((slot) => {
+      const filled = slot.signups.length;
+      const needed = Math.max(0, slot.capacity - filled);
+      return { role_name: slot.role_name, needed };
+    })
+    .filter((s) => s.needed > 0);
+
   return (
     <AppLayout>
       <div className="mb-6">
@@ -83,12 +91,12 @@ export default async function SignupsPage({ params }: PageProps) {
             {formatEventDateRange(eventData.start_date, eventData.end_date)}
           </p>
           <div className="mt-3 max-w-xs">
-            <CoverageMeter
+            <CoverageWithStillNeeded
               filled={coverage.filled}
               total={coverage.total}
               percentage={coverage.percentage}
-              size="sm"
               signupType={eventData.signup_type}
+              slotsNeedingFill={slotsNeedingFill}
             />
           </div>
         </div>
@@ -100,10 +108,10 @@ export default async function SignupsPage({ params }: PageProps) {
           <thead>
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
-                {isSimple ? 'Item' : 'Role'}
+                {isSimple ? 'Item' : 'Spot'}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
-                Volunteer Name
+                Name
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
                 Email
@@ -124,13 +132,13 @@ export default async function SignupsPage({ params }: PageProps) {
           <tbody className="divide-y divide-charcoal/10">
             {rows.map((row, i) => (
               <tr key={i}>
-                <td className="px-4 py-3 text-sm text-charcoal font-body">
+                <td className="px-4 py-3 text-sm text-charcoal font-body break-words">
                   {row.role}
                 </td>
-                <td className="px-4 py-3 text-sm text-charcoal font-body">
+                <td className="px-4 py-3 text-sm text-charcoal font-body break-words">
                   {row.name}
                 </td>
-                <td className="px-4 py-3 text-sm text-muted font-body">
+                <td className="px-4 py-3 text-sm text-muted font-body break-words">
                   {row.email}
                 </td>
                 {!isSimple && (
@@ -138,7 +146,7 @@ export default async function SignupsPage({ params }: PageProps) {
                     {row.time}
                   </td>
                 )}
-                <td className="px-4 py-3 text-sm text-muted font-body max-w-[200px] truncate">
+                <td className="px-4 py-3 text-sm text-muted font-body break-words">
                   {row.comment || '—'}
                 </td>
                 <td className="px-4 py-3 text-sm text-muted">

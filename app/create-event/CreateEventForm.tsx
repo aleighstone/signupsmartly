@@ -194,8 +194,8 @@ function SaveAsTemplateModal({
             <h2 className="text-lg font-semibold text-charcoal font-heading">{signupTitle} created!</h2>
             <p className="mt-2 text-sm text-charcoal font-body">Do you want to save this signup as a template to reuse later?</p>
             <div className="mt-6 flex gap-3">
-              <button type="button" onClick={() => setStep(2)} className="btn-primary">Save as Template</button>
-              <button type="button" onClick={handleClose} className="btn-secondary">Close</button>
+              <button type="button" onClick={() => setStep(2)} className="btn-primary">Yes, Save it</button>
+              <button type="button" onClick={handleClose} className="btn-secondary">No, I&apos;m good.</button>
             </div>
           </>
         )}

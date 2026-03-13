@@ -14,6 +14,7 @@ export type SignupFormData = z.infer<typeof signupSchema>;
 
 interface SignupFormProps {
   slotRoleName: string;
+  slotDetails?: string | null;
   onSubmit: (data: SignupFormData) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -21,6 +22,7 @@ interface SignupFormProps {
 
 export function SignupForm({
   slotRoleName,
+  slotDetails,
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -36,9 +38,14 @@ export function SignupForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <p className="text-sm text-muted font-body">
-        Signing up for <strong className="text-charcoal">{slotRoleName}</strong>
-      </p>
+      <div>
+        <p className="text-sm text-muted font-body">
+          Signing up for <strong className="text-charcoal">{slotRoleName}</strong>
+        </p>
+        {slotDetails && (
+          <p className="mt-1 text-sm text-muted font-body">{slotDetails}</p>
+        )}
+      </div>
       <div>
         <label
           htmlFor="name"

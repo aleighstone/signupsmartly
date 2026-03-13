@@ -7,6 +7,7 @@ interface SignupModalProps {
   isOpen: boolean;
   onClose: () => void;
   slotRoleName: string;
+  slotDetails?: string | null;
   onSubmit: (data: SignupFormData) => Promise<void>;
   isSubmitting?: boolean;
 }
@@ -15,6 +16,7 @@ export function SignupModal({
   isOpen,
   onClose,
   slotRoleName,
+  slotDetails,
   onSubmit,
   isSubmitting = false,
 }: SignupModalProps) {
@@ -52,6 +54,7 @@ export function SignupModal({
         </h2>
         <SignupForm
           slotRoleName={slotRoleName}
+          slotDetails={slotDetails}
           onSubmit={onSubmit}
           onCancel={onClose}
           isSubmitting={isSubmitting}

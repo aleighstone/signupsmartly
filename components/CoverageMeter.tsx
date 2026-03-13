@@ -35,7 +35,7 @@ export function CoverageMeter({
         />
       </div>
       <p className="text-sm text-muted font-body">
-        {filled} of {total} {signupType === 'simple' ? 'items' : 'roles'} filled
+        {filled} of {total} {signupType === 'simple' ? 'items' : 'spots'} filled
         {remaining > 0 && (
           <span className="ml-1 text-charcoal font-medium">
             · {remaining} still needed

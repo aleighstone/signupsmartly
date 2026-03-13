@@ -59,6 +59,7 @@ export function EventPageClient({ event }: EventPageClientProps) {
         isOpen={!!modalSlot}
         onClose={handleCloseModal}
         slotRoleName={modalSlot?.role_name ?? ''}
+        slotDetails={modalSlot?.instructions ?? modalSlot?.role_description ?? null}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
       />
