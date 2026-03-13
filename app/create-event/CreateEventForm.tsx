@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePostHog } from 'posthog-js/react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -119,6 +120,7 @@ function SaveAsTemplateModal({
   slots,
   organizationId,
   onSaved,
+  onTemplateSaved,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -136,6 +138,7 @@ function SaveAsTemplateModal({
   }>;
   organizationId: string;
   onSaved: () => void;
+  onTemplateSaved?: () => void;
 }) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [templateName, setTemplateName] = useState(`${signupTitle} Template`);
@@ -175,6 +178,7 @@ function SaveAsTemplateModal({
         }),
       });
       if (!res.ok) throw new Error('Failed to save template');
+      onTemplateSaved?.();
       setStep(3);
     } catch {
       alert('Failed to save template');
@@ -239,6 +243,7 @@ export function CreateEventForm({
   createdBy,
 }: CreateEventFormProps) {
   const router = useRouter();
+  const posthog = usePostHog();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signupType, setSignupType] = useState<SignupType>('scheduled');
   const [helpOpen, setHelpOpen] = useState(false);
@@ -323,6 +328,9 @@ export function CreateEventForm({
   };
 
   const handleLoadTemplate = (t: Template) => {
+    if (posthog) {
+      posthog.capture('template_used', { signup_type: t.signup_type });
+    }
     setSignupType(t.signup_type);
     if (t.signup_type === 'scheduled') {
       scheduledForm.reset({
@@ -397,6 +405,12 @@ export function CreateEventForm({
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to create');
+      if (posthog) {
+        posthog.capture('signup_created', {
+          signup_type: 'scheduled',
+          slot_count: data.slots.length,
+        });
+      }
       setLastCreated({
         title: data.title,
         signupType: 'scheduled',
@@ -451,6 +465,12 @@ export function CreateEventForm({
         const extra = json.details || json.code ? ` — ${JSON.stringify({ details: json.details, code: json.code })}` : '';
         throw new Error(`${msg}${extra}`);
       }
+      if (posthog) {
+        posthog.capture('signup_created', {
+          signup_type: 'simple',
+          slot_count: data.slots.length,
+        });
+      }
       setLastCreated({
         title: data.title,
         signupType: 'simple',
@@ -484,6 +504,14 @@ export function CreateEventForm({
           slots={lastCreated.slots}
           organizationId={organizationId}
           onSaved={goToDashboard}
+          onTemplateSaved={() => {
+            if (posthog) {
+              posthog.capture('template_saved', {
+                signup_type: lastCreated.signupType,
+                slot_count: lastCreated.slots.length,
+              });
+            }
+          }}
         />
       )}
 

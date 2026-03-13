@@ -4,6 +4,7 @@ import { getEventWithSlots, getEventCoverage, getOrganizationTimezone } from '@/
 
 export const dynamic = 'force-dynamic';
 import { EventHeader } from '@/components/EventHeader';
+import { TrackEventPageView } from '@/app/providers/PostHogTracker';
 import { CoverageMeter } from '@/components/CoverageMeter';
 import { EventPageClient } from './EventPageClient';
 
@@ -19,12 +20,21 @@ export default async function EventPage({ params }: PageProps) {
 
   const coverage = getEventCoverage(eventData);
   const timezone = await getOrganizationTimezone(eventData.organization_id);
+  const openSlots = eventData.slots.reduce(
+    (sum, s) => sum + Math.max(0, s.capacity - s.signups.length),
+    0
+  );
 
   return (
     <main className="min-h-screen bg-sand">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
         <EventHeader event={eventData} />
 
+        <TrackEventPageView
+          signupType={eventData.signup_type}
+          coveragePct={coverage.percentage}
+          openSlots={openSlots}
+        />
         <div className="mt-8 rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft">
           <CoverageMeter
             filled={coverage.filled}

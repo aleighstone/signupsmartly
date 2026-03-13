@@ -3,12 +3,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { usePostHog } from 'posthog-js/react';
 
 interface CancelFormProps {
   cancelToken: string;
+  signupType: 'scheduled' | 'simple';
 }
 
-export function CancelForm({ cancelToken }: CancelFormProps) {
+export function CancelForm({ cancelToken, signupType }: CancelFormProps) {
+  const posthog = usePostHog();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cancelled, setCancelled] = useState(false);
@@ -22,6 +25,9 @@ export function CancelForm({ cancelToken }: CancelFormProps) {
         body: JSON.stringify({ cancelToken }),
       });
       if (!res.ok) throw new Error('Failed to cancel');
+      if (posthog) {
+        posthog.capture('signup_cancelled', { signup_type: signupType });
+      }
       setCancelled(true);
       router.refresh();
     } catch {

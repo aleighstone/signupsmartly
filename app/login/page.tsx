@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase-browser';
+import { usePostHog } from 'posthog-js/react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const posthog = usePostHog();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -19,11 +21,16 @@ export default function LoginPage() {
     setError(null);
     try {
       const supabase = createClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (signInError) throw signInError;
+      const user = signInData.user;
+      if (user && posthog) {
+        posthog.identify(user.id, { email: user.email ?? undefined });
+        posthog.capture('organizer_logged_in');
+      }
       router.push('/dashboard');
       router.refresh();
     } catch (err) {

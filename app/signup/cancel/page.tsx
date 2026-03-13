@@ -23,7 +23,7 @@ export default async function CancelPage({ searchParams }: PageProps) {
       role_name: string;
       start_time: string;
       end_time: string;
-      event?: { title: string; location: string | null } | null;
+      event?: { title: string; location: string | null; signup_type?: 'scheduled' | 'simple' } | null;
     };
   };
 
@@ -64,7 +64,7 @@ export default async function CancelPage({ searchParams }: PageProps) {
           </p>
         </div>
 
-        <CancelForm cancelToken={token} />
+        <CancelForm cancelToken={token} signupType={event?.signup_type ?? 'scheduled'} />
       </div>
     </main>
   );

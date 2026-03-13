@@ -1,5 +1,6 @@
 'use client';
 
+import { usePostHog } from 'posthog-js/react';
 import { formatTimeRange } from '@/lib/calendar';
 import type { SlotWithSignups } from '@/types/database';
 import { getSlotRemainingCapacity } from '@/lib/slot-utils';
@@ -15,12 +16,14 @@ function SlotCard({
   slot,
   remaining,
   onSignUp,
+  onSignUpClick,
   isSimple,
   timezone = 'America/New_York',
 }: {
   slot: SlotWithSignups;
   remaining: number;
   onSignUp: () => void;
+  onSignUpClick?: () => void;
   isSimple: boolean;
   timezone?: string;
 }) {
@@ -45,7 +48,10 @@ function SlotCard({
       </div>
       <button
         type="button"
-        onClick={onSignUp}
+        onClick={() => {
+          onSignUpClick?.();
+          onSignUp();
+        }}
         className="btn-primary shrink-0"
       >
         Sign up
@@ -60,6 +66,7 @@ export function SlotList({
   signupType = 'scheduled',
   timezone = 'America/New_York',
 }: SlotListProps) {
+  const posthog = usePostHog();
   const isSimple = signupType === 'simple';
   const openSlots = slots.filter((s) => getSlotRemainingCapacity(s) > 0);
   const filledSlots = slots.filter((s) => getSlotRemainingCapacity(s) === 0);
@@ -87,6 +94,14 @@ export function SlotList({
                   slot={slot}
                   remaining={getSlotRemainingCapacity(slot)}
                   onSignUp={() => onSignUp(slot)}
+                  onSignUpClick={() => {
+                    if (posthog) {
+                      posthog.capture('signup_modal_opened', {
+                        signup_type: signupType,
+                        slot_name: slot.role_name,
+                      });
+                    }
+                  }}
                   isSimple={isSimple}
                   timezone={timezone}
                 />

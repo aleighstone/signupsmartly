@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePostHog } from 'posthog-js/react';
 
 interface SlotNeedingFill {
   role_name: string;
@@ -22,6 +23,7 @@ export function CoverageWithStillNeeded({
   signupType,
   slotsNeedingFill,
 }: CoverageWithStillNeededProps) {
+  const posthog = usePostHog();
   const [modalOpen, setModalOpen] = useState(false);
   const remaining = Math.max(0, total - filled);
   const label = signupType === 'simple' ? 'items' : 'spots';
@@ -50,7 +52,15 @@ export function CoverageWithStillNeeded({
           {remaining > 0 && (
             <button
               type="button"
-              onClick={() => setModalOpen(true)}
+              onClick={() => {
+                if (posthog) {
+                  posthog.capture('coverage_modal_opened', {
+                    signup_type: signupType,
+                    slots_still_needed: slotsNeedingFill.length,
+                  });
+                }
+                setModalOpen(true);
+              }}
               className="ml-1 text-charcoal font-medium hover:underline focus:outline-none focus:underline"
             >
               · {remaining} still needed

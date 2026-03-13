@@ -7,6 +7,7 @@ import { CoverageWithStillNeeded } from './CoverageWithStillNeeded';
 import { formatEventDateRange, formatTimeRange } from '@/lib/calendar';
 import { SignupsActions } from './SignupsActions';
 import { SignupsTable } from './SignupsTable';
+import { TrackSignupsPageView } from '@/app/providers/PostHogTracker';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -107,6 +108,11 @@ export default async function SignupsPage({ params }: PageProps) {
 
   return (
     <AppLayout>
+      <TrackSignupsPageView
+        signupType={eventData.signup_type}
+        totalSignups={coverage.filled}
+        coveragePct={coverage.percentage}
+      />
       <div className="mb-6">
         <Link
           href="/dashboard"

@@ -1,5 +1,6 @@
 'use client';
 
+import { usePostHog } from 'posthog-js/react';
 import type { EventWithSlots } from '@/types/database';
 
 interface SignupsActionsProps {
@@ -17,6 +18,7 @@ interface SignupsActionsProps {
 }
 
 export function SignupsActions({ event, rows, isSimple }: SignupsActionsProps) {
+  const posthog = usePostHog();
   const csvHeaders = isSimple
     ? ['Item', 'Name', 'Email', 'Comment', 'Signup Timestamp', 'Source']
     : ['Spot', 'Name', 'Email', 'Time', 'Comment', 'Signup Timestamp', 'Source'];
@@ -32,6 +34,12 @@ export function SignupsActions({ event, rows, isSimple }: SignupsActionsProps) {
     .join('\n');
 
   const exportCsv = () => {
+    if (posthog) {
+      posthog.capture('csv_exported', {
+        signup_type: event.signup_type,
+        total_signups: rows.length,
+      });
+    }
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

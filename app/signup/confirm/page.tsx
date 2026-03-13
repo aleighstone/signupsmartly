@@ -5,6 +5,7 @@ import { generateAddToCalendarUrl } from '@/lib/calendar';
 import type { Event, Slot } from '@/types/database';
 import { formatTimeRange } from '@/lib/calendar';
 import { getOrganizationTimezone } from '@/lib/db';
+import { TrackSignupSubmitted } from '@/app/providers/PostHogTracker';
 import { format } from 'date-fns';
 
 interface PageProps {
@@ -33,6 +34,7 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
   type SignupWithRelations = {
     name: string;
     cancel_token: string;
+    comment: string | null;
     slots?: unknown;
   };
   const signupTyped = signup as SignupWithRelations;
@@ -78,9 +80,14 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
   const eventId = eventAny.id;
   const isSimple = eventAny.signup_type === 'simple';
   const primaryLabel = isSimple ? 'Item' : 'Spot';
+  const hasComment = Boolean(signupTyped.comment?.trim());
 
   return (
     <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4 relative">
+      <TrackSignupSubmitted
+        signupType={isSimple ? 'simple' : 'scheduled'}
+        hasComment={hasComment}
+      />
       {eventId && (
         <Link
           href={`/event/${eventId}`}

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
+import { TrackDashboardView } from '@/app/providers/PostHogTracker';
 import { getEventsForUser } from '@/lib/db';
 import { getEventWithSlotsForDashboard, getEventCoverage } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
@@ -63,6 +64,7 @@ export default async function DashboardPage() {
 
   return (
     <AppLayout>
+      <TrackDashboardView eventCount={events.length} />
       <h1 className="text-2xl font-semibold text-charcoal font-heading">Your Signups</h1>
 
       {!authUser ? (

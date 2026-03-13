@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase-browser';
+import { usePostHog } from 'posthog-js/react';
 
 export default function SignUpPage() {
   const router = useRouter();
+  const posthog = usePostHog();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,6 +26,10 @@ export default function SignUpPage() {
         await supabase.auth.signUp({ email, password, options: { data: { name } } });
       if (signUpError) throw signUpError;
       if (data.user) {
+        if (posthog) {
+          posthog.identify(data.user.id, { email: data.user.email ?? undefined });
+          posthog.capture('organizer_signed_up', { email: data.user.email ?? undefined });
+        }
         await fetch('/api/auth/sync-user', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

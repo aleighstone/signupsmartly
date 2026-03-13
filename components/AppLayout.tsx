@@ -21,6 +21,12 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Link href="/create-event" className="btn-primary">
               Create Signup
             </Link>
+            <Link
+              href="/logout"
+              className="text-sm font-medium text-muted hover:text-charcoal transition-colors"
+            >
+              Sign out
+            </Link>
           </div>
         </div>
       </nav>

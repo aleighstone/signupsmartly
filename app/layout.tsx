@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Quicksand, Inter } from "next/font/google";
 import "./globals.css";
+import { PostHogProvider } from "./providers/PostHogProvider";
+import { PageviewTracker } from "./providers/PageviewTracker";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -45,7 +47,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${quicksand.variable} ${inter.variable}`}>
       <body className="antialiased font-body text-charcoal bg-sand">
-        {children}
+        <PostHogProvider>
+          <PageviewTracker />
+          {children}
+        </PostHogProvider>
       </body>
     </html>
   );
