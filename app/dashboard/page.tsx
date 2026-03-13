@@ -81,9 +81,9 @@ export default async function DashboardPage() {
         </div>
       ) : events.length === 0 ? (
         <div className="mt-8 rounded-xl border border-dashed border-charcoal/20 bg-surface p-8 text-center shadow-soft">
-          <p className="text-muted font-body">No events yet.</p>
+          <p className="text-muted font-body">Nothing to see here.</p>
           <Link href="/create-event" className="mt-4 btn-primary">
-            Create your first event
+            Create your first signup
           </Link>
         </div>
       ) : (

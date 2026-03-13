@@ -261,8 +261,11 @@ export function CreateEventForm({
           <select
             value={signupType}
             onChange={(e) => setSignupType(e.target.value as SignupType)}
-            className="min-w-[220px] appearance-none rounded-xl border border-charcoal/20 bg-surface bg-right bg-no-repeat bg-[length:16px_16px] pl-3 pr-12 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
-            style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")" }}
+            className="min-w-[220px] appearance-none rounded-xl border border-charcoal/20 bg-surface bg-no-repeat bg-[length:14px_14px] pl-3 pr-11 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+            style={{
+              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")",
+              backgroundPosition: 'right 0.75rem center',
+            }}
             aria-label="Signup type"
           >
             <option value="scheduled">organize by schedule</option>
@@ -271,10 +274,12 @@ export function CreateEventForm({
           <button
             type="button"
             onClick={() => setHelpOpen(true)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-charcoal/20 text-sm text-muted hover:text-charcoal hover:border-charcoal/30 hover:bg-charcoal/5 transition-colors font-body"
+            className="group flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full p-2.5 font-body"
             aria-label="Help"
           >
-            ?
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-charcoal text-xs font-medium leading-none text-white transition-opacity group-hover:opacity-90">
+              ?
+            </span>
           </button>
         </div>
 
