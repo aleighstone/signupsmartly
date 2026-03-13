@@ -95,7 +95,7 @@ export async function POST(request: Request) {
         ? (err as { code: unknown }).code
         : undefined;
     return NextResponse.json(
-      { error: message, ...(details && { details }), ...(code && { code }) },
+      { error: message, ...(details != null ? { details } : {}), ...(code != null ? { code } : {}) },
       { status: 500 }
     );
   }
