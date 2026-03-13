@@ -89,8 +89,9 @@ export async function POST(request: Request) {
 
     if (templateError || !template) throw templateError || new Error('Failed to create template');
 
+    const t = template as { id: string };
     const slotsToInsert = slots.map((s) => ({
-      template_id: template.id,
+      template_id: t.id,
       slot_name: s.slot_name,
       capacity: s.capacity,
       start_time: s.start_time || null,
@@ -101,7 +102,7 @@ export async function POST(request: Request) {
     const { error: slotsError } = await supabase.from('template_slots').insert(slotsToInsert);
     if (slotsError) throw slotsError;
 
-    return NextResponse.json({ id: template.id, name });
+    return NextResponse.json({ id: t.id, name });
   } catch (err) {
     console.error('Create template error:', err);
     return NextResponse.json(
