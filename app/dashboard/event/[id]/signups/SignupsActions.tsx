@@ -40,12 +40,6 @@ export function SignupsActions({ event, rows, isSimple }: SignupsActionsProps) {
     URL.revokeObjectURL(url);
   };
 
-  const copyRecap = async () => {
-    await navigator.clipboard.writeText(recapText);
-    setRecapCopied(true);
-    setTimeout(() => setRecapCopied(false), 2000);
-  };
-
   return (
     <div className="flex flex-col gap-2">
       <button
