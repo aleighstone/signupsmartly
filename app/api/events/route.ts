@@ -14,10 +14,11 @@ const slotSchema = z.object({
 const createEventSchema = z.object({
   organization_id: z.string().uuid(),
   created_by: z.string().uuid(),
+  signup_type: z.enum(['scheduled', 'simple']).optional(),
   title: z.string().min(1),
   description: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
-  start_date: z.string(),
+  start_date: z.string().nullable().optional(),
   end_date: z.string().nullable().optional(),
   published: z.boolean().optional(),
   slots: z.array(slotSchema).min(1),
@@ -43,6 +44,8 @@ export async function POST(request: Request) {
     const { slots, ...eventData } = parsed.data;
     const eventPayload = {
       ...eventData,
+      signup_type: eventData.signup_type ?? 'scheduled',
+      start_date: eventData.start_date || null,
       end_date: eventData.end_date || null,
       published: eventData.published ?? true,
     };

@@ -50,7 +50,11 @@ export function EventPageClient({ event }: EventPageClientProps) {
 
   return (
     <>
-      <SlotList slots={event.slots} onSignUp={handleSignUp} />
+      <SlotList
+        slots={event.slots}
+        onSignUp={handleSignUp}
+        signupType={event.signup_type}
+      />
       <SignupModal
         isOpen={!!modalSlot}
         onClose={handleCloseModal}

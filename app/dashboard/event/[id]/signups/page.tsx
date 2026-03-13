@@ -5,13 +5,13 @@ import { getEventWithSlotsForDashboard, getEventCoverage } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
 import { CoverageMeter } from '@/components/CoverageMeter';
 import { formatEventDateRange, formatTimeRange } from '@/lib/calendar';
-import { RosterActions } from './RosterActions';
+import { SignupsActions } from './SignupsActions';
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function RosterPage({ params }: PageProps) {
+export default async function SignupsPage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -22,15 +22,18 @@ export default async function RosterPage({ params }: PageProps) {
   if (!eventData) notFound();
 
   const coverage = getEventCoverage(eventData);
+  const isSimple = eventData.signup_type === 'simple';
 
-  const rows: {
+  type Row = {
     role: string;
     name: string;
     email: string;
-    time: string;
+    time: string | null;
     comment: string | null;
     createdAt: string;
-  }[] = [];
+  };
+
+  const rows: Row[] = [];
 
   for (const slot of eventData.slots) {
     for (const signup of slot.signups) {
@@ -38,7 +41,7 @@ export default async function RosterPage({ params }: PageProps) {
         role: slot.role_name,
         name: signup.name,
         email: signup.email,
-        time: formatTimeRange(slot.start_time, slot.end_time),
+        time: isSimple ? null : formatTimeRange(slot.start_time, slot.end_time),
         comment: signup.comment,
         createdAt: new Date(signup.created_at).toLocaleString(),
       });
@@ -48,7 +51,7 @@ export default async function RosterPage({ params }: PageProps) {
         role: slot.role_name,
         name: '—',
         email: '—',
-        time: formatTimeRange(slot.start_time, slot.end_time),
+        time: isSimple ? null : formatTimeRange(slot.start_time, slot.end_time),
         comment: null,
         createdAt: '—',
       });
@@ -85,10 +88,11 @@ export default async function RosterPage({ params }: PageProps) {
               total={coverage.total}
               percentage={coverage.percentage}
               size="sm"
+              signupType={eventData.signup_type}
             />
           </div>
         </div>
-        <RosterActions event={eventData} rows={rows} />
+        <SignupsActions event={eventData} rows={rows} isSimple={isSimple} />
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-xl border border-charcoal/10 bg-surface shadow-soft">
@@ -96,7 +100,7 @@ export default async function RosterPage({ params }: PageProps) {
           <thead>
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
-                Role
+                {isSimple ? 'Item' : 'Role'}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
                 Volunteer Name
@@ -104,9 +108,11 @@ export default async function RosterPage({ params }: PageProps) {
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
                 Email
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
-                Time
-              </th>
+              {!isSimple && (
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
+                  Time
+                </th>
+              )}
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
                 Comment
               </th>
@@ -127,9 +133,11 @@ export default async function RosterPage({ params }: PageProps) {
                 <td className="px-4 py-3 text-sm text-muted font-body">
                   {row.email}
                 </td>
-                <td className="px-4 py-3 text-sm text-muted font-body">
-                  {row.time}
-                </td>
+                {!isSimple && (
+                  <td className="px-4 py-3 text-sm text-muted font-body">
+                    {row.time}
+                  </td>
+                )}
                 <td className="px-4 py-3 text-sm text-muted font-body max-w-[200px] truncate">
                   {row.comment || '—'}
                 </td>

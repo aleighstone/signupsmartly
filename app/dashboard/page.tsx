@@ -63,7 +63,7 @@ export default async function DashboardPage() {
 
   return (
     <AppLayout>
-      <h1 className="text-2xl font-semibold text-charcoal font-heading">Your Events</h1>
+      <h1 className="text-2xl font-semibold text-charcoal font-heading">Your Signups</h1>
 
       {!authUser ? (
         <div className="mt-8 rounded-xl border border-dashed border-charcoal/20 bg-surface p-8 text-center shadow-soft">
@@ -113,22 +113,25 @@ export default async function DashboardPage() {
                         total={coverage.total}
                         percentage={coverage.percentage}
                         size="sm"
+                        signupType={event.signup_type}
                       />
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Link
-                      href={`/event/${event.id}`}
-                      className="btn-secondary"
-                    >
-                      View Event
-                    </Link>
-                    <Link
-                      href={`/dashboard/event/${event.id}/roster`}
+                      href={`/dashboard/event/${event.id}/signups`}
                       className="btn-primary"
                     >
-                      View Roster
+                      View My Signups
                     </Link>
+                    <a
+                      href={`/event/${event.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary"
+                    >
+                      Signup Page
+                    </a>
                   </div>
                 </div>
               </li>

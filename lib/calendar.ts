@@ -35,9 +35,10 @@ export function generateAddToCalendarUrl(params: {
 }
 
 export function formatEventDateRange(
-  startDate: string,
+  startDate: string | null,
   endDate: string | null
 ): string {
+  if (!startDate) return 'No date';
   const start = new Date(startDate);
   if (!endDate) {
     return format(start, 'EEEE, MMMM d, yyyy');

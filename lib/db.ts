@@ -38,7 +38,10 @@ export async function getEventWithSlots(
       signups (*)
     `)
     .eq('event_id', eventId)
-    .order('start_time', { ascending: true });
+    .order(eventRow.signup_type === 'simple' ? 'role_name' : 'start_time', {
+      ascending: true,
+      nullsFirst: true,
+    });
 
   if (slotsError) return null;
 

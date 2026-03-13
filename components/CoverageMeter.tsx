@@ -3,6 +3,7 @@ interface CoverageMeterProps {
   total: number;
   percentage: number;
   size?: 'sm' | 'md';
+  signupType?: 'scheduled' | 'simple';
 }
 
 export function CoverageMeter({
@@ -10,6 +11,7 @@ export function CoverageMeter({
   total,
   percentage,
   size = 'md',
+  signupType = 'scheduled',
 }: CoverageMeterProps) {
   const remaining = Math.max(0, total - filled);
   const barHeight = size === 'sm' ? 'h-2' : 'h-3';
@@ -17,7 +19,7 @@ export function CoverageMeter({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-sm font-body">
-        <span className="font-medium text-charcoal">Volunteer Coverage</span>
+        <span className="font-medium text-charcoal">Coverage</span>
         <span className="text-muted tabular-nums">{percentage}%</span>
       </div>
       <div
@@ -33,7 +35,7 @@ export function CoverageMeter({
         />
       </div>
       <p className="text-sm text-muted font-body">
-        {filled} of {total} roles filled
+        {filled} of {total} {signupType === 'simple' ? 'items' : 'roles'} filled
         {remaining > 0 && (
           <span className="ml-1 text-charcoal font-medium">
             · {remaining} still needed

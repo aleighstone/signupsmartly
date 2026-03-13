@@ -82,8 +82,9 @@ export interface Database {
           title: string;
           description: string | null;
           location: string | null;
-          start_date: string;
+          start_date: string | null;
           end_date: string | null;
+          signup_type: 'scheduled' | 'simple';
           published: boolean;
           created_by: string | null;
           created_at: string;
@@ -94,8 +95,9 @@ export interface Database {
           title: string;
           description?: string | null;
           location?: string | null;
-          start_date: string;
+          start_date?: string | null;
           end_date?: string | null;
+          signup_type?: 'scheduled' | 'simple';
           published?: boolean;
           created_by?: string | null;
           created_at?: string;
@@ -106,8 +108,9 @@ export interface Database {
           title?: string;
           description?: string | null;
           location?: string | null;
-          start_date?: string;
-          end_date?: string;
+          start_date?: string | null;
+          end_date?: string | null;
+          signup_type?: 'scheduled' | 'simple';
           published?: boolean;
           created_by?: string | null;
           created_at?: string;

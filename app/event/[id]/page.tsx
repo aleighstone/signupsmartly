@@ -29,6 +29,7 @@ export default async function EventPage({ params }: PageProps) {
             filled={coverage.filled}
             total={coverage.total}
             percentage={coverage.percentage}
+            signupType={eventData.signup_type}
           />
         </div>
 

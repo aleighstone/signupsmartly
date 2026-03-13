@@ -3,33 +3,34 @@
 import { useState } from 'react';
 import type { EventWithSlots } from '@/types/database';
 
-interface RosterActionsProps {
+interface SignupsActionsProps {
   event: EventWithSlots;
   rows: {
     role: string;
     name: string;
     email: string;
-    time: string;
+    time: string | null;
     comment: string | null;
     createdAt: string;
   }[];
+  isSimple: boolean;
 }
 
-export function RosterActions({ event, rows }: RosterActionsProps) {
+export function SignupsActions({ event, rows, isSimple }: SignupsActionsProps) {
   const [recapOpen, setRecapOpen] = useState(false);
   const [recapCopied, setRecapCopied] = useState(false);
 
-  const csvContent = [
-    ['Role', 'Volunteer Name', 'Email', 'Time', 'Comment', 'Signup Timestamp'],
-    ...rows.map((r) => [
-      r.role,
-      r.name,
-      r.email,
-      r.time,
-      r.comment || '',
-      r.createdAt,
-    ]),
-  ]
+  const csvHeaders = isSimple
+    ? ['Item', 'Volunteer Name', 'Email', 'Comment', 'Signup Timestamp']
+    : ['Role', 'Volunteer Name', 'Email', 'Time', 'Comment', 'Signup Timestamp'];
+
+  const csvRows = rows.map((r) =>
+    isSimple
+      ? [r.role, r.name, r.email, r.comment || '', r.createdAt]
+      : [r.role, r.name, r.email, r.time || '', r.comment || '', r.createdAt]
+  );
+
+  const csvContent = [csvHeaders, ...csvRows]
     .map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
     .join('\n');
 
@@ -49,7 +50,7 @@ export function RosterActions({ event, rows }: RosterActionsProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${event.title.replace(/\s+/g, '-')}-roster.csv`;
+    a.download = `${event.title.replace(/\s+/g, '-')}-signups.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

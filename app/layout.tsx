@@ -19,7 +19,7 @@ const metadataBase =
 
 export const metadata: Metadata = {
   metadataBase: new URL(metadataBase),
-  icons: { icon: '/icon' },
+  icons: { icon: '/smartly-icon.png' },
   title: "SignupSmartly — Organize volunteers smartly",
   description:
     "A modern, ad-free way to coordinate volunteer roles and time slots for events",
