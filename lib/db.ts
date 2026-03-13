@@ -166,6 +166,16 @@ export async function getEventWithSlotsForDashboard(eventId: string) {
   return getEventWithSlots(eventId, { publishedOnly: false });
 }
 
+export async function getOrganizationTimezone(organizationId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('timezone')
+    .eq('id', organizationId)
+    .single();
+  if (error || !data) return 'America/New_York';
+  return (data as { timezone: string }).timezone || 'America/New_York';
+}
+
 export { getSlotRemainingCapacity } from './slot-utils';
 
 export function getEventCoverage(event: EventWithSlots): {

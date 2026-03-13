@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getEventWithSlots, getEventCoverage } from '@/lib/db';
+import { getEventWithSlots, getEventCoverage, getOrganizationTimezone } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 import { EventHeader } from '@/components/EventHeader';
@@ -18,6 +18,7 @@ export default async function EventPage({ params }: PageProps) {
   if (!eventData) notFound();
 
   const coverage = getEventCoverage(eventData);
+  const timezone = await getOrganizationTimezone(eventData.organization_id);
 
   return (
     <main className="min-h-screen bg-sand">
@@ -34,7 +35,7 @@ export default async function EventPage({ params }: PageProps) {
         </div>
 
         <div className="mt-8">
-          <EventPageClient event={eventData} />
+          <EventPageClient event={eventData} timezone={timezone} />
         </div>
 
         <p className="mt-12 text-center text-sm text-muted">

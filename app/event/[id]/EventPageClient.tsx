@@ -9,9 +9,10 @@ import type { SignupFormData } from '@/components/SignupForm';
 
 interface EventPageClientProps {
   event: EventWithSlots;
+  timezone: string;
 }
 
-export function EventPageClient({ event }: EventPageClientProps) {
+export function EventPageClient({ event, timezone }: EventPageClientProps) {
   const router = useRouter();
   const [modalSlot, setModalSlot] = useState<SlotWithSignups | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,6 +55,7 @@ export function EventPageClient({ event }: EventPageClientProps) {
         slots={event.slots}
         onSignUp={handleSignUp}
         signupType={event.signup_type}
+        timezone={timezone}
       />
       <SignupModal
         isOpen={!!modalSlot}

@@ -32,10 +32,10 @@ export default async function CancelPage({ searchParams }: PageProps) {
       <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-md text-center space-y-6">
           <h1 className="text-2xl font-semibold text-charcoal font-heading">
-            Already cancelled
+            Signup cancelled 👌
           </h1>
           <p className="text-muted font-body">
-            This signup has already been cancelled.
+            Your signup has been cancelled.
           </p>
           <Link
             href="/"

@@ -376,18 +376,23 @@ export function CreateEventForm({
           start_date: startDate ? `${startDate}T00:00:00Z` : null,
           end_date: endDate ? `${endDate}T23:59:59Z` : null,
           published: true,
-          slots: data.slots.map((s) => ({
-            role_name: s.role_name,
-            role_description: s.instructions || null,
-            start_time: s.spot_date
-              ? `${s.spot_date}T${s.start_time?.trim() || '00:00'}:00Z`
-              : null,
-            end_time: s.spot_date
-              ? `${s.spot_date}T${s.end_time?.trim() || '23:59'}:00Z`
-              : null,
-            capacity: s.capacity,
-            instructions: null,
-          })),
+          slots: data.slots.map((s) => {
+            const date = s.spot_date;
+            const startTime = s.start_time?.trim() || '00:00';
+            const endTime = s.end_time?.trim() || '23:59';
+            return {
+              role_name: s.role_name,
+              role_description: s.instructions || null,
+              start_time: date
+                ? new Date(`${date}T${startTime}`).toISOString()
+                : null,
+              end_time: date
+                ? new Date(`${date}T${endTime}`).toISOString()
+                : null,
+              capacity: s.capacity,
+              instructions: null,
+            };
+          }),
         }),
       });
       const json = await res.json();

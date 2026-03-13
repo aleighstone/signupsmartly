@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { generateAddToCalendarUrl } from '@/lib/calendar';
 import type { Event, Slot } from '@/types/database';
 import { formatTimeRange } from '@/lib/calendar';
+import { getOrganizationTimezone } from '@/lib/db';
 import { format } from 'date-fns';
 
 interface PageProps {
@@ -49,11 +50,16 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
   };
   const eventAny = event as {
     id?: string;
+    organization_id?: string;
     title?: string;
     location?: string | null;
     start_date?: string | null;
     signup_type?: 'scheduled' | 'simple';
   };
+
+  const timezone = eventAny.organization_id
+    ? await getOrganizationTimezone(eventAny.organization_id)
+    : 'America/New_York';
 
   const calendarUrl = generateAddToCalendarUrl({
     event: eventAny as Event,
@@ -63,7 +69,7 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
   const cancelUrl = `/signup/cancel?token=${signupTyped.cancel_token}`;
   const hasTime = slotAny.start_time && slotAny.end_time;
   const timeRange = hasTime
-    ? formatTimeRange(slotAny.start_time || null, slotAny.end_time || null)
+    ? formatTimeRange(slotAny.start_time || null, slotAny.end_time || null, timezone)
     : null;
   const dateSource = slotAny.start_time || eventAny.start_date || null;
   const dateText = dateSource
@@ -111,12 +117,14 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
               {eventAny.title}
             </p>
           </div>
-          <div>
-            <p className="text-sm text-muted font-body">Location</p>
-            <p className="font-medium text-charcoal font-body">
-              {eventAny.location || 'TBD'}
-            </p>
-          </div>
+          {eventAny.location && (
+            <div>
+              <p className="text-sm text-muted font-body">Location</p>
+              <p className="font-medium text-charcoal font-body">
+                {eventAny.location}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-3">

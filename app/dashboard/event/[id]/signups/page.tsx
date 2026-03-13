@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
-import { getEventWithSlotsForDashboard, getEventCoverage } from '@/lib/db';
+import { getEventWithSlotsForDashboard, getEventCoverage, getOrganizationTimezone } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
 import { CoverageWithStillNeeded } from './CoverageWithStillNeeded';
 import { formatEventDateRange, formatTimeRange } from '@/lib/calendar';
@@ -49,12 +49,13 @@ export default async function SignupsPage({ params }: PageProps) {
 
   const coverage = getEventCoverage(eventData);
   const isSimple = eventData.signup_type === 'simple';
+  const timezone = await getOrganizationTimezone(eventData.organization_id);
 
   const tableRows: TableRow[] = [];
   const csvRows: CsvRow[] = [];
 
   for (const slot of eventData.slots) {
-    const slotTime = isSimple ? null : formatTimeRange(slot.start_time, slot.end_time);
+    const slotTime = isSimple ? null : formatTimeRange(slot.start_time, slot.end_time, timezone);
     const signupSource = (s: { source?: 'volunteer' | 'organizer' }) => s.source ?? 'volunteer';
 
     for (const signup of slot.signups) {

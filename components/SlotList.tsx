@@ -8,6 +8,7 @@ interface SlotListProps {
   slots: SlotWithSignups[];
   onSignUp: (slot: SlotWithSignups) => void;
   signupType?: 'scheduled' | 'simple';
+  timezone?: string;
 }
 
 function SlotCard({
@@ -15,13 +16,15 @@ function SlotCard({
   remaining,
   onSignUp,
   isSimple,
+  timezone = 'America/New_York',
 }: {
   slot: SlotWithSignups;
   remaining: number;
   onSignUp: () => void;
   isSimple: boolean;
+  timezone?: string;
 }) {
-  const timeRange = formatTimeRange(slot.start_time, slot.end_time);
+  const timeRange = formatTimeRange(slot.start_time, slot.end_time, timezone);
   const unitLabel = isSimple ? 'item' : 'spot';
   const spotsText =
     remaining === 1
@@ -55,6 +58,7 @@ export function SlotList({
   slots,
   onSignUp,
   signupType = 'scheduled',
+  timezone = 'America/New_York',
 }: SlotListProps) {
   const isSimple = signupType === 'simple';
   const openSlots = slots.filter((s) => getSlotRemainingCapacity(s) > 0);
@@ -84,6 +88,7 @@ export function SlotList({
                   remaining={getSlotRemainingCapacity(slot)}
                   onSignUp={() => onSignUp(slot)}
                   isSimple={isSimple}
+                  timezone={timezone}
                 />
               </li>
             ))}
@@ -101,7 +106,8 @@ export function SlotList({
             {filledSlots.map((slot) => {
               const timeRange = formatTimeRange(
                 slot.start_time,
-                slot.end_time
+                slot.end_time,
+                timezone
               );
               const names = slot.signups
                 .map((s) => s.name)
