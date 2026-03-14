@@ -40,7 +40,7 @@ export default function SignUpPage() {
           }),
         });
       }
-      router.push('/dashboard');
+      router.push('/signup/success');
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed');
