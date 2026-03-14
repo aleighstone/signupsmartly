@@ -26,19 +26,31 @@ export async function sendSignupConfirmation(params: {
 
   const labelSpotOrItem = isSimple ? 'Item' : 'Spot';
 
-  const formatEventDate = (d: string | null) =>
-    d
-      ? format(new Date(d + 'T00:00:00'), 'EEEE, MMMM d, yyyy')
-      : 'TBD';
+  const safeFormatDate = (d: string | null): string => {
+    if (!d) return 'TBD';
+    const dateStr = d.includes('T') ? d : `${d}T00:00:00`;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'TBD';
+    return format(date, 'EEEE, MMMM d, yyyy');
+  };
+
+  const safeFormatTime = (t: string | null): string | null => {
+    if (!t) return null;
+    const date = new Date(t);
+    if (isNaN(date.getTime())) return null;
+    return format(date, 'h:mm a');
+  };
 
   const spotOrItemRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>${labelSpotOrItem}:</strong> ${slot.role_name}</p>`;
   const dateRow = (show: boolean, dateVal: string | null) =>
     show
-      ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Date:</strong> ${formatEventDate(dateVal)}</p>`
+      ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Date:</strong> ${safeFormatDate(dateVal)}</p>`
       : '';
+  const startTimeStr = safeFormatTime(slot.start_time);
+  const endTimeStr = safeFormatTime(slot.end_time);
   const timeRow =
-    !isSimple && slot.start_time && slot.end_time
-      ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Time:</strong> ${format(new Date(slot.start_time), 'h:mm a')} – ${format(new Date(slot.end_time), 'h:mm a')}</p>`
+    !isSimple && startTimeStr && endTimeStr
+      ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Time:</strong> ${startTimeStr} – ${endTimeStr}</p>`
       : '';
   const eventRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Event:</strong> ${event.title}</p>`;
   const locationRow = event.location
