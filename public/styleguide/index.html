@@ -367,6 +367,193 @@
     </div>
   </div>
 
+  <h2 class="section-title">Email</h2>
+
+  <!-- Email component styles (inline-compatible, matches email.ts output) -->
+  <style>
+    .email-preview-wrap {
+      background-color: #FAF9F6;
+      border-radius: var(--radius-lg);
+      padding: 32px 16px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .email-preview-card {
+      background-color: #ffffff;
+      border-radius: 8px;
+      max-width: 560px;
+      margin: 0 auto;
+      overflow: hidden;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .ep-header {
+      background-color: #27272A;
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ep-header-logo {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+    }
+
+    .ep-header-name {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 18px;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: 0.3px;
+    }
+
+    .ep-content {
+      padding: 32px 28px;
+    }
+
+    .ep-content h2 {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0 0 6px;
+      text-align: left;
+      border: none;
+      padding: 0;
+      letter-spacing: normal;
+      text-transform: none;
+    }
+
+    .ep-subheading {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin: 0 0 24px;
+    }
+
+    .ep-details {
+      background-color: #F0F9F0;
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-bottom: 28px;
+    }
+
+    .ep-row {
+      display: flex;
+      gap: 12px;
+      font-size: 14px;
+      padding: 5px 0;
+      border-bottom: 1px solid #E5F2E5;
+      line-height: 1.5;
+    }
+
+    .ep-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .ep-row:first-child { padding-top: 0; }
+
+    .ep-label {
+      font-weight: 600;
+      color: var(--text-primary);
+      width: 72px;
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+
+    .ep-value {
+      color: #374151;
+      font-size: 14px;
+    }
+
+    .ep-cancel-hint {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0 0 8px;
+    }
+
+    .ep-btn {
+      display: inline-block;
+      background-color: #ffffff;
+      color: var(--text-primary);
+      padding: 12px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      font-family: var(--font-heading);
+      border: 2px solid #27272A;
+    }
+
+    .ep-footer {
+      border-top: 1px solid #F4F4F5;
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ep-footer-logo {
+      width: 18px;
+      height: 18px;
+      opacity: 0.5;
+    }
+
+    .ep-footer-text {
+      font-size: 12px;
+      color: #9CA3AF;
+    }
+  </style>
+
+  <div class="email-preview-wrap">
+    <div class="email-preview-card">
+
+      <!-- Header -->
+      <div class="ep-header">
+        <img class="ep-header-logo" src="/smartly-icon.png" alt="">
+        <span class="ep-header-name">SignupSmartly</span>
+      </div>
+
+      <!-- Body -->
+      <div class="ep-content">
+        <h2>You're signed up</h2>
+        <p class="ep-subheading">Here's a summary of what you signed up for.</p>
+
+        <div class="ep-details">
+          <div class="ep-row">
+            <span class="ep-label">Spot</span>
+            <span class="ep-value">Spotter</span>
+          </div>
+          <div class="ep-row">
+            <span class="ep-label">Date</span>
+            <span class="ep-value">Wednesday, March 25, 2026</span>
+          </div>
+          <div class="ep-row">
+            <span class="ep-label">Time</span>
+            <span class="ep-value">9:00 AM – 11:00 AM</span>
+          </div>
+          <div class="ep-row">
+            <span class="ep-label">Event</span>
+            <span class="ep-value">Falcons Track Meet</span>
+          </div>
+          <div class="ep-row">
+            <span class="ep-label">Location</span>
+            <span class="ep-value">Sunny High School Track</span>
+          </div>
+        </div>
+
+        <p class="ep-cancel-hint">Need to cancel? No problem:</p>
+        <a class="ep-btn" href="#">Cancel my signup</a>
+      </div>
+
+      <!-- Footer -->
+      <div class="ep-footer">
+        <img class="ep-footer-logo" src="/smartly-icon.png" alt="">
+        <span class="ep-footer-text">Organized with SignupSmartly</span>
+      </div>
+
+    </div>
+  </div>
+
   <h2 class="section-title">UI Components</h2>
   <div class="component-grid">
     <div class="card">

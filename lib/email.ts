@@ -22,21 +22,50 @@ export async function sendSignupConfirmation(params: {
   }
   const cancelUrl = `${APP_URL}/signup/cancel?token=${signup.cancel_token}`;
   const isSimple = event.signup_type === 'simple';
+  const logoUrl = `${APP_URL}/smartly-icon.png`;
 
-  const timeDisplay =
-    slot.start_time && slot.end_time
-      ? `${format(new Date(slot.start_time), 'h:mm a')} – ${format(new Date(slot.end_time), 'h:mm a')}`
-      : 'All day';
+  const labelSpotOrItem = isSimple ? 'Item' : 'Spot';
 
-  const labelRow = isSimple ? 'Item' : 'Role';
-  const timeRow = isSimple
-    ? ''
-    : `<p style="margin: 0 0 8px;"><strong>Time:</strong> ${timeDisplay}</p>`;
+  const formatEventDate = (d: string | null) =>
+    d
+      ? format(new Date(d + 'T00:00:00'), 'EEEE, MMMM d, yyyy')
+      : 'TBD';
+
+  const spotOrItemRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>${labelSpotOrItem}:</strong> ${slot.role_name}</p>`;
+  const dateRow = (show: boolean, dateVal: string | null) =>
+    show
+      ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Date:</strong> ${formatEventDate(dateVal)}</p>`
+      : '';
+  const timeRow =
+    !isSimple && slot.start_time && slot.end_time
+      ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Time:</strong> ${format(new Date(slot.start_time), 'h:mm a')} – ${format(new Date(slot.end_time), 'h:mm a')}</p>`
+      : '';
+  const eventRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Event:</strong> ${event.title}</p>`;
+  const locationRow = event.location
+    ? `<p style="margin: 0; padding: 12px 0;"><strong>Location:</strong> ${event.location}</p>`
+    : '';
+
+  const scheduledDetailRows = [
+    spotOrItemRow,
+    dateRow(true, event.start_date),
+    timeRow,
+    eventRow,
+    locationRow,
+  ].filter(Boolean).join('');
+
+  const simpleDetailRows = [
+    spotOrItemRow,
+    dateRow(!!event.start_date, event.start_date),
+    eventRow,
+    locationRow,
+  ].filter(Boolean).join('');
+
+  const detailRows = isSimple ? simpleDetailRows : scheduledDetailRows;
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: signup.email,
-    subject: `You're signed up: ${slot.role_name} - ${event.title}`,
+    subject: `You're signed up: ${slot.role_name} — ${event.title}`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -44,21 +73,26 @@ export async function sendSignupConfirmation(params: {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Signup Confirmation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #374151; max-width: 600px; margin: 0 auto; padding: 24px;">
-  <h1 style="font-size: 24px; font-weight: 600; color: #111827; margin-bottom: 16px;">You're signed up!</h1>
-  
-  <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin: 24px 0;">
-    <p style="margin: 0 0 8px;"><strong>${labelRow}:</strong> ${slot.role_name}</p>
-    ${timeRow}
-    <p style="margin: 0 0 8px;"><strong>Event:</strong> ${event.title}</p>
-    <p style="margin: 0;"><strong>Location:</strong> ${event.location || 'TBD'}</p>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #27272A; margin: 0; padding: 0; background-color: #FAF9F6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
+      <div style="background-color: #27272A; padding: 20px 24px; display: flex; align-items: center; gap: 12px;">
+        <img src="${logoUrl}" alt="SignupSmartly" width="40" height="40" style="display: block;">
+        <span style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 1.25rem; color: #FFFFFF;">SignupSmartly</span>
+      </div>
+      <div style="padding: 24px;">
+        <h1 style="font-size: 24px; font-weight: 600; color: #27272A; margin: 0 0 20px;">You're signed up!</h1>
+        <div style="background-color: #F0F9F0; border-radius: 8px; padding: 0 20px; margin-bottom: 24px;">
+          ${detailRows}
+        </div>
+        <p style="margin: 0 0 16px; color: #27272A;">Need to cancel? Use the link below:</p>
+        <a href="${cancelUrl}" style="display: inline-block; background-color: #FFFFFF; color: #27272A; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; border: 2px solid #27272A;">Cancel signup</a>
+      </div>
+      <div style="padding: 16px 24px; border-top: 1px solid #E5F2E5; font-size: 14px; color: #71717A;">Organized with SignupSmartly</div>
+    </div>
   </div>
-
-  <p style="margin: 24px 0;">Need to cancel? Use the link below:</p>
-  <a href="${cancelUrl}" style="display: inline-block; background: #111827; color: white !important; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">Cancel signup</a>
-
-  <p style="margin-top: 32px; font-size: 14px; color: #6b7280;">Organized with SignupSmartly</p>
 </body>
 </html>
     `.trim(),
