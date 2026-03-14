@@ -8,6 +8,9 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const FROM_EMAIL =
   process.env.RESEND_FROM_EMAIL || 'SignupSmartly <onboarding@resend.dev>';
 
+const ADMIN_EMAIL =
+  process.env.ADMIN_EMAIL || 'allisonleighstone@gmail.com';
+
 export async function sendSignupConfirmation(params: {
   signup: Signup;
   slot: Slot;
@@ -63,5 +66,34 @@ export async function sendSignupConfirmation(params: {
 
   if (error) {
     throw new Error(`Failed to send confirmation email: ${error.message}`);
+  }
+}
+
+export async function sendNpsResponse(params: {
+  score: number;
+  comment: string | null;
+  userEmail: string;
+  eventCount: number;
+}) {
+  const { score, comment, userEmail, eventCount } = params;
+  const submittedAt = format(new Date(), 'MMMM d, yyyy');
+
+  const body = `Score: ${score} / 10
+Comment: ${comment ?? '(no comment)'}
+
+───────────────
+User: ${userEmail}
+Events created: ${eventCount}
+Submitted: ${submittedAt}`;
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: ADMIN_EMAIL,
+    subject: `NPS Response — Score ${score}/10`,
+    text: body,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send NPS email: ${error.message}`);
   }
 }

@@ -1,11 +1,23 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { TrackDashboardView } from '@/app/providers/PostHogTracker';
-import { getEventsForUser } from '@/lib/db';
-import { getEventWithSlotsForDashboard, getEventCoverage } from '@/lib/db';
+import { getEventsForUser, getEventWithSlotsForDashboard, getEventCoverage, hasEventWithVolunteerSignup } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
 import { CoverageMeter } from '@/components/CoverageMeter';
+import { NpsBanner } from '@/components/NpsBanner';
 import { formatEventDateRange } from '@/lib/calendar';
+
+function shouldShowNps(
+  npsSubmittedAt: string | null,
+  npsDismissedAt: string | null,
+  hasVolunteerSignup: boolean
+): boolean {
+  if (!hasVolunteerSignup || npsSubmittedAt) return false;
+  if (!npsDismissedAt) return true;
+  const dismissed = new Date(npsDismissedAt).getTime();
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  return dismissed < sevenDaysAgo;
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -15,15 +27,16 @@ export default async function DashboardPage() {
 
   let events: Awaited<ReturnType<typeof getEventsForUser>> = [];
   let userId: string | null = null;
+  let ourUser: { id: string; nps_submitted_at: string | null; nps_dismissed_at: string | null } | null = null;
 
   if (authUser) {
     const { data: ourUserData } = await supabase
       .from('users')
-      .select('id')
+      .select('id, nps_submitted_at, nps_dismissed_at')
       .eq('email', authUser.email!)
       .single();
 
-    let ourUser = ourUserData as { id: string } | null;
+    ourUser = ourUserData as { id: string; nps_submitted_at: string | null; nps_dismissed_at: string | null } | null;
     if (!ourUser) {
       // @ts-expect-error Supabase SSR createServerClient return type incompatibility with Database
       await supabase.from('users').insert({
@@ -31,7 +44,7 @@ export default async function DashboardPage() {
         email: authUser.email!,
         name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Organizer',
       });
-      ourUser = { id: authUser.id };
+      ourUser = { id: authUser.id, nps_submitted_at: null, nps_dismissed_at: null };
     }
 
     const { data: members } = await supabase
@@ -61,6 +74,18 @@ export default async function DashboardPage() {
     userId = ourUser?.id ?? authUser.id;
     events = await getEventsForUser(userId);
   }
+
+  const hasVolunteerSignup = userId ? await hasEventWithVolunteerSignup(userId) : false;
+  const showNps =
+    !!authUser &&
+    !!userId &&
+    !!ourUser &&
+    hasVolunteerSignup &&
+    shouldShowNps(
+      ourUser.nps_submitted_at ?? null,
+      ourUser.nps_dismissed_at ?? null,
+      hasVolunteerSignup
+    );
 
   return (
     <AppLayout>
@@ -140,6 +165,12 @@ export default async function DashboardPage() {
             );
           })}
         </ul>
+      )}
+
+      {showNps && (
+        <div className="mt-8">
+          <NpsBanner />
+        </div>
       )}
     </AppLayout>
   );

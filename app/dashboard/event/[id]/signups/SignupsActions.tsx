@@ -1,6 +1,6 @@
 'use client';
 
-import { usePostHog } from 'posthog-js/react';
+import { usePostHog } from '@posthog/react';
 import type { EventWithSlots } from '@/types/database';
 
 interface SignupsActionsProps {

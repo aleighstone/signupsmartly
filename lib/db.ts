@@ -178,6 +178,64 @@ export async function getOrganizationTimezone(organizationId: string): Promise<s
 
 export { getSlotRemainingCapacity } from './slot-utils';
 
+export async function hasEventWithVolunteerSignup(userId: string): Promise<boolean> {
+  const { data: memberships, error: memError } = await supabase
+    .from('organization_members')
+    .select('organization_id')
+    .eq('user_id', userId);
+
+  if (memError || !memberships?.length) return false;
+
+  const orgIds = (memberships as { organization_id: string }[]).map((m) => m.organization_id);
+
+  const { data: orgEvents } = await supabase
+    .from('events')
+    .select('id')
+    .in('organization_id', orgIds);
+
+  if (!orgEvents?.length) return false;
+
+  const eventIds = (orgEvents as { id: string }[]).map((e) => e.id);
+
+  const { data: orgSlots } = await supabase
+    .from('slots')
+    .select('id')
+    .in('event_id', eventIds);
+
+  if (!orgSlots?.length) return false;
+
+  const slotIds = (orgSlots as { id: string }[]).map((s) => s.id);
+
+  const { data: volunteerSignups } = await supabase
+    .from('signups')
+    .select('id')
+    .in('slot_id', slotIds)
+    .eq('source', 'volunteer')
+    .eq('cancelled', false)
+    .limit(1);
+
+  return (volunteerSignups?.length ?? 0) > 0;
+}
+
+export async function getEventCountForUser(userId: string): Promise<number> {
+  const { data: memberships, error: memError } = await supabase
+    .from('organization_members')
+    .select('organization_id')
+    .eq('user_id', userId);
+
+  if (memError || !memberships?.length) return 0;
+
+  const orgIds = (memberships as { organization_id: string }[]).map((m) => m.organization_id);
+
+  const { count, error } = await supabase
+    .from('events')
+    .select('*', { count: 'exact', head: true })
+    .in('organization_id', orgIds);
+
+  if (error) return 0;
+  return count ?? 0;
+}
+
 export function getEventCoverage(event: EventWithSlots): {
   filled: number;
   total: number;

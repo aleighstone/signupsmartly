@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { usePostHog } from 'posthog-js/react';
+import { usePostHog } from '@posthog/react';
 
 interface SlotNeedingFill {
   role_name: string;

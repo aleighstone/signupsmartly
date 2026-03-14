@@ -38,18 +38,24 @@ export interface Database {
           email: string;
           name: string;
           created_at: string;
+          nps_dismissed_at: string | null;
+          nps_submitted_at: string | null;
         };
         Insert: {
           id?: string;
           email: string;
           name: string;
           created_at?: string;
+          nps_dismissed_at?: string | null;
+          nps_submitted_at?: string | null;
         };
         Update: {
           id?: string;
           email?: string;
           name?: string;
           created_at?: string;
+          nps_dismissed_at?: string | null;
+          nps_submitted_at?: string | null;
         };
       };
       organization_members: {
@@ -212,6 +218,29 @@ export interface Database {
           created_at?: string;
         };
       };
+      nps_responses: {
+        Row: {
+          id: string;
+          user_id: string;
+          score: number;
+          comment: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          score: number;
+          comment?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          score?: number;
+          comment?: string | null;
+          created_at?: string;
+        };
+      };
       signups: {
         Row: {
           id: string;
@@ -258,6 +287,7 @@ export type OrganizationMember =
 export type Event = Database['public']['Tables']['events']['Row'];
 export type Slot = Database['public']['Tables']['slots']['Row'];
 export type Signup = Database['public']['Tables']['signups']['Row'];
+export type NpsResponse = Database['public']['Tables']['nps_responses']['Row'];
 
 export interface SlotWithSignups extends Slot {
   signups: (Signup & { cancelled: boolean })[];

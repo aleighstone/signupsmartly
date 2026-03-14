@@ -1,6 +1,6 @@
 'use client';
 
-import { usePostHog } from 'posthog-js/react';
+import { usePostHog } from '@posthog/react';
 import { formatTimeRange } from '@/lib/calendar';
 import type { SlotWithSignups } from '@/types/database';
 import { getSlotRemainingCapacity } from '@/lib/slot-utils';
