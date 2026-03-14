@@ -5,13 +5,13 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col bg-sand" data-page="home">
       <header className="border-b border-charcoal/10 bg-surface shadow-soft">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
-          <Logo />
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="btn-secondary">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 sm:gap-4 sm:px-6">
+          <Logo className="shrink-0" />
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <Link href="/login" className="btn-secondary whitespace-nowrap px-3 py-2 text-sm sm:px-4 sm:py-2.5 sm:text-base">
               Sign in
             </Link>
-            <Link href="/signup" className="btn-primary">
+            <Link href="/signup" className="btn-primary whitespace-nowrap px-3 py-2 text-sm sm:px-4 sm:py-2.5 sm:text-base">
               Get started
             </Link>
           </div>

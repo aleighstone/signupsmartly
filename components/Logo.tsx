@@ -19,7 +19,7 @@ export function Logo({ link = true, className = '' }: LogoProps) {
         className="shrink-0"
         aria-hidden
       />
-      <span className="font-heading font-semibold text-charcoal">
+      <span className="hidden font-heading font-semibold text-charcoal sm:inline">
         SignupSmartly
       </span>
     </>
@@ -29,7 +29,8 @@ export function Logo({ link = true, className = '' }: LogoProps) {
     return (
       <Link
         href="/"
-        className={`inline-flex items-center gap-2 text-lg hover:opacity-90 transition-opacity ${className}`}
+        className={`inline-flex shrink-0 items-center gap-2 text-lg hover:opacity-90 transition-opacity ${className}`}
+        aria-label="SignupSmartly home"
       >
         {content}
       </Link>
