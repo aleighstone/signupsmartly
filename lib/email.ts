@@ -90,8 +90,8 @@ export async function sendSignupConfirmation(params: {
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #27272A; margin: 0; padding: 0; background-color: #FAF9F6;">
   <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
     <div style="background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
-      <div style="background-color: #27272A; padding: 20px 24px; display: flex; align-items: center; gap: 18px;">
-        <img src="${logoUrl}" alt="SignupSmartly" width="28" height="28" style="display: block;">
+      <div style="background-color: #27272A; padding: 20px 24px; display: flex; align-items: center;">
+        <img src="${logoUrl}" alt="SignupSmartly" width="28" height="28" style="display: block; margin-right: 16px;">
         <span style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 1.25rem; color: #FFFFFF;">SignupSmartly</span>
       </div>
       <div style="padding: 24px;">
