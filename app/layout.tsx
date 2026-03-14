@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Quicksand, Inter } from "next/font/google";
 import "./globals.css";
 import { PostHogProvider } from "./providers/PostHogProvider";
@@ -48,7 +49,9 @@ export default function RootLayout({
     <html lang="en" className={`${quicksand.variable} ${inter.variable}`}>
       <body className="antialiased font-body text-charcoal bg-sand">
         <PostHogProvider>
-          <PageviewTracker />
+          <Suspense fallback={null}>
+            <PageviewTracker />
+          </Suspense>
           {children}
         </PostHogProvider>
       </body>
