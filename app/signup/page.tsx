@@ -22,8 +22,12 @@ export default function SignUpPage() {
     setError(null);
     try {
       const supabase = createClient();
-      const { data, error: signUpError } =
-        await supabase.auth.signUp({ email, password, options: { data: { name } } });
+      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback?next=/dashboard` : undefined;
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name }, emailRedirectTo: redirectTo },
+      });
       if (signUpError) throw signUpError;
       if (data.user) {
         if (posthog) {
