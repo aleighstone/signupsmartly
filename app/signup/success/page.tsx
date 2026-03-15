@@ -31,7 +31,7 @@ export default function SignUpSuccessPage() {
         <div className="rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft">
           <Link
             href="/login"
-            className="btn-primary w-full flex items-center justify-center"
+            className="btn-secondary w-full flex items-center justify-center"
           >
             Go to sign in
           </Link>

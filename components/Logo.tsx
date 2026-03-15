@@ -4,11 +4,13 @@ import Link from 'next/link';
 interface LogoProps {
   /** If true, wrap in a link to home. Default: true */
   link?: boolean;
+  /** Link href when link is true. Default: "/" */
+  href?: string;
   /** Additional class names */
   className?: string;
 }
 
-export function Logo({ link = true, className = '' }: LogoProps) {
+export function Logo({ link = true, href = '/', className = '' }: LogoProps) {
   const content = (
     <>
       <Image
@@ -28,7 +30,7 @@ export function Logo({ link = true, className = '' }: LogoProps) {
   if (link) {
     return (
       <Link
-        href="/"
+        href={href}
         className={`inline-flex shrink-0 items-center gap-2 text-lg hover:opacity-90 transition-opacity ${className}`}
         aria-label="SignupSmartly home"
       >

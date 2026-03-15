@@ -10,13 +10,13 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="min-h-screen bg-sand font-body">
       <nav className="border-b border-charcoal/10 bg-surface shadow-soft">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 sm:gap-4 sm:px-6">
-          <Logo className="shrink-0 hover:text-muted" />
+          <Logo href="/dashboard" className="shrink-0 hover:text-muted" />
           <div className="flex shrink-0 items-center gap-2 sm:gap-4">
             <Link
-              href="/dashboard"
+              href="/logout"
               className="text-sm font-medium text-muted hover:text-charcoal transition-colors whitespace-nowrap"
             >
-              Dashboard
+              Sign out
             </Link>
             <Link
               href="/create-event"
@@ -24,12 +24,6 @@ export function AppLayout({ children }: AppLayoutProps) {
             >
               <span className="sm:hidden">Create</span>
               <span className="hidden sm:inline">Create Signup</span>
-            </Link>
-            <Link
-              href="/logout"
-              className="text-sm font-medium text-muted hover:text-charcoal transition-colors whitespace-nowrap"
-            >
-              Sign out
             </Link>
           </div>
         </div>

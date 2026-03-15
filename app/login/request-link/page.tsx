@@ -55,8 +55,8 @@ export default function RequestSignInLinkPage() {
             <h1 className="mt-4 text-2xl font-semibold text-charcoal font-heading">
               Check your email
             </h1>
-            <p className="mt-1 text-sm text-muted font-body">
-              If an account exists for {email}, we&apos;ve sent you a sign-in link.
+            <p className="mt-4 text-sm text-muted font-body">
+              If an account exists for {email}, we&apos;ve sent you a sign in link.
             </p>
           </div>
           <div className="rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft">
@@ -91,7 +91,7 @@ export default function RequestSignInLinkPage() {
             SignupSmartly
           </Link>
           <h1 className="mt-4 text-2xl font-semibold text-charcoal font-heading">
-            Request sign-in link
+            Request sign in link
           </h1>
           <p className="mt-1 text-sm text-muted font-body">
             Enter your email and we&apos;ll send you a link to sign in.
@@ -129,7 +129,7 @@ export default function RequestSignInLinkPage() {
             disabled={isLoading}
             className="w-full rounded-xl bg-sage px-4 py-2.5 text-sm font-medium text-white hover:bg-sage-hover disabled:opacity-60 transition-colors font-body"
           >
-            {isLoading ? 'Sending link…' : 'Send sign-in link'}
+            {isLoading ? 'Sending link…' : 'Send sign in link'}
           </button>
         </form>
 

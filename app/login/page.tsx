@@ -41,17 +41,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-sand px-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
+    <div className="flex min-h-screen items-center justify-center bg-sand px-4 py-12">
+      <div className="flex w-full max-w-sm flex-col gap-8">
+        <div className="flex flex-col items-center gap-1 text-center">
           <Link href="/" className="inline-flex items-center justify-center gap-2 text-xl font-semibold text-charcoal font-heading hover:opacity-90 transition-opacity">
             <Image src="/smartly-icon.png" alt="" width={32} height={32} className="shrink-0" aria-hidden />
             SignupSmartly
           </Link>
-          <h1 className="mt-4 text-2xl font-semibold text-charcoal font-heading">
+          <h1 className="mt-5 text-2xl font-semibold text-charcoal font-heading">
             Sign in
           </h1>
-          <p className="mt-1 text-sm text-muted font-body">
+          <p className="mt-2 text-sm text-muted font-body">
             Sign in to manage your events
           </p>
         </div>
@@ -64,17 +64,17 @@ export default function LoginPage() {
               e.currentTarget.requestSubmit();
             }
           }}
-          className="rounded-xl border border-charcoal/10 bg-surface p-6 space-y-4 shadow-soft"
+          className="flex flex-col gap-5 rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft"
         >
           {error && (
             <p className="text-sm text-white rounded-xl bg-coral p-3 font-body">
               {error}
             </p>
           )}
-          <div>
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-charcoal mb-1 font-body"
+              className="text-sm font-medium text-charcoal font-body"
             >
               Email
             </label>
@@ -88,10 +88,10 @@ export default function LoginPage() {
               className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
             />
           </div>
-          <div>
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-charcoal mb-1 font-body"
+              className="text-sm font-medium text-charcoal font-body"
             >
               Password
             </label>
@@ -114,18 +114,20 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-muted font-body">
-          Forgot password?{' '}
-          <Link href="/login/request-link" className="font-medium text-charcoal hover:underline">
-            Request a sign-in link
-          </Link>
-        </p>
-        <p className="text-center text-sm text-muted font-body">
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-medium text-charcoal hover:underline">
-            Sign up
-          </Link>
-        </p>
+        <div className="flex flex-col items-center gap-3 text-center">
+          <p className="text-sm text-muted font-body">
+            Forgot password?{' '}
+            <Link href="/login/request-link" className="font-medium text-charcoal hover:underline">
+              Request a sign in link
+            </Link>
+          </p>
+          <p className="text-sm text-muted font-body">
+            Don&apos;t have an account?{' '}
+            <Link href="/signup" className="font-medium text-charcoal hover:underline">
+              Sign up
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
