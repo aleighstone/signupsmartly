@@ -9,7 +9,7 @@ const signupSchema = z.object({
   email: z.string().email('Valid email required'),
   comment: z.string().max(500).optional(),
   reminder_opt_in: z.boolean(),
-  reminder_offset: z.enum(['1_day', 'morning_of', '1_hour']),
+  reminder_offset: z.enum(['1_day', 'morning_of']),
 });
 
 export type SignupFormData = z.infer<typeof signupSchema>;
@@ -90,7 +90,6 @@ export function SignupForm({
                 >
                   <option value="1_day">1 day before</option>
                   <option value="morning_of">Morning of the event</option>
-                  <option value="1_hour">1 hour before</option>
                 </select>
               </div>
             )}

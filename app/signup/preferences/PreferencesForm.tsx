@@ -5,7 +5,7 @@ import { useState } from 'react';
 interface PreferencesFormProps {
   token: string;
   initialOptIn: boolean;
-  initialOffset: '1_day' | 'morning_of' | '1_hour';
+  initialOffset: '1_day' | 'morning_of';
   slotName?: string;
   hasDate: boolean;
 }
@@ -85,13 +85,12 @@ export function PreferencesForm(props: PreferencesFormProps) {
             className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal bg-white focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body disabled:opacity-60"
             value={offset}
             onChange={(e) =>
-              setOffset(e.target.value as '1_day' | 'morning_of' | '1_hour')
+              setOffset(e.target.value as '1_day' | 'morning_of')
             }
             disabled={disabled || !optIn}
           >
             <option value="1_day">1 day before</option>
             <option value="morning_of">Morning of the event</option>
-            <option value="1_hour">1 hour before</option>
           </select>
         </div>
       </div>

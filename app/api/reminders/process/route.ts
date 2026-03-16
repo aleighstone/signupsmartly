@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     }
 
     const now = new Date();
-    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     const { data: rows, error } = await supabase
       .from('signups')
@@ -93,16 +93,14 @@ export async function POST(request: Request) {
         continue;
       }
 
-      // If event already in the past, tombstone without sending
-      if (sendAt.getTime() < twoHoursAgo.getTime()) {
+      // Skip and tombstone if the reminder window has passed by more than 24 hours
+      if (sendAt.getTime() < twentyFourHoursAgo.getTime()) {
         await markReminderSent(signup.id);
         continue;
       }
 
-      if (
-        sendAt.getTime() <= now.getTime() &&
-        sendAt.getTime() >= twoHoursAgo.getTime()
-      ) {
+      // Daily cron: send any reminders whose target time has passed within the last 24 hours
+      if (sendAt.getTime() <= now.getTime()) {
         try {
           await sendSignupReminder({
             signup,
@@ -182,26 +180,7 @@ function computeSendTime(params: {
     return new Date(Date.UTC(year, month, day, 8, 0, 0));
   }
 
-  // '1_hour'
-  if (slot.start_time) {
-    const base = getDateInTz(slot.start_time);
-    return new Date(base.getTime() - 60 * 60 * 1000);
-  }
-
-  // No start_time: fall back to morning_of
-  const dateIso = event.start_date!;
-  const date = new Date(dateIso);
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: orgTz,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  const parts = formatter.formatToParts(date);
-  const year = Number(parts.find((p) => p.type === 'year')?.value);
-  const month = Number(parts.find((p) => p.type === 'month')?.value) - 1;
-  const day = Number(parts.find((p) => p.type === 'day')?.value);
-  return new Date(Date.UTC(year, month, day, 8, 0, 0));
+  return null;
 }
 
 async function markReminderSent(signupId: string) {

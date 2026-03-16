@@ -10,9 +10,7 @@ const signupSchema = z.object({
   email: z.string().email(),
   comment: z.string().max(500).optional(),
   reminder_opt_in: z.boolean().optional(),
-  reminder_offset: z
-    .enum(['1_day', 'morning_of', '1_hour'])
-    .optional(),
+  reminder_offset: z.enum(['1_day', 'morning_of']).optional(),
 });
 
 export async function POST(request: Request) {

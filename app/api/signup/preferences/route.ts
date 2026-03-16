@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 const schema = z.object({
   token: z.string().min(1),
   reminder_opt_in: z.boolean(),
-  reminder_offset: z.enum(['1_day', 'morning_of', '1_hour']),
+  reminder_offset: z.enum(['1_day', 'morning_of']),
 });
 
 export async function PATCH(request: Request) {

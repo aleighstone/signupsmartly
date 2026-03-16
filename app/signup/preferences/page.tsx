@@ -18,7 +18,7 @@ export default async function PreferencesPage({ searchParams }: PageProps) {
     id: string;
     cancelled: boolean;
     reminder_opt_in: boolean;
-    reminder_offset: '1_day' | 'morning_of' | '1_hour';
+    reminder_offset: '1_day' | 'morning_of';
     slots: {
       role_name: string;
       event?: {
