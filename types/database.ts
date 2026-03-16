@@ -40,6 +40,7 @@ export interface Database {
           created_at: string;
           nps_dismissed_at: string | null;
           nps_submitted_at: string | null;
+          notification_preference: 'instant' | 'daily' | 'weekly' | 'never';
         };
         Insert: {
           id?: string;
@@ -48,6 +49,7 @@ export interface Database {
           created_at?: string;
           nps_dismissed_at?: string | null;
           nps_submitted_at?: string | null;
+          notification_preference?: 'instant' | 'daily' | 'weekly' | 'never';
         };
         Update: {
           id?: string;
@@ -56,6 +58,7 @@ export interface Database {
           created_at?: string;
           nps_dismissed_at?: string | null;
           nps_submitted_at?: string | null;
+          notification_preference?: 'instant' | 'daily' | 'weekly' | 'never';
         };
       };
       organization_members: {
@@ -94,6 +97,7 @@ export interface Database {
           published: boolean;
           created_by: string | null;
           created_at: string;
+          notification_override: 'instant' | 'daily' | 'weekly' | 'never' | null;
         };
         Insert: {
           id?: string;
@@ -107,6 +111,7 @@ export interface Database {
           published?: boolean;
           created_by?: string | null;
           created_at?: string;
+          notification_override?: 'instant' | 'daily' | 'weekly' | 'never' | null;
         };
         Update: {
           id?: string;
@@ -120,6 +125,7 @@ export interface Database {
           published?: boolean;
           created_by?: string | null;
           created_at?: string;
+          notification_override?: 'instant' | 'daily' | 'weekly' | 'never' | null;
         };
       };
       slots: {
@@ -285,6 +291,32 @@ export interface Database {
           created_at?: string;
         };
       };
+      organizer_notification_digest: {
+        Row: {
+          id: string;
+          user_id: string;
+          event_id: string;
+          signup_id: string;
+          created_at: string;
+          digest_sent_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          event_id: string;
+          signup_id: string;
+          created_at?: string;
+          digest_sent_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          event_id?: string;
+          signup_id?: string;
+          created_at?: string;
+          digest_sent_at?: string | null;
+        };
+      };
     };
   };
 }
@@ -297,6 +329,7 @@ export type Event = Database['public']['Tables']['events']['Row'];
 export type Slot = Database['public']['Tables']['slots']['Row'];
 export type Signup = Database['public']['Tables']['signups']['Row'];
 export type NpsResponse = Database['public']['Tables']['nps_responses']['Row'];
+export type OrganizerNotificationDigest = Database['public']['Tables']['organizer_notification_digest']['Row'];
 
 export interface SlotWithSignups extends Slot {
   signups: (Signup & { cancelled: boolean })[];
