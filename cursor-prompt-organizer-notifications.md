@@ -6,6 +6,8 @@ SignupSmartly is a Next.js 14 (App Router) + TypeScript app using Supabase (Post
 
 This prompt implements **organizer signup notifications**: emails sent to organizers when volunteers sign up for their events. Organizers control frequency at a global level (account settings) with a per-event override.
 
+> **Vercel constraint:** The app is on Vercel's hobby plan, which limits cron jobs to run at most once per day. The volunteer reminders feature already occupies one cron job slot. This feature must use a single cron job for all digest processing (daily + weekly combined), described in section 8.
+
 ---
 
 ## 1. Database Changes
@@ -164,35 +166,34 @@ Create a Resend email template for digest notifications (shared by daily and wee
 
 ---
 
-## 8. Digest Cron Jobs
+## 8. Digest Cron Job
 
-### Daily digest — runs at 7:00 AM every day
+> **Important:** Due to the Vercel hobby plan's once-per-day cron limit, there is a **single combined digest job** that handles both daily and weekly digest logic in one run. Do not create two separate cron entries.
+
+### Single digest job — runs at 7:00 AM UTC every day
 ```
 POST /api/notifications/digest
-Body: { type: 'daily' }
 ```
+No request body needed — the job determines internally which digest types to process based on the current day.
+
 Cron schedule in `vercel.json`: `0 7 * * *`
 
-### Weekly digest — runs at 7:00 AM every Monday
-```
-POST /api/notifications/digest
-Body: { type: 'weekly' }
-```
-Cron schedule in `vercel.json`: `0 7 * * 1`
-
-Both endpoints protected by `Authorization: Bearer [CRON_SECRET]` header check.
+Protected by `Authorization: Bearer [CRON_SECRET]` header check (same `CRON_SECRET` env var used by the volunteer reminders cron).
 
 ### Digest logic
 
-For `daily`: Find all organizers whose effective notification preference (accounting for per-event overrides) is `'daily'` and who have `organizer_notification_digest` rows with `digest_sent_at IS NULL` created in the last 24 hours.
+The job runs two passes on every execution:
 
-For `weekly`: Same, but for `'weekly'` preference and rows created in the last 7 days.
+**Pass 1 — Daily digests:** Find all organizers whose effective notification preference (accounting for per-event overrides) is `'daily'` and who have `organizer_notification_digest` rows with `digest_sent_at IS NULL` created in the last 24 hours.
 
-For each qualifying organizer:
+**Pass 2 — Weekly digests:** Only execute this pass if today is **Monday**. Find all organizers whose effective preference is `'weekly'` and who have `organizer_notification_digest` rows with `digest_sent_at IS NULL` created in the last 7 days. Skip this pass entirely on all other days.
+
+For each qualifying organizer in either pass:
 1. Collect all their pending digest rows, grouped by event.
-2. Build and send one digest email covering all their events.
+2. Build and send one digest email covering all their events (use the appropriate subject line — daily vs. weekly).
 3. Mark all included rows `digest_sent_at = now()`.
-4. Process in batches of 50 organizers per run.
+
+Process in batches of 50 organizers per pass.
 
 **Important:** For events where the organizer has set `notification_override = 'never'`, skip those signups in the digest even if the organizer's global preference would include them.
 
