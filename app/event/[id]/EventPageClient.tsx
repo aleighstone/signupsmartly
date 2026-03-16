@@ -37,6 +37,8 @@ export function EventPageClient({ event, timezone }: EventPageClientProps) {
           name: data.name,
           email: data.email,
           comment: data.comment,
+          reminder_opt_in: data.reminder_opt_in,
+          reminder_offset: data.reminder_offset,
         }),
       });
       const json = await res.json();
@@ -62,6 +64,7 @@ export function EventPageClient({ event, timezone }: EventPageClientProps) {
         onClose={handleCloseModal}
         slotRoleName={modalSlot?.role_name ?? ''}
         slotDetails={modalSlot?.instructions ?? modalSlot?.role_description ?? null}
+        showReminders={event.signup_type === 'scheduled' || !!event.start_date}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
       />

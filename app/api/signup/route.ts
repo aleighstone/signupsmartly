@@ -9,6 +9,10 @@ const signupSchema = z.object({
   name: z.string().min(1).max(100),
   email: z.string().email(),
   comment: z.string().max(500).optional(),
+  reminder_opt_in: z.boolean().optional(),
+  reminder_offset: z
+    .enum(['1_day', 'morning_of', '1_hour'])
+    .optional(),
 });
 
 export async function POST(request: Request) {
@@ -22,7 +26,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const { slotId, name, email, comment } = parsed.data;
+    const {
+      slotId,
+      name,
+      email,
+      comment,
+      reminder_opt_in = true,
+      reminder_offset = '1_day',
+    } = parsed.data;
 
     const slot = await getSlot(slotId);
     if (!slot) {
@@ -52,7 +63,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const signup = await createSignup({ slotId, name, email, comment });
+    const signup = await createSignup({
+      slotId,
+      name,
+      email,
+      comment,
+      reminder_opt_in,
+      reminder_offset,
+    });
 
     await sendSignupConfirmation({
       signup,

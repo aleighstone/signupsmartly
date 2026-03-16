@@ -72,6 +72,8 @@ export async function createSignup(params: {
   name: string;
   email: string;
   comment?: string;
+  reminder_opt_in?: boolean;
+  reminder_offset?: '1_day' | 'morning_of' | '1_hour';
 }) {
   const { data, error } = await supabase
     .from('signups')
@@ -82,6 +84,11 @@ export async function createSignup(params: {
       email: params.email,
       comment: params.comment || null,
       source: 'volunteer',
+      reminder_opt_in:
+        typeof params.reminder_opt_in === 'boolean'
+          ? params.reminder_opt_in
+          : true,
+      reminder_offset: params.reminder_offset || '1_day',
     })
     .select()
     .single();

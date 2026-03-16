@@ -148,12 +148,22 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
           </Link>
         </div>
 
-        <p className="text-sm text-muted font-body">
-          Organized with{' '}
-          <Link href="/" className="hover:text-charcoal transition-colors">
-            SignupSmartly
-          </Link>
-        </p>
+        <div className="space-y-1">
+          <p className="text-sm text-muted font-body">
+            Organized with{' '}
+            <Link href="/" className="hover:text-charcoal transition-colors">
+              SignupSmartly
+            </Link>
+          </p>
+          <p className="text-xs text-muted font-body">
+            <Link
+              href={`/signup/preferences?token=${signupTyped.cancel_token}`}
+              className="underline hover:text-charcoal transition-colors"
+            >
+              Manage reminder preferences
+            </Link>
+          </p>
+        </div>
       </div>
     </main>
   );

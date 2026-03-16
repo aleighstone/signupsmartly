@@ -8,6 +8,8 @@ const signupSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   email: z.string().email('Valid email required'),
   comment: z.string().max(500).optional(),
+  reminder_opt_in: z.boolean(),
+  reminder_offset: z.enum(['1_day', 'morning_of', '1_hour']),
 });
 
 export type SignupFormData = z.infer<typeof signupSchema>;
@@ -15,6 +17,7 @@ export type SignupFormData = z.infer<typeof signupSchema>;
 interface SignupFormProps {
   slotRoleName: string;
   slotDetails?: string | null;
+  showReminders: boolean;
   onSubmit: (data: SignupFormData) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -23,6 +26,7 @@ interface SignupFormProps {
 export function SignupForm({
   slotRoleName,
   slotDetails,
+  showReminders,
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -30,11 +34,20 @@ export function SignupForm({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { name: '', email: '', comment: '' },
+    defaultValues: {
+      name: '',
+      email: '',
+      comment: '',
+      reminder_opt_in: true,
+      reminder_offset: '1_day',
+    },
   });
+
+  const reminderOptIn = watch('reminder_opt_in');
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -46,6 +59,44 @@ export function SignupForm({
           <p className="mt-1 text-sm text-muted font-body">{slotDetails}</p>
         )}
       </div>
+      {showReminders && (
+        <div className="border-t border-charcoal/10 pt-4 mt-2">
+          <p className="text-sm font-medium text-charcoal font-body">
+            Reminder
+          </p>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <label className="inline-flex items-center gap-2 text-sm text-charcoal font-body">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-charcoal/30 text-sage focus:ring-sage/40"
+                disabled={isSubmitting}
+                {...register('reminder_opt_in')}
+              />
+              <span>Send me a reminder email</span>
+            </label>
+            {reminderOptIn && (
+              <div className="sm:min-w-[200px]">
+                <label
+                  htmlFor="reminder_offset"
+                  className="sr-only"
+                >
+                  Reminder timing
+                </label>
+                <select
+                  id="reminder_offset"
+                  className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal bg-white focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                  disabled={isSubmitting}
+                  {...register('reminder_offset')}
+                >
+                  <option value="1_day">1 day before</option>
+                  <option value="morning_of">Morning of the event</option>
+                  <option value="1_hour">1 hour before</option>
+                </select>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       <div>
         <label
           htmlFor="name"

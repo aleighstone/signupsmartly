@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { format } from 'date-fns';
 import type { Event, Slot, Signup } from '@/types/database';
+import { generateAddToCalendarUrl } from '@/lib/calendar';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
 
@@ -11,7 +12,7 @@ const FROM_EMAIL =
 const ADMIN_EMAIL =
   process.env.ADMIN_EMAIL || 'allisonleighstone@gmail.com';
 
-export async function sendSignupConfirmation(params: {
+function buildSignupEmailDetails(params: {
   signup: Signup;
   slot: Slot;
   event: Event;
@@ -20,7 +21,6 @@ export async function sendSignupConfirmation(params: {
   if (!signup.email) {
     throw new Error('Cannot send confirmation: signup has no email');
   }
-  const cancelUrl = `${APP_URL}/signup/cancel?token=${signup.cancel_token}`;
   const isSimple = event.signup_type === 'simple';
   const logoUrl = `${APP_URL}/smartly-icon.png`;
 
@@ -72,11 +72,32 @@ export async function sendSignupConfirmation(params: {
     locationRow,
   ].filter(Boolean).join('');
 
+  const cancelUrl = `${APP_URL}/signup/cancel?token=${signup.cancel_token}`;
   const detailRows = isSimple ? simpleDetailRows : scheduledDetailRows;
+  const manageUrl = `${APP_URL}/signup/preferences?token=${signup.cancel_token}`;
+
+  return {
+    cancelUrl,
+    manageUrl,
+    isSimple,
+    logoUrl,
+    labelSpotOrItem,
+    detailRows,
+  };
+}
+
+export async function sendSignupConfirmation(params: {
+  signup: Signup;
+  slot: Slot;
+  event: Event;
+}) {
+  const { signup, slot, event } = params;
+  const { cancelUrl, manageUrl, logoUrl, detailRows } =
+    buildSignupEmailDetails({ signup, slot, event });
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
-    to: signup.email,
+    to: signup.email!,
     subject: `You're signed up: ${slot.role_name} — ${event.title}`,
     html: `
 <!DOCTYPE html>
@@ -102,7 +123,12 @@ export async function sendSignupConfirmation(params: {
         <p style="margin: 0 0 16px; color: #27272A;">Need to cancel? Use the link below:</p>
         <a href="${cancelUrl}" style="display: inline-block; background-color: #FFFFFF; color: #27272A; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; border: 2px solid #27272A;">Cancel signup</a>
       </div>
-      <div style="padding: 16px 24px; border-top: 1px solid #E5F2E5; font-size: 14px; color: #71717A;">Organized with SignupSmartly</div>
+      <div style="padding: 16px 24px; border-top: 1px solid #E5F2E5; font-size: 14px; color: #71717A;">
+        <div style="margin-bottom: 4px;">Organized with SignupSmartly</div>
+        <div style="margin-top: 4px;">
+          <a href="${manageUrl}" style="color: #15803D; text-decoration: underline;">Manage reminder preferences</a>
+        </div>
+      </div>
     </div>
   </div>
 </body>
@@ -141,5 +167,90 @@ Submitted: ${submittedAt}`;
 
   if (error) {
     throw new Error(`Failed to send NPS email: ${error.message}`);
+  }
+}
+
+export async function sendSignupReminder(params: {
+  signup: Signup;
+  slot: Slot;
+  event: Event;
+}) {
+  const { signup, slot, event } = params;
+  if (!signup.email) {
+    throw new Error('Cannot send reminder: signup has no email');
+  }
+
+  const { cancelUrl, manageUrl, logoUrl, detailRows, labelSpotOrItem } =
+    buildSignupEmailDetails({ signup, slot, event });
+
+  const isSimple = event.signup_type === 'simple';
+
+  const subject = isSimple
+    ? `SignupSmartly Reminder: ${slot.role_name} for ${event.title}`
+    : `SignupSmartly Reminder: ${slot.role_name} on ${
+        event.start_date
+          ? format(
+              new Date(
+                event.start_date.includes('T')
+                  ? event.start_date
+                  : `${event.start_date}T00:00:00`
+              ),
+              'MMMM d, yyyy'
+            )
+          : event.title
+      }`;
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: signup.email!,
+    subject,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signup Reminder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #27272A; margin: 0; padding: 0; background-color: #FAF9F6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
+      <div style="background-color: #27272A; padding: 20px 24px; display: flex; align-items: center;">
+        <img src="${logoUrl}" alt="SignupSmartly" width="28" height="28" style="display: block; margin-right: 16px;">
+        <span style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 1.25rem; color: #FFFFFF;">SignupSmartly</span>
+      </div>
+      <div style="padding: 24px;">
+        <h1 style="font-size: 24px; font-weight: 600; color: #27272A; margin: 0 0 20px;">Just a reminder — you're signed up!</h1>
+        <p style="margin: 0 0 16px; color: #27272A;">
+          Here are the details for your upcoming ${labelSpotOrItem.toLowerCase()}:
+        </p>
+        <div style="background-color: #F0F9F0; border-radius: 8px; padding: 0 20px; margin-bottom: 24px;">
+          ${detailRows}
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
+          <a href="${generateAddToCalendarUrl({
+            event,
+            slot,
+            volunteerName: signup.name,
+          })}" style="display: inline-block; background-color: #15803D; color: #FFFFFF; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Add to Calendar</a>
+          <a href="${cancelUrl}" style="display: inline-block; background-color: #FFFFFF; color: #27272A; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; border: 2px solid #27272A;">Cancel signup</a>
+        </div>
+      </div>
+      <div style="padding: 16px 24px; border-top: 1px solid #E5F2E5; font-size: 14px; color: #71717A;">
+        <div style="margin-bottom: 4px;">Organized with SignupSmartly</div>
+        <div style="margin-top: 4px;">
+          <a href="${manageUrl}" style="color: #15803D; text-decoration: underline;">Manage reminder preferences</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  });
+
+  if (error) {
+    throw new Error(`Failed to send reminder email: ${error.message}`);
   }
 }

@@ -61,11 +61,42 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 
 ## Organizer Auth
 
-### Sign Up / Login
+### Sign Up (`/signup`)
 
-- Email + password auth (Supabase)
-- Sign up: creates user and organization
-- Login: existing organizers
+- **Goal:** Let new organizers create an account and get to the dashboard with minimal friction.
+- **Fields:** Name (required), Email (required, valid email), Password (required, min 6 chars).
+- **Behavior:**
+  - Form submits to Supabase email + password auth.
+  - On success:
+    - Supabase sends a confirmation email using `emailRedirectTo = /auth/callback?next=/dashboard`.
+    - App:
+      - Identifies the user in PostHog (`organizer_signed_up` event with user id + email).
+      - Calls `/api/auth/sync-user` to upsert the app `users` row with id, email, and name (falling back to local-part or "Organizer").
+      - Redirects to `/signup/success`.
+  - On error, show an inline error message at the top of the form; keep field values.
+- **UI copy:**
+  - Title: "Create account"
+  - Subtitle: "Create an account to organize volunteer events"
+  - Primary button: "Create account"
+  - Footer: "Already have an account? Sign in" (links to `/login`).
+
+### Sign Up Success (`/signup/success`)
+
+- **Audience:** Newly registered organizers after a successful sign up.
+- **Content:**
+  - Heading: "You're in!"
+  - Body copy: "Check your email to confirm your account and come back to sign in."
+  - Primary action: "Go to sign in" → `/login`.
+- **Behavior:**
+  - Page is safe to refresh; no side effects.
+  - Does not auto-redirect; user is in control of when to go sign in.
+
+### Login (`/login`)
+
+- Email + password auth (Supabase) for existing organizers.
+- On first successful login for a Supabase user without a corresponding app `users` row, create:
+  - `users` row with id, email, and name (from metadata or email local-part).
+  - Default organization and `organization_members` owner record if none exist.
 
 ---
 
@@ -74,9 +105,53 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 ### Dashboard (`/dashboard`)
 
 - **Title:** "Your Signups"
-- **Logged out:** "Sign in to view and manage your events" + "Create your first event", "Sign in"
+- **Logged out:** "Sign in to view and manage your events"
+  - Primary CTA: "Create your first event" → `/signup`
+  - Secondary CTA: "Sign in" → `/login`
 - **Logged in, no events:** "Nothing to see here." + "Create your first signup"
 - **Logged in, has events:** List of signups with title, date range, coverage meter; "View My Signups" (primary), "Signup Page" (secondary, opens in new tab)
+
+#### NPS Survey (Dashboard)
+
+- **Placement:** Appears as a banner block near the bottom of the dashboard when conditions are met.
+- **Eligibility rules:**
+  - User is authenticated in Supabase.
+  - User has an app `users` row.
+  - User has at least one event that has volunteer signups (`hasEventWithVolunteerSignup` true).
+  - `users.nps_submitted_at` is `NULL`.
+  - If `users.nps_dismissed_at` is non-null, at least 7 full days have passed since that timestamp.
+- **Step 1 – Score:**
+  - Question: "How likely are you to recommend SignupSmartly to a friend or colleague?"
+  - Scale 0–10 rendered as circular buttons.
+  - Labels below scale: "Not likely at all" (left) and "Extremely likely" (right).
+  - Close button:
+    - Clicking "✕" dismisses the banner for the user.
+    - Calls `/api/nps/dismiss` (POST) and records `nps_dismissed_at` on the user.
+    - Even if the request fails, the banner hides locally for the current session.
+  - Analytics: When the banner is first shown, track `nps_banner_shown`. When a score is clicked, track `nps_score_selected` with `score`.
+- **Step 2 – Comment (optional):**
+  - Question: "What's the main reason for your score?"
+  - Shows the previously chosen score.
+  - Multiline text area where the user can leave free-form feedback (optional).
+  - Actions:
+    - "Send feedback" → submits score + comment.
+    - "Skip, just submit my score" → submits score without comment.
+  - Both actions call `/api/nps/submit` (POST) with:
+    - `score` (0–10, required).
+    - `comment` (string or `null`; trimmed, `null` when empty or when skipping).
+  - On success:
+    - Sets `users.nps_submitted_at` to now.
+    - Transitions UI to the Thank You state.
+  - Analytics:
+    - With comment: `nps_comment_submitted` with `score` and `has_comment`.
+    - Score only: `nps_score_only_submitted` with `score`.
+- **Step 3 – Thank You:**
+  - Copy:
+    - Heading: "Thanks for the feedback! 🙏"
+    - Body: "It really helps us make SignupSmartly better."
+  - Behavior:
+    - Banner auto-dismisses itself after ~3 seconds.
+    - Once dismissed, it respects `nps_submitted_at` and will not show again for that user.
 
 ### Create Signup (`/create-event`)
 
@@ -137,11 +212,20 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 
 - **Organizations** — name, timezone
 - **Users** — organizers (auth)
+  - New fields for NPS:
+    - `nps_dismissed_at` — last time the user dismissed the NPS banner (nullable).
+    - `nps_submitted_at` — time the user successfully submitted an NPS response (nullable).
 - **Events** — title, description, location, start_date (optional for simple), end_date (optional), signup_type ('scheduled' | 'simple'), published
 - **Slots** — role_name (item name for simple), role_description, capacity, start_time (optional; null for simple), end_time (optional; null for simple), instructions
 - **Signups** — name, email, comment, cancel_token, cancelled
 - **Templates** — name, description, location, signup_type, organization_id
 - **Template_slots** — template_id, role_name, role_description, capacity, start_time, end_time, instructions
+- **Nps_responses** — individual NPS submissions
+  - `id` — uuid primary key
+  - `user_id` — references `users.id` (cascade on delete)
+  - `score` — integer 0–10
+  - `comment` — optional text
+  - `created_at` — timestamp, defaults to now()
 
 ---
 

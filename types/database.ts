@@ -251,6 +251,9 @@ export interface Database {
           cancelled: boolean;
           cancel_token: string;
           source: 'volunteer' | 'organizer';
+          reminder_opt_in: boolean;
+          reminder_offset: '1_day' | 'morning_of' | '1_hour';
+          reminder_sent_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -262,6 +265,9 @@ export interface Database {
           cancelled?: boolean;
           cancel_token?: string;
           source?: 'volunteer' | 'organizer';
+          reminder_opt_in?: boolean;
+          reminder_offset?: '1_day' | 'morning_of' | '1_hour';
+          reminder_sent_at?: string | null;
           created_at?: string;
         };
         Update: {
@@ -273,6 +279,9 @@ export interface Database {
           cancelled?: boolean;
           cancel_token?: string;
           source?: 'volunteer' | 'organizer';
+          reminder_opt_in?: boolean;
+          reminder_offset?: '1_day' | 'morning_of' | '1_hour';
+          reminder_sent_at?: string | null;
           created_at?: string;
         };
       };
