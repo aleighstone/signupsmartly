@@ -16,6 +16,11 @@
 
 - **Always share the deploy commands** after making changes so the user can push to production.
 
+## Learned Workspace Facts
+
+- Project uses a Vercel Hobby plan, so scheduled functions/cron jobs can only run once per day; reminder and background processing requirements must respect this limit.
+- Project uses a free Resend plan; when writing new email-related requirements, keep email volume modest and avoid designs that assume high-frequency or bulk email sending.*** End Patch```}"/>
+
 ## History
 
 - SignupSmartly was originally created as a subfolder under `digitaleigh-dev`.
