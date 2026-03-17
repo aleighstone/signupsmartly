@@ -4,13 +4,6 @@ import { useState } from 'react';
 
 type NotificationPreference = 'instant' | 'daily' | 'weekly' | 'never';
 
-const LABELS: Record<NotificationPreference, string> = {
-  instant: 'Instantly',
-  daily: 'Daily digest',
-  weekly: 'Weekly digest',
-  never: 'Never',
-};
-
 interface Props {
   eventId: string;
   eventOverride: NotificationPreference | null;
@@ -53,7 +46,7 @@ export function EventNotificationOverride({
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {
-      setValue(eventOverride);
+      setValue(eventOverride ?? globalPreference);
     } finally {
       setSaving(false);
     }
