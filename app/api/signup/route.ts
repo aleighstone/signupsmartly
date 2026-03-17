@@ -80,51 +80,56 @@ export async function POST(request: Request) {
       event,
     });
 
-    // Organizer notifications: insert digest row, send instant if applicable
-    const ownerId = await getOrganizationOwner(event.organization_id);
-    if (ownerId) {
-      const { data: ownerRow } = await supabase
-        .from('users')
-        .select('id, email, notification_preference')
-        .eq('id', ownerId)
-        .single();
-
-      const owner = ownerRow as { id: string; email: string; notification_preference: string } | null;
-      if (owner?.email) {
-        const userPref = (owner.notification_preference ?? 'daily') as 'instant' | 'daily' | 'weekly' | 'never';
-        const eventOverride = event.notification_override as 'instant' | 'daily' | 'weekly' | 'never' | null;
-        const effective = effectiveNotificationPreference(userPref, eventOverride);
-
-        const db = supabase as unknown as {
-          from: (t: string) => {
-            insert: (v: object) => { select: (s: string) => { single: () => Promise<{ data: { id: string } | null }> } };
-            update: (v: object) => { eq: (c: string, v: string) => Promise<unknown> };
-          };
-        };
-        const { data: digestRow } = await db
-          .from('organizer_notification_digest')
-          .insert({ user_id: ownerId, event_id: event.id, signup_id: signup.id })
-          .select('id')
+    // Organizer notifications: insert digest row, send instant if applicable.
+    // This should never block a volunteer from signing up.
+    try {
+      const ownerId = await getOrganizationOwner(event.organization_id);
+      if (ownerId) {
+        const { data: ownerRow } = await supabase
+          .from('users')
+          .select('id, email, notification_preference')
+          .eq('id', ownerId)
           .single();
 
-        const digestId = digestRow?.id;
-        if (digestId && effective === 'instant' && signup.email !== owner.email) {
-          try {
-            await sendOrganizerInstantNotification({
-              event,
-              slot,
-              signup,
-              organizerEmail: owner.email,
-            });
-            await db
-              .from('organizer_notification_digest')
-              .update({ digest_sent_at: new Date().toISOString() })
-              .eq('id', digestId);
-          } catch (err) {
-            console.error('Failed to send instant organizer notification:', err);
+        const owner = ownerRow as { id: string; email: string; notification_preference: string } | null;
+        if (owner?.email) {
+          const userPref = (owner.notification_preference ?? 'daily') as 'instant' | 'daily' | 'weekly' | 'never';
+          const eventOverride = event.notification_override as 'instant' | 'daily' | 'weekly' | 'never' | null;
+          const effective = effectiveNotificationPreference(userPref, eventOverride);
+
+          const db = supabase as unknown as {
+            from: (t: string) => {
+              insert: (v: object) => { select: (s: string) => { single: () => Promise<{ data: { id: string } | null }> } };
+              update: (v: object) => { eq: (c: string, v: string) => Promise<unknown> };
+            };
+          };
+          const { data: digestRow } = await db
+            .from('organizer_notification_digest')
+            .insert({ user_id: ownerId, event_id: event.id, signup_id: signup.id })
+            .select('id')
+            .single();
+
+          const digestId = digestRow?.id;
+          if (digestId && effective === 'instant' && signup.email !== owner.email) {
+            try {
+              await sendOrganizerInstantNotification({
+                event,
+                slot,
+                signup,
+                organizerEmail: owner.email,
+              });
+              await db
+                .from('organizer_notification_digest')
+                .update({ digest_sent_at: new Date().toISOString() })
+                .eq('id', digestId);
+            } catch (err) {
+              console.error('Failed to send instant organizer notification:', err);
+            }
           }
         }
       }
+    } catch (notificationErr) {
+      console.error('Organizer notification error (non-blocking):', notificationErr);
     }
 
     return NextResponse.json({ signupId: signup.id });

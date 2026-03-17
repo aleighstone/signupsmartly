@@ -6,7 +6,7 @@ type Preference = 'instant' | 'daily' | 'weekly' | 'never';
 
 const OPTIONS: { value: Preference; label: string; description: string }[] = [
   { value: 'instant', label: 'Instantly', description: 'Get an email as soon as someone signs up' },
-  { value: 'daily', label: 'Daily digest', description: 'Get a summary email each morning with overnight signups' },
+  { value: 'daily', label: 'Daily digest', description: 'Get a summary email each morning with new signups' },
   { value: 'weekly', label: 'Weekly digest', description: 'Get a summary email every Monday morning' },
   { value: 'never', label: 'Never', description: "Don't send me signup notification emails" },
 ];
