@@ -74,11 +74,16 @@ export async function POST(request: Request) {
       reminder_offset,
     });
 
-    await sendSignupConfirmation({
-      signup,
-      slot,
-      event,
-    });
+    // Volunteer confirmation email should not block signup success
+    try {
+      await sendSignupConfirmation({
+        signup,
+        slot,
+        event,
+      });
+    } catch (emailErr) {
+      console.error('Volunteer confirmation email error (non-blocking):', emailErr);
+    }
 
     // Organizer notifications: insert digest row, send instant if applicable.
     // This should never block a volunteer from signing up.
