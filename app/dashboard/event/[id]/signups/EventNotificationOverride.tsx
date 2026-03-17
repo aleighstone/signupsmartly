@@ -22,16 +22,20 @@ export function EventNotificationOverride({
   eventOverride,
   globalPreference,
 }: Props) {
-  const [value, setValue] = useState<NotificationPreference | null>(eventOverride);
+  const [value, setValue] = useState<NotificationPreference>(
+    eventOverride ?? globalPreference
+  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const defaultLabel = `Use my default (${LABELS[globalPreference]})`;
-
   async function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const raw = e.target.value;
-    const nextValue = raw === '' ? null : (raw as NotificationPreference);
-    setValue(nextValue);
+    const selected = raw as NotificationPreference;
+    // If the selected value matches the global preference, clear the override (null in DB).
+    const nextOverride =
+      selected === globalPreference ? null : (selected as NotificationPreference);
+
+    setValue(selected);
     setSaving(true);
     setSaved(false);
 
@@ -39,7 +43,7 @@ export function EventNotificationOverride({
       const res = await fetch(`/api/events/${eventId}/notification-override`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notification_override: nextValue }),
+        body: JSON.stringify({ notification_override: nextOverride }),
       });
 
       if (!res.ok) {
@@ -65,12 +69,11 @@ export function EventNotificationOverride({
       </label>
       <select
         id="event-notification-override"
-        value={value ?? ''}
+        value={value}
         onChange={handleChange}
         disabled={saving}
         className="rounded-lg border border-charcoal/20 px-3 py-1.5 text-sm font-body text-charcoal bg-surface focus:ring-2 focus:ring-sage/30 focus:border-sage disabled:opacity-60"
       >
-        <option value="">{defaultLabel}</option>
         <option value="instant">Instantly</option>
         <option value="daily">Daily digest</option>
         <option value="weekly">Weekly digest</option>

@@ -135,34 +135,39 @@ export default async function SignupsPage({ params }: PageProps) {
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+        <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold text-charcoal font-heading">
             {eventData.title}
           </h1>
           <p className="text-muted font-body">
             {formatEventDateRange(eventData.start_date, eventData.end_date)}
           </p>
-          <div className="mt-3 flex flex-col gap-3">
-            <EventNotificationOverride
-              eventId={id}
-              eventOverride={eventData.notification_override as NotificationPreference | null}
-              globalPreference={globalPreference}
-            />
-            <div className="max-w-xs">
-              <CoverageWithStillNeeded
+          <div className="mt-3 max-w-sm">
+            <CoverageWithStillNeeded
               filled={coverage.filled}
               total={coverage.total}
               percentage={coverage.percentage}
               signupType={eventData.signup_type}
               slotsNeedingFill={slotsNeedingFill}
             />
-            </div>
           </div>
         </div>
         <SignupsActions event={eventData} rows={csvRows} isSimple={isSimple} />
       </div>
 
-      <SignupsTable rows={tableRows} slots={eventData.slots.map((s) => ({ id: s.id, role_name: s.role_name }))} isSimple={isSimple} />
+      <SignupsTable
+        rows={tableRows}
+        slots={eventData.slots.map((s) => ({ id: s.id, role_name: s.role_name }))}
+        isSimple={isSimple}
+      />
+
+      <div className="mt-6 max-w-sm">
+        <EventNotificationOverride
+          eventId={id}
+          eventOverride={eventData.notification_override as NotificationPreference | null}
+          globalPreference={globalPreference}
+        />
+      </div>
     </AppLayout>
   );
 }
