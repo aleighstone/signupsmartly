@@ -39,7 +39,8 @@ export function formatEventDateRange(
   startDate: string | null,
   endDate: string | null
 ): string {
-  if (!startDate) return 'No date';
+  // For events (especially simple lists) without a date, show nothing
+  if (!startDate) return '';
   const start = new Date(startDate);
   if (!endDate) {
     return format(start, 'EEEE, MMMM d, yyyy');
