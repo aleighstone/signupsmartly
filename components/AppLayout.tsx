@@ -13,6 +13,12 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Logo href="/dashboard" className="shrink-0 hover:text-muted" />
           <div className="flex shrink-0 items-center gap-2 sm:gap-4">
             <Link
+              href="/dashboard/settings"
+              className="text-sm font-medium text-muted hover:text-charcoal transition-colors whitespace-nowrap"
+            >
+              Settings
+            </Link>
+            <Link
               href="/logout"
               className="text-sm font-medium text-muted hover:text-charcoal transition-colors whitespace-nowrap"
             >

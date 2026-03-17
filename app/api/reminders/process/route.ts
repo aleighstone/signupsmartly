@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { sendSignupReminder } from '@/lib/email';
+import { sendSignupReminder, sendOrganizerDigest } from '@/lib/email';
+import { effectiveNotificationPreference } from '@/lib/notifications';
 import type { Event, Slot, Signup } from '@/types/database';
 
 const BATCH_SIZE = 50;
@@ -116,7 +117,9 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ processed });
+    // --- Organizer digest passes ---
+    const digestProcessed = await runOrganizerDigests(now);
+    return NextResponse.json({ processed, digestProcessed });
   } catch (err) {
     console.error('Reminder processing error:', err);
     return NextResponse.json(
@@ -189,5 +192,194 @@ async function markReminderSent(signupId: string) {
     // @ts-expect-error Supabase Update type inference
     .update({ reminder_sent_at: new Date().toISOString() })
     .eq('id', signupId);
+}
+
+type DigestRow = {
+  id: string;
+  user_id: string;
+  event_id: string;
+  signup_id: string;
+  created_at: string;
+  digest_sent_at: string | null;
+  signups: { id: string; cancelled: boolean; name: string; email: string | null; comment: string | null } | null;
+  events: {
+    id: string;
+    title: string;
+    signup_type: 'scheduled' | 'simple';
+    start_date: string | null;
+    location: string | null;
+    notification_override: 'instant' | 'daily' | 'weekly' | 'never' | null;
+  } | null;
+  slots: { id: string; role_name: string; start_time: string | null; end_time: string | null } | null;
+  users: { email: string; notification_preference: 'instant' | 'daily' | 'weekly' | 'never' } | null;
+};
+
+async function runOrganizerDigests(now: Date): Promise<number> {
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const isMonday = now.getUTCDay() === 1;
+
+  let digestProcessed = 0;
+
+  // Pass 1: Daily digests
+  const { data: dailyRows } = await supabase
+    .from('organizer_notification_digest')
+    .select(
+      `
+      id, user_id, event_id, signup_id, created_at, digest_sent_at,
+      signups (id, cancelled, name, email, comment),
+      events (id, title, signup_type, start_date, location, notification_override),
+      slots (id, role_name, start_time, end_time),
+      users (email, notification_preference)
+    `
+    )
+    .is('digest_sent_at', null)
+    .gte('created_at', twentyFourHoursAgo.toISOString())
+    .limit(200);
+
+  const dailyByUser = groupAndFilterDigestRows(
+    (dailyRows || []) as DigestRow[],
+    'daily'
+  );
+
+  for (const [, eventsMap] of Array.from(dailyByUser.entries())) {
+    const firstRow = Array.from(eventsMap.values()).flat()[0];
+    const organizerEmail = (firstRow as DigestRow).users?.email;
+    if (!organizerEmail) continue;
+
+    const signupsByEvent = new Map<string, { signup: Signup; slot: Slot; event: Event }[]>();
+    const digestIds: string[] = [];
+
+    for (const [eventId, rows] of Array.from(eventsMap.entries())) {
+      const signupRows = rows
+        .filter((r) => r.signups && !r.signups.cancelled && r.slots && r.events)
+        .map((r) => ({
+          signup: { ...r.signups!, cancel_token: '', created_at: '', reminder_opt_in: true, reminder_offset: '1_day' as const, reminder_sent_at: null, slot_id: r.slots!.id, cancelled: false, source: 'volunteer' as const },
+          slot: r.slots as unknown as Slot,
+          event: r.events as unknown as Event,
+          digestId: r.id,
+        }));
+      if (signupRows.length === 0) continue;
+      signupsByEvent.set(eventId, signupRows.map((s) => ({ signup: s.signup, slot: s.slot, event: s.event })));
+      digestIds.push(...signupRows.map((s) => s.digestId));
+    }
+
+    if (signupsByEvent.size === 0) continue;
+
+    try {
+      await sendOrganizerDigest({
+        organizerEmail,
+        signupsByEvent,
+        isWeekly: false,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from('organizer_notification_digest')
+        .update({ digest_sent_at: now.toISOString() })
+        .in('id', digestIds);
+      digestProcessed += 1;
+    } catch (err) {
+      console.error('Failed to send daily digest to', organizerEmail, err);
+    }
+  }
+
+  // Pass 2: Weekly digests (Mondays only)
+  if (isMonday) {
+    const { data: weeklyRows } = await supabase
+      .from('organizer_notification_digest')
+      .select(
+        `
+        id, user_id, event_id, signup_id, created_at, digest_sent_at,
+        signups (id, cancelled, name, email, comment),
+        events (id, title, signup_type, start_date, location, notification_override),
+        slots (id, role_name, start_time, end_time),
+        users (email, notification_preference)
+      `
+      )
+      .is('digest_sent_at', null)
+      .gte('created_at', sevenDaysAgo.toISOString())
+      .limit(200);
+
+    const weeklyByUser = groupAndFilterDigestRows(
+      (weeklyRows || []) as DigestRow[],
+      'weekly'
+    );
+
+    for (const [, eventsMap] of Array.from(weeklyByUser.entries())) {
+      const firstRow = Array.from(eventsMap.values()).flat()[0];
+      const organizerEmail = (firstRow as DigestRow).users?.email;
+      if (!organizerEmail) continue;
+
+      const signupsByEvent = new Map<string, { signup: Signup; slot: Slot; event: Event }[]>();
+      const digestIds: string[] = [];
+
+      for (const [eventId, rows] of Array.from(eventsMap.entries())) {
+        const signupRows = rows
+          .filter((r) => r.signups && !r.signups.cancelled && r.slots && r.events)
+          .map((r) => ({
+            signup: { ...r.signups!, cancel_token: '', created_at: '', reminder_opt_in: true, reminder_offset: '1_day' as const, reminder_sent_at: null, slot_id: r.slots!.id, cancelled: false, source: 'volunteer' as const },
+            slot: r.slots as unknown as Slot,
+            event: r.events as unknown as Event,
+            digestId: r.id,
+          }));
+        if (signupRows.length === 0) continue;
+        signupsByEvent.set(eventId, signupRows.map((s) => ({ signup: s.signup, slot: s.slot, event: s.event })));
+        digestIds.push(...signupRows.map((s) => s.digestId));
+      }
+
+      if (signupsByEvent.size === 0) continue;
+
+      try {
+        await sendOrganizerDigest({
+          organizerEmail,
+          signupsByEvent,
+          isWeekly: true,
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+          .from('organizer_notification_digest')
+          .update({ digest_sent_at: now.toISOString() })
+          .in('id', digestIds);
+        digestProcessed += 1;
+      } catch (err) {
+        console.error('Failed to send weekly digest to', organizerEmail, err);
+      }
+    }
+  }
+
+  return digestProcessed;
+}
+
+function groupAndFilterDigestRows(
+  rows: DigestRow[],
+  targetPref: 'daily' | 'weekly'
+): Map<string, Map<string, DigestRow[]>> {
+  const byUser = new Map<string, Map<string, DigestRow[]>>();
+
+  for (const row of rows) {
+    if (!row.users || !row.events) continue;
+    const userPref = row.users.notification_preference ?? 'daily';
+    const eventOverride = row.events.notification_override;
+    const effective = effectiveNotificationPreference(userPref, eventOverride);
+
+    if (effective === 'never') continue;
+    if (eventOverride === 'never') continue;
+    if (effective !== targetPref) continue;
+    if (row.signups?.cancelled) continue;
+
+    let userMap = byUser.get(row.user_id);
+    if (!userMap) {
+      userMap = new Map();
+      byUser.set(row.user_id, userMap);
+    }
+    let eventList = userMap.get(row.event_id);
+    if (!eventList) {
+      eventList = [];
+      userMap.set(row.event_id, eventList);
+    }
+    eventList.push(row);
+  }
+
+  return byUser;
 }
 

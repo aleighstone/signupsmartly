@@ -59,43 +59,6 @@ export function SignupForm({
           <p className="mt-1 text-sm text-muted font-body">{slotDetails}</p>
         )}
       </div>
-      {showReminders && (
-        <div className="border-t border-charcoal/10 pt-4 mt-2">
-          <p className="text-sm font-medium text-charcoal font-body">
-            Reminder
-          </p>
-          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <label className="inline-flex items-center gap-2 text-sm text-charcoal font-body">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-charcoal/30 text-sage focus:ring-sage/40"
-                disabled={isSubmitting}
-                {...register('reminder_opt_in')}
-              />
-              <span>Send me a reminder email</span>
-            </label>
-            {reminderOptIn && (
-              <div className="sm:min-w-[200px]">
-                <label
-                  htmlFor="reminder_offset"
-                  className="sr-only"
-                >
-                  Reminder timing
-                </label>
-                <select
-                  id="reminder_offset"
-                  className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal bg-white focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
-                  disabled={isSubmitting}
-                  {...register('reminder_offset')}
-                >
-                  <option value="1_day">1 day before</option>
-                  <option value="morning_of">Morning of the event</option>
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
       <div>
         <label
           htmlFor="name"
@@ -152,6 +115,39 @@ export function SignupForm({
           disabled={isSubmitting}
         />
       </div>
+      {showReminders && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <label className="inline-flex items-center gap-2 text-sm text-charcoal font-body">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-charcoal/30 text-sage focus:ring-sage/40"
+              disabled={isSubmitting}
+              {...register('reminder_opt_in')}
+            />
+            <span>Send a reminder</span>
+          </label>
+          {reminderOptIn && (
+            <div className="sm:min-w-[200px]">
+              <label htmlFor="reminder_offset" className="sr-only">
+                Reminder timing
+              </label>
+              <select
+                id="reminder_offset"
+                className="w-full appearance-none rounded-xl border border-charcoal/20 bg-white bg-no-repeat bg-[length:14px_14px] pl-3 pr-11 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                style={{
+                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")",
+                  backgroundPosition: 'right 0.75rem center',
+                }}
+                disabled={isSubmitting}
+                {...register('reminder_offset')}
+              >
+                <option value="1_day">1 day before</option>
+                <option value="morning_of">Morning of the event</option>
+              </select>
+            </div>
+          )}
+        </div>
+      )}
       <div className="flex gap-3 pt-2">
         <button
           type="submit"

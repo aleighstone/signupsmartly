@@ -82,7 +82,11 @@ export function PreferencesForm(props: PreferencesFormProps) {
           </label>
           <select
             id="reminder_offset"
-            className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal bg-white focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body disabled:opacity-60"
+            className="w-full appearance-none rounded-xl border border-charcoal/20 bg-white bg-no-repeat bg-[length:14px_14px] pl-3 pr-11 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body disabled:opacity-60"
+            style={{
+              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")",
+              backgroundPosition: 'right 0.75rem center',
+            }}
             value={offset}
             onChange={(e) =>
               setOffset(e.target.value as '1_day' | 'morning_of')

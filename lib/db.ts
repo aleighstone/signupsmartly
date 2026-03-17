@@ -243,6 +243,20 @@ export async function getEventCountForUser(userId: string): Promise<number> {
   return count ?? 0;
 }
 
+/** Returns the user_id of the organization owner (first owner in organization_members). */
+export async function getOrganizationOwner(organizationId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('organization_members')
+    .select('user_id')
+    .eq('organization_id', organizationId)
+    .eq('role', 'owner')
+    .limit(1)
+    .single();
+
+  if (error || !data) return null;
+  return (data as { user_id: string }).user_id;
+}
+
 export function getEventCoverage(event: EventWithSlots): {
   filled: number;
   total: number;

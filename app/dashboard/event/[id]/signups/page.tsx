@@ -4,10 +4,13 @@ import { createClient } from '@/lib/supabase-server';
 import { getEventWithSlotsForDashboard, getEventCoverage, getOrganizationTimezone } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
 import { CoverageWithStillNeeded } from './CoverageWithStillNeeded';
+import { EventNotificationOverride } from './EventNotificationOverride';
 import { formatEventDateRange, formatTimeRange } from '@/lib/calendar';
 import { SignupsActions } from './SignupsActions';
 import { SignupsTable } from './SignupsTable';
 import { TrackSignupsPageView } from '@/app/providers/PostHogTracker';
+
+type NotificationPreference = 'instant' | 'daily' | 'weekly' | 'never';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -44,6 +47,15 @@ export default async function SignupsPage({ params }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) notFound();
+
+  const { data: ourUserRow } = await supabase
+    .from('users')
+    .select('notification_preference')
+    .eq('id', user.id)
+    .single();
+
+  const ourUser = ourUserRow as { notification_preference?: string } | null;
+  const globalPreference = (ourUser?.notification_preference ?? 'daily') as NotificationPreference;
 
   const eventData = await getEventWithSlotsForDashboard(id);
   if (!eventData) notFound();
@@ -130,14 +142,21 @@ export default async function SignupsPage({ params }: PageProps) {
           <p className="text-muted font-body">
             {formatEventDateRange(eventData.start_date, eventData.end_date)}
           </p>
-          <div className="mt-3 max-w-xs">
-            <CoverageWithStillNeeded
+          <div className="mt-3 flex flex-col gap-3">
+            <EventNotificationOverride
+              eventId={id}
+              eventOverride={eventData.notification_override as NotificationPreference | null}
+              globalPreference={globalPreference}
+            />
+            <div className="max-w-xs">
+              <CoverageWithStillNeeded
               filled={coverage.filled}
               total={coverage.total}
               percentage={coverage.percentage}
               signupType={eventData.signup_type}
               slotsNeedingFill={slotsNeedingFill}
             />
+            </div>
           </div>
         </div>
         <SignupsActions event={eventData} rows={csvRows} isSimple={isSimple} />
