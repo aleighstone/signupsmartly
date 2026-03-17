@@ -39,6 +39,7 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 
 - Shows: "Signing up for [spot/item name]"; if the spot has instructions or item has description, display that text below the name
 - Fields: name, email, optional comment
+- **Reminder** (when event has a date): Checkbox "Send me a reminder email" (default on); dropdown: "1 day before" or "Morning of the event"
 - Submit creates signup and redirects to confirmation
 
 ### Signup Confirmation (`/signup/confirm?id=...`)
@@ -56,6 +57,14 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 ### Signup Cancel (`/signup/cancel?token=...`)
 
 - Volunteer cancels via secure link from confirmation email
+
+### Volunteer Reminders
+
+- **Goal:** Let volunteers receive reminder emails about their signup at a time they choose.
+- **Availability:** Reminders only available for events with a date (`start_date`). Simple list events with no date: hide reminder controls; no reminders sent.
+- **Signup modal:** Below Comment, show Reminder section when event has date — checkbox "Send me a reminder email" (checked by default); dropdown "1 day before" / "Morning of the event".
+- **Preferences page (`/signup/preferences?token=…`):** Linked from confirmation email, reminder email, and confirmation page footer. Uses `cancel_token`; 404 if not found or cancelled. Shows event/slot name and current preference; toggle on/off and change timing; success/error inline.
+- **Backend:** `signups.reminder_opt_in`, `signups.reminder_offset` ('1_day' | 'morning_of'), `signups.reminder_sent_at`. Timing: "1 day before" = 24h before slot/event; "morning of" = 8:00 AM org timezone. Single daily cron sends pending reminders; skip/tombstone if >24h overdue or signup cancelled.
 
 ---
 
@@ -183,8 +192,22 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 - **Simple list:** Table: Item, Name, Email, Comment, Signup Timestamp — no Time column
 - **Table behavior:** No truncation; text wraps in all columns
 - **Coverage (# still needed):** Make clickable; opens modal listing spots/items that still need filling
+- **Notification settings:** Inline dropdown "Notifications for this event:" — Use my default / Instantly / Daily digest / Weekly digest / Never; auto-saves on change
 - Export CSV (columns adapt by signup type)
 - *(Generate Volunteer Recap removed; may return later)*
+
+---
+
+## Organizer Signup Notifications
+
+- **Goal:** Email organizers when volunteers sign up, with frequency controls.
+- **Global preference** (`users.notification_preference`): 'instant' | 'daily' | 'weekly' | 'never' (default: 'daily'). Settings page `/dashboard/settings`, section "Signup Notifications"; API `PATCH /api/settings/notifications`.
+- **Per-event override** (`events.notification_override`): same enum or null (use global). Signups page; API `PATCH /api/events/[id]/notification-override`.
+- **Helper:** `effectiveNotificationPreference(userPreference, eventOverride)` — event override wins when non-null.
+- **Digest tracking:** `organizer_notification_digest` table (user_id, event_id, signup_id, digest_sent_at). One row per signup per organizer; instant = send immediately and set digest_sent_at; daily/weekly = leave null for digest job.
+- **On volunteer signup:** Insert digest row for org owner; if effective = 'instant', send instant email and mark sent; if 'never', skip. Organizer signing up for own event: insert row but don't send.
+- **Emails:** Instant subject `[Event Title] — [Volunteer Name] just signed up`; digest subject daily `SignupSmartly — Your signup summary for [Date]`, weekly `SignupSmartly — Your weekly signup summary`. Footer link to `/dashboard/settings`.
+- **Digest cron:** Same daily job as volunteer reminders. Daily pass: unsent rows from last 24h, exclude cancelled signups and events with override 'never'; send one email per organizer. Weekly pass (Mondays only): last 7 days. Tombstone old rows.
 
 ---
 
@@ -212,20 +235,17 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 
 - **Organizations** — name, timezone
 - **Users** — organizers (auth)
-  - New fields for NPS:
-    - `nps_dismissed_at` — last time the user dismissed the NPS banner (nullable).
-    - `nps_submitted_at` — time the user successfully submitted an NPS response (nullable).
-- **Events** — title, description, location, start_date (optional for simple), end_date (optional), signup_type ('scheduled' | 'simple'), published
-- **Slots** — role_name (item name for simple), role_description, capacity, start_time (optional; null for simple), end_time (optional; null for simple), instructions
-- **Signups** — name, email, comment, cancel_token, cancelled
+  - NPS: `nps_dismissed_at`, `nps_submitted_at`
+  - `notification_preference` — 'instant' | 'daily' | 'weekly' | 'never' (default: 'daily')
+- **Events** — title, description, location, start_date (optional), end_date (optional), signup_type ('scheduled' | 'simple'), published
+  - `notification_override` — 'instant' | 'daily' | 'weekly' | 'never' | null (use global)
+- **Slots** — role_name, role_description, capacity, start_time, end_time, instructions
+- **Signups** — name, email, comment, cancel_token, cancelled, reminder_opt_in, reminder_offset ('1_day' | 'morning_of'), reminder_sent_at
 - **Templates** — name, description, location, signup_type, organization_id
 - **Template_slots** — template_id, role_name, role_description, capacity, start_time, end_time, instructions
-- **Nps_responses** — individual NPS submissions
-  - `id` — uuid primary key
-  - `user_id` — references `users.id` (cascade on delete)
-  - `score` — integer 0–10
-  - `comment` — optional text
-  - `created_at` — timestamp, defaults to now()
+- **Nps_responses** — individual NPS submissions (user_id, score, comment, created_at)
+- **Organizer_notification_digest** — tracks organizer notification delivery
+  - `user_id` — organizer; `event_id`; `signup_id`; `created_at`; `digest_sent_at` (null = pending)
 
 ---
 
@@ -250,9 +270,10 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 
 ## Email
 
-- Signup confirmation: **scheduled** — Spot, Time, event, location; **simple list** — Item, event, location (no Time row)
-- Add to Calendar link, Cancel link
-- Time shows "All day" when slot has no start/end time (scheduled only)
+- **Volunteer confirmation:** Spot/Item, date, time (if any), event, location; Add to Calendar, Cancel link; Manage reminder preferences link
+- **Volunteer reminder:** Same layout; "Just a reminder — you're signed up!"; Add to Calendar, Cancel link; Manage reminder preferences link
+- **Organizer instant notification:** Subject `[Event Title] — [Volunteer Name] just signed up`; signup details; "View all signups" CTA; Change notification settings link
+- **Organizer digest:** Daily/weekly; grouped by event; "View all signups" per event; Change notification settings link
 
 ---
 

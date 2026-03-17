@@ -163,7 +163,7 @@ export async function getEventsForUser(userId: string) {
     .from('events')
     .select('*')
     .in('organization_id', orgIds)
-    .order('start_date', { ascending: false });
+    .order('created_at', { ascending: false });
 
   if (error) return [];
   return (data || []) as Event[];
