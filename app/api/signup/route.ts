@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { Event } from '@/types/database';
 import { createSignup, getSlot, getOrganizationOwner } from '@/lib/db';
 import { sendSignupConfirmation, sendOrganizerInstantNotification } from '@/lib/email';
+import { reportProductionError } from '@/lib/error-reporter';
 import { effectiveNotificationPreference } from '@/lib/notifications';
 import { serviceSupabase } from '@/lib/supabase-service';
 
@@ -140,6 +141,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ signupId: signup.id });
   } catch (err) {
     console.error('Signup error:', err);
+    await reportProductionError({ error: err, request, status: 500 });
     return NextResponse.json(
       {
         error:

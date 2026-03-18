@@ -21,6 +21,7 @@ interface SignupFormProps {
   onSubmit: (data: SignupFormData) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
+  error?: string | null;
 }
 
 export function SignupForm({
@@ -30,6 +31,7 @@ export function SignupForm({
   onSubmit,
   onCancel,
   isSubmitting = false,
+  error = null,
 }: SignupFormProps) {
   const {
     register,
@@ -51,6 +53,11 @@ export function SignupForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {error && (
+        <p className="rounded-xl bg-coral p-3 text-sm text-white font-body">
+          {error}
+        </p>
+      )}
       <div>
         <p className="text-sm text-muted font-body">
           Signing up for <strong className="text-charcoal">{slotRoleName}</strong>

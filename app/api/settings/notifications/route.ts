@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase-server';
+import { reportProductionError } from '@/lib/error-reporter';
 
 const schema = z.object({
   notification_preference: z.enum(['instant', 'daily', 'weekly', 'never']),
@@ -37,6 +38,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('Update notification preference error:', err);
+    await reportProductionError({ error: err, request, status: 500 });
     return NextResponse.json(
       {
         error:

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase-server';
 import { createOrganizerSignup, getSlot } from '@/lib/db';
 import { serviceSupabase } from '@/lib/supabase-service';
+import { reportProductionError } from '@/lib/error-reporter';
 
 const organizerSignupSchema = z.object({
   slotId: z.string().uuid(),
@@ -80,6 +81,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ signupId: signup.id });
   } catch (err) {
     console.error('Organizer signup error:', err);
+    await reportProductionError({ error: err, request, status: 500 }).catch(() => {});
     return NextResponse.json(
       {
         error:

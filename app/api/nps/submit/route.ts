@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase-server';
 import { getEventCountForUser } from '@/lib/db';
+import { reportProductionError } from '@/lib/error-reporter';
 import { sendNpsResponse } from '@/lib/email';
 
 const submitSchema = z.object({
@@ -75,6 +76,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('NPS submit error:', err);
+    await reportProductionError({ error: err, request, status: 500 });
     return NextResponse.json(
       {
         error:

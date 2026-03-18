@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
+import { reportProductionError } from '@/lib/error-reporter';
 
 export async function POST() {
   try {
@@ -24,6 +25,7 @@ export async function POST() {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('NPS dismiss error:', err);
+    await reportProductionError({ error: err, status: 500 });
     return NextResponse.json(
       {
         error:

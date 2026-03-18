@@ -11,6 +11,7 @@ interface SignupModalProps {
   showReminders: boolean;
   onSubmit: (data: SignupFormData) => Promise<void>;
   isSubmitting?: boolean;
+  error?: string | null;
 }
 
 export function SignupModal({
@@ -21,6 +22,7 @@ export function SignupModal({
   showReminders,
   onSubmit,
   isSubmitting = false,
+  error = null,
 }: SignupModalProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -61,6 +63,7 @@ export function SignupModal({
           onSubmit={onSubmit}
           onCancel={onClose}
           isSubmitting={isSubmitting}
+          error={error}
         />
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase-server';
+import { reportProductionError } from '@/lib/error-reporter';
 
 const templateSlotSchema = z.object({
   slot_name: z.string().min(1),
@@ -49,6 +50,7 @@ export async function GET(request: Request) {
     return NextResponse.json(templates || []);
   } catch (err) {
     console.error('Get templates error:', err);
+    await reportProductionError({ error: err, request, status: 500 });
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Failed to fetch templates' },
       { status: 500 }
@@ -108,6 +110,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ id: t.id, name });
   } catch (err) {
     console.error('Create template error:', err);
+    await reportProductionError({ error: err, request, status: 500 });
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Failed to create template' },
       { status: 500 }

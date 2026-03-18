@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase-server';
+import { reportProductionError } from '@/lib/error-reporter';
 
 const slotSchema = z.object({
   role_name: z.string().min(1),
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ id: eventRow.id });
   } catch (err: unknown) {
     console.error('Create event error:', err);
+    await reportProductionError({ error: err, request, status: 500 });
     const message =
       err && typeof err === 'object' && 'message' in err
         ? String((err as { message: unknown }).message)

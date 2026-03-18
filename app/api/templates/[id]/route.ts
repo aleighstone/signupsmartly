@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
+import { reportProductionError } from '@/lib/error-reporter';
 
 export async function GET(
   request: Request,
@@ -54,6 +55,7 @@ export async function GET(
     return NextResponse.json(template);
   } catch (err) {
     console.error('Get template error:', err);
+    await reportProductionError({ error: err, request, status: 500 });
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Failed to fetch template' },
       { status: 500 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSignupByCancelToken, cancelSignup } from '@/lib/db';
+import { reportProductionError } from '@/lib/error-reporter';
 
 const cancelSchema = z.object({
   cancelToken: z.string().uuid(),
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('Cancel error:', err);
+    await reportProductionError({ error: err, request, status: 500 });
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Cancel failed' },
       { status: 500 }

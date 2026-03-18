@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { getEventWithSlotsForDashboard, getEventCoverage, getOrganizationTimezone } from '@/lib/db';
@@ -46,7 +46,7 @@ export default async function SignupsPage({ params }: PageProps) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) notFound();
+  if (!user) redirect(`/login?next=${encodeURIComponent(`/dashboard/event/${id}/signups`)}`);
 
   const { data: ourUserRow } = await supabase
     .from('users')

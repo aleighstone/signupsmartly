@@ -16,18 +16,24 @@ export function EventPageClient({ event, timezone }: EventPageClientProps) {
   const router = useRouter();
   const [modalSlot, setModalSlot] = useState<SlotWithSignups | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignUp = (slot: SlotWithSignups) => {
     setModalSlot(slot);
+    setError(null);
   };
 
   const handleCloseModal = () => {
-    if (!isSubmitting) setModalSlot(null);
+    if (!isSubmitting) {
+      setModalSlot(null);
+      setError(null);
+    }
   };
 
   const handleSubmit = async (data: SignupFormData) => {
     if (!modalSlot) return;
     setIsSubmitting(true);
+    setError(null);
     try {
       const res = await fetch('/api/signup', {
         method: 'POST',
@@ -45,7 +51,7 @@ export function EventPageClient({ event, timezone }: EventPageClientProps) {
       if (!res.ok) throw new Error(json.error || 'Signup failed');
       router.push(`/signup/confirm?id=${json.signupId}`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Something went wrong');
+      setError('Something went wrong, please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -67,6 +73,7 @@ export function EventPageClient({ event, timezone }: EventPageClientProps) {
         showReminders={event.signup_type === 'scheduled' || !!event.start_date}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
+        error={error}
       />
     </>
   );

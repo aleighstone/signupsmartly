@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { serviceSupabase } from '@/lib/supabase-service';
+import { reportProductionError } from '@/lib/error-reporter';
 
 const schema = z.object({
   token: z.string().min(1),
@@ -54,6 +55,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('Update reminder preferences error:', err);
+    await reportProductionError({ error: err, request, status: 500 }).catch(() => {});
     return NextResponse.json(
       {
         error:

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { serviceSupabase as supabase } from '@/lib/supabase-service';
 import { sendSignupReminder, sendOrganizerDigest } from '@/lib/email';
+import { reportProductionError } from '@/lib/error-reporter';
 import { effectiveNotificationPreference } from '@/lib/notifications';
 import type { Event, Slot, Signup } from '@/types/database';
 
@@ -122,6 +123,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ processed, digestProcessed });
   } catch (err) {
     console.error('Reminder processing error:', err);
+    await reportProductionError({ error: err, request, status: 500, extra: { handler: 'reminders/process' } }).catch(() => {});
     return NextResponse.json(
       {
         error:

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase-server';
+import { reportProductionError } from '@/lib/error-reporter';
 const schema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
@@ -64,6 +65,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('Sync user error:', err);
+    await reportProductionError({ error: err, request, status: 500 });
     return NextResponse.json({ error: 'Sync failed' }, { status: 500 });
   }
 }
