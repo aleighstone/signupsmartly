@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase-server';
 import { createOrganizerSignup, getSlot } from '@/lib/db';
-import { supabase } from '@/lib/supabase';
+import { serviceSupabase } from '@/lib/supabase-service';
 
 const organizerSignupSchema = z.object({
   slotId: z.string().uuid(),
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
     }
 
-    const { data: eventData } = await supabase
+    const { data: eventData } = await serviceSupabase
       .from('events')
       .select('organization_id')
       .eq('id', slot.event_id)
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    const { data: membership } = await supabase
+    const { data: membership } = await serviceSupabase
       .from('organization_members')
       .select('id')
       .eq('organization_id', event.organization_id)
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Not authorized for this event' }, { status: 403 });
     }
 
-    const { count } = await supabase
+    const { count } = await serviceSupabase
       .from('signups')
       .select('*', { count: 'exact', head: true })
       .eq('slot_id', slotId)

@@ -4,7 +4,7 @@ import type { Event } from '@/types/database';
 import { createSignup, getSlot, getOrganizationOwner } from '@/lib/db';
 import { sendSignupConfirmation, sendOrganizerInstantNotification } from '@/lib/email';
 import { effectiveNotificationPreference } from '@/lib/notifications';
-import { supabase } from '@/lib/supabase';
+import { serviceSupabase } from '@/lib/supabase-service';
 
 const signupSchema = z.object({
   slotId: z.string().uuid(),
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
     }
 
-    const { data: eventRow } = await supabase
+    const { data: eventRow } = await serviceSupabase
       .from('events')
       .select('*')
       .eq('id', slot.event_id)
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    const { count } = await supabase
+    const { count } = await serviceSupabase
       .from('signups')
       .select('*', { count: 'exact', head: true })
       .eq('slot_id', slotId)
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     try {
       const ownerId = await getOrganizationOwner(event.organization_id);
       if (ownerId) {
-        const { data: ownerRow } = await supabase
+        const { data: ownerRow } = await serviceSupabase
           .from('users')
           .select('id, email, notification_preference')
           .eq('id', ownerId)
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
           const eventOverride = event.notification_override as 'instant' | 'daily' | 'weekly' | 'never' | null;
           const effective = effectiveNotificationPreference(userPref, eventOverride);
 
-          const db = supabase as unknown as {
+          const db = serviceSupabase as unknown as {
             from: (t: string) => {
               insert: (v: object) => { select: (s: string) => { single: () => Promise<{ data: { id: string } | null }> } };
               update: (v: object) => { eq: (c: string, v: string) => Promise<unknown> };
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
                 signup,
                 organizerEmail: owner.email,
               });
-              await db
+            await db
                 .from('organizer_notification_digest')
                 .update({ digest_sent_at: new Date().toISOString() })
                 .eq('id', digestId);

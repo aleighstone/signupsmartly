@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { supabase } from '@/lib/supabase';
+import { serviceSupabase } from '@/lib/supabase-service';
 
 const schema = z.object({
   token: z.string().min(1),
@@ -21,7 +21,7 @@ export async function PATCH(request: Request) {
 
     const { token, reminder_opt_in, reminder_offset } = parsed.data;
 
-    const { data, error } = await supabase
+    const { data, error } = await serviceSupabase
       .from('signups')
       .select('*')
       .eq('cancel_token', token)
@@ -40,7 +40,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await serviceSupabase
       .from('signups')
       // @ts-expect-error Supabase Update type inference
       .update({

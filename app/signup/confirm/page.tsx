@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { serviceSupabase } from '@/lib/supabase-service';
 import { generateAddToCalendarUrl } from '@/lib/calendar';
 import type { Event, Slot } from '@/types/database';
 import { formatTimeRange } from '@/lib/calendar';
@@ -16,7 +16,7 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
   const { id } = await searchParams;
   if (!id) notFound();
 
-  const { data: signup, error } = await supabase
+  const { data: signup, error } = await serviceSupabase
     .from('signups')
     .select(`
       *,

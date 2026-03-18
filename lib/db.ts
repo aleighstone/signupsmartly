@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { serviceSupabase as supabase } from './supabase-service';
 import type {
   Event,
   Slot,
@@ -31,11 +31,16 @@ export async function getEventWithSlots(
   if (eventError || !event) return null;
 
   const eventRow = event as Event;
+  // Public event pages only need signup names (for "filled" UI), so avoid selecting
+  // sensitive fields like `email`, `comment`, and `cancel_token`.
+  const signupsSelect = publishedOnly
+    ? 'signups (id, name, cancelled)'
+    : 'signups (*)';
   const { data: slots, error: slotsError } = await supabase
     .from('slots')
     .select(`
       *,
-      signups (*)
+      ${signupsSelect}
     `)
     .eq('event_id', eventId)
     .order(eventRow.signup_type === 'simple' ? 'role_name' : 'start_time', {

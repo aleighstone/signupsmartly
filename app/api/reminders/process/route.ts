@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { serviceSupabase as supabase } from '@/lib/supabase-service';
 import { sendSignupReminder, sendOrganizerDigest } from '@/lib/email';
 import { effectiveNotificationPreference } from '@/lib/notifications';
 import type { Event, Slot, Signup } from '@/types/database';
