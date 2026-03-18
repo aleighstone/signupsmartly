@@ -134,7 +134,7 @@ export default async function DashboardPage() {
                     <p className="text-sm text-muted font-body">
                       {formatEventDateRange(event.start_date, event.end_date)}
                     </p>
-                    <div className="mt-3 max-w-xs">
+                    <div className="mt-3 max-w-sm">
                       <CoverageMeter
                         filled={coverage.filled}
                         total={coverage.total}
