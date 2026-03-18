@@ -18,6 +18,7 @@
 
 ## Learned Workspace Facts
 
+- Always work in the main repo at `/Users/allisonstone/Documents/signupsmartly`. Do not use or create worktrees; all edits must go to main.
 - Project uses a Vercel Hobby plan, so scheduled functions/cron jobs can only run once per day; reminder and background processing requirements must respect this limit.
 - Project uses a free Resend plan; when writing new email-related requirements, keep email volume modest and avoid designs that assume high-frequency or bulk email sending.*** End Patch```}"/>
 

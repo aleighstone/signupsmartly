@@ -50,7 +50,7 @@ export function EventPageClient({ event, timezone }: EventPageClientProps) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Signup failed');
       router.push(`/signup/confirm?id=${json.signupId}`);
-    } catch (err) {
+    } catch {
       setError('Something went wrong, please try again.');
     } finally {
       setIsSubmitting(false);
