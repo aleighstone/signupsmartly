@@ -27,6 +27,7 @@ export async function ensureUserAndOrg(authUser: User): Promise<{
     .maybeSingle();
 
   if (!existingUser) {
+    // @ts-expect-error Supabase Insert type inference
     const { error: userError } = await serviceSupabase.from('users').insert({
       id: userId,
       email,
@@ -48,13 +49,15 @@ export async function ensureUserAndOrg(authUser: User): Promise<{
     .limit(1)
     .maybeSingle();
 
-  if (membership?.organization_id) {
-    return { userId, orgId: membership.organization_id };
+  const membershipRow = membership as { organization_id: string } | null;
+  if (membershipRow?.organization_id) {
+    return { userId, orgId: membershipRow.organization_id };
   }
 
   // Create org and membership
   const { data: orgData, error: orgError } = await serviceSupabase
     .from('organizations')
+    // @ts-expect-error Supabase Insert type inference
     .insert({
       name: `${name}'s Organization`,
       timezone: 'America/New_York',
@@ -67,10 +70,12 @@ export async function ensureUserAndOrg(authUser: User): Promise<{
     return { userId, orgId: null };
   }
 
+  const org = orgData as { id: string };
   const { error: memberError } = await serviceSupabase
     .from('organization_members')
+    // @ts-expect-error Supabase Insert type inference
     .insert({
-      organization_id: orgData.id,
+      organization_id: org.id,
       user_id: userId,
       role: 'owner',
     });
@@ -80,5 +85,5 @@ export async function ensureUserAndOrg(authUser: User): Promise<{
     return { userId, orgId: null };
   }
 
-  return { userId, orgId: orgData.id };
+  return { userId, orgId: org.id };
 }
