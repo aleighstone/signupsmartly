@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
+import { ensureUserAndOrg } from '@/lib/ensure-user-org';
 import { TrackDashboardView } from '@/app/providers/PostHogTracker';
 import { getEventsForUser, getEventWithSlotsForDashboard, getEventCoverage, hasEventWithVolunteerSignup } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
 import { CoverageMeter } from '@/components/CoverageMeter';
 import { NpsBanner } from '@/components/NpsBanner';
 import { formatEventDateRange } from '@/lib/calendar';
+import { serviceSupabase } from '@/lib/supabase-service';
 
 function shouldShowNps(
   npsSubmittedAt: string | null,
@@ -30,48 +32,20 @@ export default async function DashboardPage() {
   let ourUser: { id: string; nps_submitted_at: string | null; nps_dismissed_at: string | null } | null = null;
 
   if (authUser) {
-    const { data: ourUserData } = await supabase
+    const { userId: ensuredUserId } = await ensureUserAndOrg(authUser);
+    userId = ensuredUserId;
+
+    const { data: ourUserData } = await serviceSupabase
       .from('users')
       .select('id, nps_submitted_at, nps_dismissed_at')
-      .eq('email', authUser.email!)
-      .single();
+      .eq('id', userId)
+      .maybeSingle();
 
     ourUser = ourUserData as { id: string; nps_submitted_at: string | null; nps_dismissed_at: string | null } | null;
     if (!ourUser) {
-      // @ts-expect-error Supabase SSR createServerClient return type incompatibility with Database
-      await supabase.from('users').insert({
-        id: authUser.id,
-        email: authUser.email!,
-        name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Organizer',
-      });
-      ourUser = { id: authUser.id, nps_submitted_at: null, nps_dismissed_at: null };
+      ourUser = { id: userId, nps_submitted_at: null, nps_dismissed_at: null };
     }
 
-    const { data: members } = await supabase
-      .from('organization_members')
-      .select('id')
-      .eq('user_id', ourUser.id);
-
-    if (!members?.length) {
-      const name = authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Organizer';
-      const { data: orgData } = await supabase
-        .from('organizations')
-        // @ts-expect-error Supabase SSR createServerClient return type incompatibility with Database
-        .insert({ name: `${name}'s Organization`, timezone: 'America/New_York' })
-        .select('id')
-        .single();
-      const org = orgData as { id: string } | null;
-      if (org) {
-        // @ts-expect-error Supabase SSR createServerClient return type incompatibility with Database
-        await supabase.from('organization_members').insert({
-          organization_id: org.id,
-          user_id: ourUser.id,
-          role: 'owner',
-        });
-      }
-    }
-
-    userId = ourUser?.id ?? authUser.id;
     events = await getEventsForUser(userId);
   }
 
