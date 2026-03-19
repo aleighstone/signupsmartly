@@ -16,6 +16,10 @@
 
 - **Always share the deploy commands** after making changes so the user can push to production.
 
+## Auth / signup changes
+
+- **When modifying any code related to new user creation or sign-in** (e.g. signup flow, login, auth callback, sync-user, ensure-user-org), remind the user to run automated smoke tests with Claude QA before deploying.
+
 ## Learned Workspace Facts
 
 - Always work in the main repo at `/Users/allisonstone/Documents/signupsmartly`. Do not use or create worktrees; all edits must go to main.

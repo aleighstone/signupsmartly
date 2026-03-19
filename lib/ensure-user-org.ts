@@ -15,6 +15,7 @@ export async function ensureUserAndOrg(authUser: User): Promise<{
   const userId = authUser.id;
   const email = authUser.email!;
   const name =
+    authUser.user_metadata?.full_name ||
     authUser.user_metadata?.name ||
     authUser.email?.split('@')[0] ||
     'Organizer';

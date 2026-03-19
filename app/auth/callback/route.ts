@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
+import { ensureUserAndOrg } from '@/lib/ensure-user-org';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -20,8 +21,9 @@ export async function GET(request: Request) {
       return NextResponse.redirect(redirectUrl);
     }
   } else if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error && data.user) {
+      await ensureUserAndOrg(data.user);
       return NextResponse.redirect(redirectUrl);
     }
   }
