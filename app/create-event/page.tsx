@@ -11,24 +11,53 @@ export default async function CreateEventPage() {
     redirect('/login?next=/create-event');
   }
 
-  const { data: ourUserData } = await supabase
+  let ourUser = (await supabase
     .from('users')
     .select('id')
     .eq('email', user.email!)
-    .single();
+    .single()).data as { id: string } | null;
 
-  const ourUser = ourUserData as { id: string } | null;
-  const userId = ourUser?.id ?? user.id;
+  if (!ourUser) {
+    // @ts-expect-error Supabase SSR createServerClient return type incompatibility with Database
+    await supabase.from('users').insert({
+      id: user.id,
+      email: user.email!,
+      name: user.user_metadata?.name || user.email?.split('@')[0] || 'Organizer',
+    });
+    ourUser = { id: user.id };
+  }
 
-  const { data: membershipData } = await supabase
+  const userId = ourUser.id;
+
+  let membership = (await supabase
     .from('organization_members')
     .select('organization_id')
     .eq('user_id', userId)
     .in('role', ['owner', 'organizer'])
     .limit(1)
-    .single();
+    .single()).data as { organization_id: string } | null;
 
-  const membership = membershipData as { organization_id: string } | null;
+  if (!membership?.organization_id) {
+    const name = user.user_metadata?.name || user.email?.split('@')[0] || 'Organizer';
+    const { data: orgData } = await supabase
+      .from('organizations')
+      // @ts-expect-error Supabase SSR createServerClient return type incompatibility with Database
+      .insert({ name: `${name}'s Organization`, timezone: 'America/New_York' })
+      .select('id')
+      .single();
+
+    const org = orgData as { id: string } | null;
+    if (org) {
+      // @ts-expect-error Supabase SSR createServerClient return type incompatibility with Database
+      await supabase.from('organization_members').insert({
+        organization_id: org.id,
+        user_id: userId,
+        role: 'owner',
+      });
+      membership = { organization_id: org.id };
+    }
+  }
+
   const orgId = membership?.organization_id;
   if (!orgId) {
     return (
