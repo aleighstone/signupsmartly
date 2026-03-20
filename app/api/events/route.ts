@@ -80,6 +80,22 @@ export async function POST(request: Request) {
 
     if (slotsError) throw slotsError;
 
+    // Send event created confirmation email (non-blocking)
+    try {
+      const { sendEventCreatedConfirmation } = await import('@/lib/email');
+      await sendEventCreatedConfirmation({
+        organizerEmail: user.email!,
+        eventId: eventRow.id,
+        eventTitle: parsed.data.title,
+        startDate: parsed.data.start_date ?? null,
+        endDate: parsed.data.end_date ?? null,
+        signupType: parsed.data.signup_type ?? 'scheduled',
+      });
+    } catch (emailErr) {
+      // Log but don't fail the request — event was created successfully
+      console.error('Event created email failed (non-blocking):', emailErr);
+    }
+
     return NextResponse.json({ id: eventRow.id });
   } catch (err: unknown) {
     console.error('Create event error:', err);

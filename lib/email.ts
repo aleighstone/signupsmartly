@@ -546,3 +546,99 @@ export async function sendFeedbackEmail(params: {
     throw new Error(`Failed to send feedback email: ${error.message}`);
   }
 }
+
+// --- Event created confirmation email ---
+
+export async function sendEventCreatedConfirmation(params: {
+  organizerEmail: string;
+  eventId: string;
+  eventTitle: string;
+  startDate: string | null;
+  endDate: string | null;
+  signupType: 'scheduled' | 'simple';
+}): Promise<void> {
+  const {
+    organizerEmail,
+    eventId,
+    eventTitle,
+    startDate,
+    endDate,
+    signupType,
+  } = params;
+
+  const logoUrl = `${APP_URL}/smartly-icon.png`;
+  const signupUrl = `${APP_URL}/event/${eventId}`;
+  const signupsUrl = `${APP_URL}/dashboard/event/${eventId}/signups`;
+  const settingsUrl = `${APP_URL}/dashboard/settings`;
+
+  const safeFormatDate = (d: string | null): string => {
+    if (!d) return 'TBD';
+    const dateStr = d.includes('T') ? d : `${d}T00:00:00`;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'TBD';
+    return format(date, 'EEEE, MMMM d, yyyy');
+  };
+
+  const eventRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Event:</strong> ${eventTitle}</p>`;
+
+  let dateRow = '';
+  if (startDate) {
+    const startFormatted = safeFormatDate(startDate);
+    const endFormatted = endDate && endDate !== startDate ? safeFormatDate(endDate) : null;
+    const dateValue = endFormatted ? `${startFormatted} – ${endFormatted}` : startFormatted;
+    dateRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Date:</strong> ${dateValue}</p>`;
+  }
+
+  const typeLabel =
+    signupType === 'scheduled' ? 'Scheduled sign-up' : 'Simple sign-up list';
+  const typeRow = `<p style="margin: 0; padding: 12px 0;"><strong>Type:</strong> ${typeLabel}</p>`;
+
+  const detailRows = [eventRow, dateRow, typeRow].filter(Boolean).join('');
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your signup is ready</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #27272A; margin: 0; padding: 0; background-color: #FAF9F6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
+      <div style="background-color: #27272A; padding: 20px 24px; display: flex; align-items: center;">
+        <img src="${logoUrl}" alt="SignupSmartly" width="28" height="28" style="display: block; margin-right: 16px;">
+        <span style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 1.25rem; color: #FFFFFF;">SignupSmartly</span>
+      </div>
+      <div style="padding: 24px;">
+        <h1 style="font-size: 24px; font-weight: 600; color: #27272A; margin: 0 0 20px;">Your signup is ready to share!</h1>
+        <div style="background-color: #F0F9F0; border-radius: 8px; padding: 0 20px; margin-bottom: 24px;">
+          ${detailRows}
+        </div>
+        <p style="margin: 0 0 8px; color: #27272A;">Here is the link to your public signup page:</p>
+        <p style="margin: 0 0 24px; font-family: monospace; font-size: 14px; color: #15803D; word-break: break-all;">${signupUrl}</p>
+        <a href="${signupsUrl}" style="display: inline-block; background-color: #FFFFFF; color: #27272A; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; border: 2px solid #27272A;">View Signups</a>
+      </div>
+      <div style="padding: 16px 24px; border-top: 1px solid #E5F2E5; font-size: 14px; color: #71717A;">
+        Manage notification settings →
+        <a href="${settingsUrl}" style="color: #15803D; text-decoration: underline;">dashboard settings</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const subject = `SignupSmartly: Your signup "${eventTitle}" is ready`;
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: organizerEmail,
+    subject,
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send event created email: ${error.message}`);
+  }
+}
