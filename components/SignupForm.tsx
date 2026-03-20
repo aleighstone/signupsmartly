@@ -18,6 +18,7 @@ interface SignupFormProps {
   slotRoleName: string;
   slotDetails?: string | null;
   showReminders: boolean;
+  modalTitleId?: string;
   onSubmit: (data: SignupFormData) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -28,6 +29,7 @@ export function SignupForm({
   slotRoleName,
   slotDetails,
   showReminders,
+  modalTitleId,
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -58,10 +60,13 @@ export function SignupForm({
           {error}
         </p>
       )}
-      <div>
-        <p className="text-sm text-muted font-body">
-          Signing up for <strong className="text-charcoal">{slotRoleName}</strong>
-        </p>
+      <div className="mb-4">
+        <h2
+          id={modalTitleId}
+          className="text-lg font-semibold text-charcoal font-heading"
+        >
+          Sign up for {slotRoleName}
+        </h2>
         {slotDetails && (
           <p className="mt-1 text-sm text-muted font-body">{slotDetails}</p>
         )}

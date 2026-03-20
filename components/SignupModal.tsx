@@ -53,10 +53,8 @@ export function SignupModal({
         aria-hidden="true"
       />
       <div className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md">
-        <h2 id="signup-modal-title" className="text-lg font-semibold text-charcoal mb-4 font-heading">
-          Sign up to volunteer
-        </h2>
         <SignupForm
+          modalTitleId="signup-modal-title"
           slotRoleName={slotRoleName}
           slotDetails={slotDetails}
           showReminders={showReminders}
