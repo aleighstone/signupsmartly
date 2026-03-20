@@ -481,3 +481,68 @@ export async function sendOrganizerDigest(params: {
     throw new Error(`Failed to send organizer digest: ${error.message}`);
   }
 }
+
+// --- Feedback form email ---
+
+export async function sendFeedbackEmail(params: {
+  name?: string | null;
+  email: string;
+  reason: string;
+  message: string;
+}) {
+  const { name, email, reason, message } = params;
+  const APP_URL =
+    process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const logoUrl = `${APP_URL}/smartly-icon.png`;
+  const dateStr = format(new Date(), 'MM/dd/yy');
+
+  const nameRow = name
+    ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Name:</strong> ${name}</p>`
+    : '';
+  const rows = [
+    nameRow,
+    `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>`,
+    `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Reason:</strong> ${reason}</p>`,
+    `<p style="margin: 0; padding: 12px 0;"><strong>Message:</strong></p><p style="margin: 8px 0 0; padding: 0; white-space: pre-wrap;">${message.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`,
+  ].filter(Boolean).join('');
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #27272A; margin: 0; padding: 0; background-color: #FAF9F6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
+      <div style="background-color: #27272A; padding: 20px 24px; display: flex; align-items: center;">
+        <img src="${logoUrl}" alt="SignupSmartly" width="28" height="28" style="display: block; margin-right: 16px;">
+        <span style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 1.25rem; color: #FFFFFF;">SignupSmartly</span>
+      </div>
+      <div style="padding: 24px;">
+        <h1 style="font-size: 24px; font-weight: 600; color: #27272A; margin: 0 0 20px;">New Feedback Submission</h1>
+        <div style="background-color: #F0F9F0; border-radius: 8px; padding: 0 20px; margin-bottom: 24px;">
+          ${rows}
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const subject = `SignupSmartly: NEW ${reason} ${dateStr}`;
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: ADMIN_EMAIL,
+    replyTo: email,
+    subject,
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send feedback email: ${error.message}`);
+  }
+}
