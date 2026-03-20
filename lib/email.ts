@@ -569,7 +569,6 @@ export async function sendEventCreatedConfirmation(params: {
   const logoUrl = `${APP_URL}/smartly-icon.png`;
   const signupUrl = `${APP_URL}/event/${eventId}`;
   const signupsUrl = `${APP_URL}/dashboard/event/${eventId}/signups`;
-  const settingsUrl = `${APP_URL}/dashboard/settings`;
 
   const safeFormatDate = (d: string | null): string => {
     if (!d) return 'TBD';
@@ -621,8 +620,7 @@ export async function sendEventCreatedConfirmation(params: {
         <a href="${signupsUrl}" style="display: inline-block; background-color: #FFFFFF; color: #27272A; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; border: 2px solid #27272A;">View Signups</a>
       </div>
       <div style="padding: 16px 24px; border-top: 1px solid #E5F2E5; font-size: 14px; color: #71717A;">
-        Manage notification settings →
-        <a href="${settingsUrl}" style="color: #15803D; text-decoration: underline;">dashboard settings</a>
+        <a href="${signupsUrl}" style="color: #15803D; text-decoration: underline;">Manage signup notifications</a>
       </div>
     </div>
   </div>
