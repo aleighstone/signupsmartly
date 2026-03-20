@@ -125,7 +125,7 @@ export default async function SignupsPage({ params }: PageProps) {
         totalSignups={coverage.filled}
         coveragePct={coverage.percentage}
       />
-      <div className="mb-6">
+      <div data-no-print className="mb-6">
         <Link
           href="/dashboard"
           className="text-sm text-muted hover:text-charcoal transition-colors"
@@ -152,7 +152,7 @@ export default async function SignupsPage({ params }: PageProps) {
             />
           </div>
         </div>
-        <SignupsActions event={eventData} rows={csvRows} isSimple={isSimple} />
+        <SignupsActions event={eventData} rows={csvRows} isSimple={isSimple} eventId={id} />
       </div>
 
       <SignupsTable
@@ -161,7 +161,7 @@ export default async function SignupsPage({ params }: PageProps) {
         isSimple={isSimple}
       />
 
-      <div className="mt-6 max-w-sm">
+      <div data-no-print className="mt-6 max-w-sm">
         <EventNotificationOverride
           eventId={id}
           eventOverride={eventData.notification_override as NotificationPreference | null}
