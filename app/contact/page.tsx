@@ -46,15 +46,17 @@ export default function ContactPage() {
   if (success) {
     return (
       <AppLayout>
-        <h1 className="text-2xl font-semibold text-charcoal font-heading">
-          Your feedback has been sent 🎉
-        </h1>
-        <Link
-          href="/dashboard"
-          className="mt-6 inline-block btn-primary"
-        >
-          Go to My Dashboard
-        </Link>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+          <h1 className="text-2xl font-semibold text-charcoal font-heading">
+            Your feedback has been sent 🎉
+          </h1>
+          <Link
+            href="/dashboard"
+            className="mt-10 inline-block btn-primary"
+          >
+            Go to My Dashboard
+          </Link>
+        </div>
       </AppLayout>
     );
   }

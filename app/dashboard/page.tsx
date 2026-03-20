@@ -67,7 +67,9 @@ export default async function DashboardPage() {
       <h1 className="text-2xl font-semibold text-charcoal font-heading">Your Signups</h1>
       {authUser && events.length > 0 && (
         <p className="mt-2 text-sm text-muted font-body">
-          View your signup organizer page by clicking on &quot;View My Signups&quot; and click on &quot;Signup Page&quot; to view your public signup page. Copy the Signup Page URL to share with your potential volunteers to collect signups.
+          View your signup organizer page by clicking on &quot;View My Signups&quot; and click on &quot;Signup Page&quot; to view your public signup page.
+          <br />
+          Copy the Signup Page URL to share with your potential volunteers to collect signups.
         </p>
       )}
 
