@@ -1,5 +1,9 @@
 # SignupSmartly – Agent Notes
 
+## Clarifying questions
+
+- **When the user says something contradictory or confusing**, ask a clarifying question before making changes. Do not assume intent — e.g. if they mix up terms like "privacy" vs "terms" or give conflicting instructions, pause and confirm what they mean before proceeding.
+
 ## Front-end standards
 
 - Act as a **professional front-end engineer** on all UI work.
