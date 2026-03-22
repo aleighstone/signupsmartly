@@ -18,6 +18,8 @@ const patchEventSchema = z.object({
       capacity: z.number().min(1),
       start_time: z.string().nullable().optional(),
       end_time: z.string().nullable().optional(),
+      instructions: z.string().nullable().optional(),
+      role_description: z.string().nullable().optional(),
     })
   ),
   deleted_slot_ids: z
@@ -178,6 +180,8 @@ export async function PATCH(
             capacity: slot.capacity,
             start_time: slot.start_time ?? null,
             end_time: slot.end_time ?? null,
+            instructions: slot.instructions ?? null,
+            role_description: slot.role_description ?? null,
           })
           .eq('id', slot.id)
           .eq('event_id', id);
@@ -191,6 +195,8 @@ export async function PATCH(
           capacity: slot.capacity,
           start_time: slot.start_time ?? null,
           end_time: slot.end_time ?? null,
+          instructions: slot.instructions ?? null,
+          role_description: slot.role_description ?? null,
         });
       }
     }

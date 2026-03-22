@@ -23,12 +23,14 @@ const scheduledSlotSchema = z.object({
   start_time: z.string().optional(),
   end_time: z.string().optional(),
   capacity: z.number().min(1),
+  instructions: z.string().optional(),
 });
 
 const simpleSlotSchema = z.object({
   id: z.string().uuid().optional(),
   role_name: z.string().min(1),
   capacity: z.number().min(1),
+  role_description: z.string().optional(),
 });
 
 const scheduledFormSchema = z.object({
@@ -93,6 +95,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
         start_time: s.start_time ? s.start_time.slice(11, 16) : '',
         end_time: s.end_time ? s.end_time.slice(11, 16) : '',
         capacity: s.capacity,
+        instructions: s.instructions || '',
       })),
     },
   });
@@ -108,6 +111,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
         id: s.id,
         role_name: s.role_name,
         capacity: s.capacity,
+        role_description: s.role_description || '',
       })),
     },
   });
@@ -136,7 +140,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
     if (simple) {
       simpleForm.setValue('slots', [
         ...simpleSlots,
-        { role_name: '', capacity: 1 },
+        { role_name: '', capacity: 1, role_description: '' },
       ]);
     } else {
       const last = scheduledSlots[scheduledSlots.length - 1];
@@ -149,6 +153,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
           start_time: '',
           end_time: '',
           capacity: 1,
+          instructions: '',
         },
       ]);
     }
@@ -202,6 +207,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
           id: s.id,
           role_name: s.role_name,
           capacity: s.capacity,
+          role_description: s.role_description?.trim() || null,
           start_time: null as string | null,
           end_time: null as string | null,
         }));
@@ -235,6 +241,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
           id: s.id,
           role_name: s.role_name,
           capacity: s.capacity,
+          instructions: s.instructions?.trim() || null,
           start_time:
             date && startTimeStr ? toLiteralIso(date, startTimeStr) : null,
           end_time: date && endTimeStr ? toLiteralIso(date, endTimeStr) : null,
@@ -517,7 +524,7 @@ function SlotsSectionSimple({
   getSignupCount,
   hasCapacityError,
 }: {
-  slots: { id?: string; role_name: string; capacity: number }[];
+  slots: { id?: string; role_name: string; capacity: number; role_description?: string }[];
   form: { register: (n: string, opts?: { valueAsNumber?: boolean }) => object; setValue?: (n: string, v: unknown) => void; formState: { errors: Record<string, unknown> } };
   slotLabel: string;
   slotsLabel: string;
@@ -578,6 +585,17 @@ function SlotsSectionSimple({
                   </p>
                 )}
               </div>
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                  Instructions <span className="text-muted font-normal">(optional)</span>
+                </label>
+                <textarea
+                  {...form.register(`slots.${index}.role_description`)}
+                  rows={2}
+                  className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 placeholder:text-muted/70"
+                  placeholder="Any notes for volunteers"
+                />
+              </div>
             </div>
           );
         })}
@@ -599,7 +617,7 @@ function SlotsSectionScheduled({
   getSignupCount,
   hasCapacityError,
 }: {
-  slots: { id?: string; spot_date?: string; role_name: string; start_time?: string; end_time?: string; capacity: number }[];
+  slots: { id?: string; spot_date?: string; role_name: string; start_time?: string; end_time?: string; capacity: number; instructions?: string }[];
   form: { register: (n: string, opts?: { valueAsNumber?: boolean }) => object; formState: { errors: Record<string, unknown> } };
   slotLabel: string;
   slotsLabel: string;
@@ -691,6 +709,17 @@ function SlotsSectionScheduled({
                   </p>
                 )}
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                Instructions <span className="text-muted font-normal">(optional)</span>
+              </label>
+              <textarea
+                {...form.register(`slots.${index}.instructions`)}
+                rows={2}
+                className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 placeholder:text-muted/70"
+                placeholder="Any notes for volunteers"
+              />
             </div>
           </div>
         ))}
