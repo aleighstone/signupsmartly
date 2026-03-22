@@ -19,6 +19,15 @@
 ## Deployment
 
 - **Always share the deploy commands** after making changes so the user can push to production.
+- **Setup:** GitHub + Vercel. Pushing to `main` triggers auto-deploy. Remote is `origin`.
+- **Commands to give after changes** (with a suggested commit message tailored to the work):
+
+  ```
+  npm run build
+  git add .
+  git commit -m "Your suggested message here"
+  git push origin main
+  ```
 
 ## Auth / signup changes
 

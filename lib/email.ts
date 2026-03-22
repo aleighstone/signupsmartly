@@ -583,8 +583,15 @@ export async function sendEventCreatedConfirmation(params: {
   let dateRow = '';
   if (startDate) {
     const startFormatted = safeFormatDate(startDate);
-    const endFormatted = endDate && endDate !== startDate ? safeFormatDate(endDate) : null;
-    const dateValue = endFormatted ? `${startFormatted} – ${endFormatted}` : startFormatted;
+    let dateValue = startFormatted;
+    if (endDate) {
+      const endFormatted = safeFormatDate(endDate);
+      const startD = new Date(startDate.includes('T') ? startDate : `${startDate}T00:00:00`);
+      const endD = new Date(endDate.includes('T') ? endDate : `${endDate}T00:00:00`);
+      if (startD.toDateString() !== endD.toDateString()) {
+        dateValue = `${startFormatted} – ${endFormatted}`;
+      }
+    }
     dateRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Date:</strong> ${dateValue}</p>`;
   }
 

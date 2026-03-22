@@ -1,6 +1,9 @@
 import { type User } from '@supabase/supabase-js';
 import { serviceSupabase } from '@/lib/supabase-service';
 
+const LOG = '[ensureUserAndOrg]';
+const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+
 /**
  * Ensures the app users row and an organization exist for an authenticated user.
  * Uses service role to bypass RLS, which can fail for newly confirmed users
@@ -20,12 +23,27 @@ export async function ensureUserAndOrg(authUser: User): Promise<{
     authUser.email?.split('@')[0] ||
     'Organizer';
 
+  console.info(LOG, 'start', {
+    userId,
+    email,
+    hasServiceKey,
+  });
+
   // Ensure users row exists (service role bypasses RLS)
-  const { data: existingUser } = await serviceSupabase
+  const { data: existingUser, error: selectUserError } = await serviceSupabase
     .from('users')
     .select('id')
     .eq('id', userId)
     .maybeSingle();
+
+  if (selectUserError) {
+    console.error(LOG, 'users select failed', {
+      code: selectUserError.code,
+      message: selectUserError.message,
+      details: selectUserError.details,
+    });
+    return { userId, orgId: null };
+  }
 
   if (!existingUser) {
     // @ts-expect-error Supabase Insert type inference
@@ -36,13 +54,20 @@ export async function ensureUserAndOrg(authUser: User): Promise<{
     });
     if (userError && userError.code !== '23505') {
       // 23505 = unique violation, user may exist from sync-user race
-      console.error('ensureUserAndOrg: users insert failed', userError);
+      console.error(LOG, 'users insert failed', {
+        code: userError.code,
+        message: userError.message,
+        details: userError.details,
+      });
       return { userId, orgId: null };
+    }
+    if (userError?.code === '23505') {
+      console.info(LOG, 'users insert skipped (unique violation, continuing)');
     }
   }
 
   // Check for existing org membership
-  const { data: membership } = await serviceSupabase
+  const { data: membership, error: membershipError } = await serviceSupabase
     .from('organization_members')
     .select('organization_id')
     .eq('user_id', userId)
@@ -50,8 +75,18 @@ export async function ensureUserAndOrg(authUser: User): Promise<{
     .limit(1)
     .maybeSingle();
 
+  if (membershipError) {
+    console.error(LOG, 'organization_members select failed', {
+      code: membershipError.code,
+      message: membershipError.message,
+      details: membershipError.details,
+    });
+    return { userId, orgId: null };
+  }
+
   const membershipRow = membership as { organization_id: string } | null;
   if (membershipRow?.organization_id) {
+    console.info(LOG, 'existing membership', { orgId: membershipRow.organization_id });
     return { userId, orgId: membershipRow.organization_id };
   }
 
@@ -67,7 +102,11 @@ export async function ensureUserAndOrg(authUser: User): Promise<{
     .single();
 
   if (orgError || !orgData) {
-    console.error('ensureUserAndOrg: organizations insert failed', orgError);
+    console.error(LOG, 'organizations insert failed', {
+      code: orgError?.code,
+      message: orgError?.message,
+      details: orgError?.details,
+    });
     return { userId, orgId: null };
   }
 
@@ -82,9 +121,14 @@ export async function ensureUserAndOrg(authUser: User): Promise<{
     });
 
   if (memberError) {
-    console.error('ensureUserAndOrg: organization_members insert failed', memberError);
+    console.error(LOG, 'organization_members insert failed', {
+      code: memberError.code,
+      message: memberError.message,
+      details: memberError.details,
+    });
     return { userId, orgId: null };
   }
 
+  console.info(LOG, 'success', { orgId: org.id });
   return { userId, orgId: org.id };
 }
