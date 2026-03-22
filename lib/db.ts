@@ -178,6 +178,22 @@ export async function getEventWithSlotsForDashboard(eventId: string) {
   return getEventWithSlots(eventId, { publishedOnly: false });
 }
 
+export async function getPublishedEventsForOrg(organizationId: string) {
+  const { data } = await supabase
+    .from('events')
+    .select('id, title, start_date, end_date, signup_type')
+    .eq('organization_id', organizationId)
+    .eq('published', true)
+    .order('start_date', { ascending: true });
+  return (data ?? []) as Array<{
+    id: string;
+    title: string;
+    start_date: string | null;
+    end_date: string | null;
+    signup_type: 'scheduled' | 'simple';
+  }>;
+}
+
 export async function getOrganizationTimezone(organizationId: string): Promise<string> {
   const { data, error } = await supabase
     .from('organizations')

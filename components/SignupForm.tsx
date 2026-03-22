@@ -23,6 +23,7 @@ interface SignupFormProps {
   onCancel: () => void;
   isSubmitting?: boolean;
   error?: string | null;
+  primaryColor?: string;
 }
 
 export function SignupForm({
@@ -34,6 +35,7 @@ export function SignupForm({
   onCancel,
   isSubmitting = false,
   error = null,
+  primaryColor,
 }: SignupFormProps) {
   const {
     register,
@@ -164,7 +166,8 @@ export function SignupForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 rounded-xl bg-sage px-4 py-2.5 text-sm font-medium text-white hover:bg-sage-hover focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors font-body"
+          className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors font-body ${!primaryColor ? 'bg-sage hover:bg-sage-hover focus:ring-sage' : 'hover:opacity-90 focus:ring-sage'}`}
+          style={primaryColor ? { backgroundColor: primaryColor } : undefined}
         >
           {isSubmitting ? 'Signing up…' : 'Confirm Signup'}
         </button>

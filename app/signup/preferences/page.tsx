@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { getSignupByCancelToken } from '@/lib/db';
+import { getOrgBySlug } from '@/lib/org-branding';
 import { PreferencesForm } from './PreferencesForm';
 
 interface PageProps {
@@ -37,6 +39,9 @@ export default async function PreferencesPage({ searchParams }: PageProps) {
   const event = slot?.event;
   const isSimple = event?.signup_type === 'simple';
 
+  const slug = (await headers()).get('x-org-slug');
+  const org = slug ? await getOrgBySlug(slug) : null;
+
   return (
     <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-md space-y-6">
@@ -59,16 +64,30 @@ export default async function PreferencesPage({ searchParams }: PageProps) {
           initialOffset={signup.reminder_offset}
           slotName={slot?.role_name}
           hasDate={!!event?.start_date}
+          primaryColor={org?.primary_color}
         />
 
         <p className="text-center text-xs text-muted font-body">
-          Organized with{' '}
-          <Link
-            href="/"
-            className="font-medium text-charcoal hover:text-charcoal hover:underline"
-          >
-            SignupSmartly
-          </Link>
+          {org ? (
+            <Link
+              href="https://www.signupsmartly.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-charcoal hover:text-charcoal hover:underline"
+            >
+              {org.name}
+            </Link>
+          ) : (
+            <>
+              Organized with{' '}
+              <Link
+                href="/"
+                className="font-medium text-charcoal hover:text-charcoal hover:underline"
+              >
+                SignupSmartly
+              </Link>
+            </>
+          )}
         </p>
       </div>
     </main>

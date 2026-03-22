@@ -4,6 +4,8 @@ interface CoverageMeterProps {
   percentage: number;
   size?: 'sm' | 'md';
   signupType?: 'scheduled' | 'simple';
+  /** Override the bar color (e.g. org primary_color) */
+  primaryColor?: string | null;
 }
 
 export function CoverageMeter({
@@ -12,6 +14,7 @@ export function CoverageMeter({
   percentage,
   size = 'md',
   signupType = 'scheduled',
+  primaryColor,
 }: CoverageMeterProps) {
   const remaining = Math.max(0, total - filled);
   const barHeight = size === 'sm' ? 'h-2' : 'h-3';
@@ -30,8 +33,8 @@ export function CoverageMeter({
         aria-valuemax={100}
       >
         <div
-          className="h-full bg-sage rounded-full transition-all duration-300"
-          style={{ width: `${percentage}%` }}
+          className={`h-full rounded-full transition-all duration-300 ${!primaryColor ? 'bg-sage' : ''}`}
+          style={{ width: `${percentage}%`, ...(primaryColor ? { backgroundColor: primaryColor } : {}) }}
         />
       </div>
       <p className="text-sm text-muted font-body">

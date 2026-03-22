@@ -55,7 +55,7 @@ CREATE INDEX idx_organizations_custom_domain ON organizations(custom_domain) WHE
 
 -- Seed the Falcons track team org
 -- First find your org ID, then run:
--- UPDATE organizations SET slug = 'falconstrack', primary_color = '#1a3a6b' WHERE name = 'Allison Stone''s Organization';
+-- UPDATE organizations SET slug = 'falconstrack', primary_color = '#8C0000' WHERE name = 'Allison Stone''s Organization';
 -- (or whatever org name was created for your account — check the organizations table)
 ```
 
@@ -71,7 +71,7 @@ FROM organizations o
 JOIN organization_members om ON om.organization_id = o.id
 WHERE om.role = 'owner';
 -- Then:
-UPDATE organizations SET slug = 'falconstrack', primary_color = '#1a3a6b'
+UPDATE organizations SET slug = 'falconstrack', primary_color = '#8C0000'
 WHERE id = '{your-org-id}';
 ```
 

@@ -8,10 +8,11 @@ interface PreferencesFormProps {
   initialOffset: '1_day' | 'morning_of';
   slotName?: string;
   hasDate: boolean;
+  primaryColor?: string | null;
 }
 
 export function PreferencesForm(props: PreferencesFormProps) {
-  const { token, initialOptIn, initialOffset, hasDate } = props;
+  const { token, initialOptIn, initialOffset, hasDate, primaryColor } = props;
   const [optIn, setOptIn] = useState(initialOptIn);
   const [offset, setOffset] = useState(initialOffset);
   const [isSaving, setIsSaving] = useState(false);
@@ -109,7 +110,8 @@ export function PreferencesForm(props: PreferencesFormProps) {
       <button
         type="submit"
         disabled={isSaving || !hasDate}
-        className="w-full rounded-xl bg-sage px-4 py-2.5 text-sm font-medium text-white hover:bg-sage-hover disabled:opacity-60 transition-colors font-body"
+        className={`w-full rounded-xl px-4 py-2.5 text-sm font-medium text-white disabled:opacity-60 transition-colors font-body ${!primaryColor ? 'bg-sage hover:bg-sage-hover' : 'hover:opacity-90'}`}
+        style={primaryColor ? { backgroundColor: primaryColor } : undefined}
       >
         {isSaving ? 'Saving…' : 'Save preferences'}
       </button>

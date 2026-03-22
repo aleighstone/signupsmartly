@@ -1,6 +1,8 @@
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getSignupByCancelToken } from '@/lib/db';
+import { getOrgBySlug } from '@/lib/org-branding';
 import { CancelForm } from './CancelForm';
 
 interface PageProps {
@@ -27,6 +29,9 @@ export default async function CancelPage({ searchParams }: PageProps) {
     };
   };
 
+  const slug = (await headers()).get('x-org-slug');
+  const org = slug ? await getOrgBySlug(slug) : null;
+
   if (signup.cancelled) {
     return (
       <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4">
@@ -39,7 +44,8 @@ export default async function CancelPage({ searchParams }: PageProps) {
           </p>
           <Link
             href="/"
-            className="inline-flex items-center justify-center rounded-xl bg-sage px-4 py-3 text-sm font-medium text-white hover:bg-sage-hover transition-colors font-body"
+            className={`inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium text-white transition-colors font-body ${!org?.primary_color ? 'bg-sage hover:bg-sage-hover' : 'hover:opacity-90'}`}
+            style={org?.primary_color ? { backgroundColor: org.primary_color } : undefined}
           >
             Go home
           </Link>

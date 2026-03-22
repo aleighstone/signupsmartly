@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { serviceSupabase } from '@/lib/supabase-service';
+import { getOrgBySlug } from '@/lib/org-branding';
 import { generateAddToCalendarUrl } from '@/lib/calendar';
 import type { Event, Slot } from '@/types/database';
 import { formatTimeRange } from '@/lib/calendar';
@@ -82,6 +84,9 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
   const primaryLabel = isSimple ? 'Item' : 'Spot';
   const hasComment = Boolean(signupTyped.comment?.trim());
 
+  const slug = (await headers()).get('x-org-slug');
+  const org = slug ? await getOrgBySlug(slug) : null;
+
   return (
     <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4 relative">
       <TrackSignupSubmitted
@@ -139,7 +144,8 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
             href={calendarUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-primary-lg"
+            className={`btn-primary-lg ${org?.primary_color ? 'hover:opacity-90' : ''}`}
+            style={org?.primary_color ? { backgroundColor: org.primary_color } : undefined}
           >
             Add to Calendar
           </a>
@@ -150,10 +156,23 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
 
         <div className="space-y-1">
           <p className="text-sm text-muted font-body">
-            Organized with{' '}
-            <Link href="/" className="hover:text-charcoal transition-colors">
-              SignupSmartly
-            </Link>
+            {org ? (
+              <Link
+                href="https://www.signupsmartly.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-charcoal transition-colors"
+              >
+                {org.name}
+              </Link>
+            ) : (
+              <>
+                Organized with{' '}
+                <Link href="/" className="hover:text-charcoal transition-colors">
+                  SignupSmartly
+                </Link>
+              </>
+            )}
           </p>
           <p className="text-xs text-muted font-body">
             <Link

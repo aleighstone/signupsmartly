@@ -10,9 +10,10 @@ import type { SignupFormData } from '@/components/SignupForm';
 interface EventPageClientProps {
   event: EventWithSlots;
   timezone: string;
+  primaryColor?: string;
 }
 
-export function EventPageClient({ event, timezone }: EventPageClientProps) {
+export function EventPageClient({ event, timezone, primaryColor }: EventPageClientProps) {
   const router = useRouter();
   const [modalSlot, setModalSlot] = useState<SlotWithSignups | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,6 +65,7 @@ export function EventPageClient({ event, timezone }: EventPageClientProps) {
         onSignUp={handleSignUp}
         signupType={event.signup_type}
         timezone={timezone}
+        primaryColor={primaryColor}
       />
       <SignupModal
         isOpen={!!modalSlot}
@@ -74,6 +76,7 @@ export function EventPageClient({ event, timezone }: EventPageClientProps) {
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         error={error}
+        primaryColor={primaryColor}
       />
     </>
   );

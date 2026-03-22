@@ -10,6 +10,7 @@ interface SlotListProps {
   onSignUp: (slot: SlotWithSignups) => void;
   signupType?: 'scheduled' | 'simple';
   timezone?: string;
+  primaryColor?: string;
 }
 
 function SlotCard({
@@ -19,6 +20,7 @@ function SlotCard({
   onSignUpClick,
   isSimple,
   timezone = 'America/New_York',
+  primaryColor,
 }: {
   slot: SlotWithSignups;
   remaining: number;
@@ -26,6 +28,7 @@ function SlotCard({
   onSignUpClick?: () => void;
   isSimple: boolean;
   timezone?: string;
+  primaryColor?: string;
 }) {
   const timeRange = formatTimeRange(slot.start_time, slot.end_time, timezone);
   const unitLabel = isSimple ? 'item' : 'spot';
@@ -33,6 +36,8 @@ function SlotCard({
     remaining === 1
       ? `1 ${unitLabel} remaining`
       : `${remaining} ${unitLabel}s remaining`;
+
+  const buttonStyle = primaryColor ? { backgroundColor: primaryColor } : undefined;
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
@@ -53,6 +58,7 @@ function SlotCard({
           onSignUp();
         }}
         className="btn-primary shrink-0"
+        style={buttonStyle}
       >
         Sign up
       </button>
@@ -65,6 +71,7 @@ export function SlotList({
   onSignUp,
   signupType = 'scheduled',
   timezone = 'America/New_York',
+  primaryColor,
 }: SlotListProps) {
   const posthog = usePostHog();
   const isSimple = signupType === 'simple';
@@ -104,6 +111,7 @@ export function SlotList({
                   }}
                   isSimple={isSimple}
                   timezone={timezone}
+                  primaryColor={primaryColor}
                 />
               </li>
             ))}

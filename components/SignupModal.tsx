@@ -12,6 +12,7 @@ interface SignupModalProps {
   onSubmit: (data: SignupFormData) => Promise<void>;
   isSubmitting?: boolean;
   error?: string | null;
+  primaryColor?: string;
 }
 
 export function SignupModal({
@@ -23,6 +24,7 @@ export function SignupModal({
   onSubmit,
   isSubmitting = false,
   error = null,
+  primaryColor,
 }: SignupModalProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -62,6 +64,7 @@ export function SignupModal({
           onCancel={onClose}
           isSubmitting={isSubmitting}
           error={error}
+          primaryColor={primaryColor}
         />
       </div>
     </div>

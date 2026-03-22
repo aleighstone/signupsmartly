@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { getEventWithSlots, getEventCoverage, getOrganizationTimezone } from '@/lib/db';
+import { getOrgBySlug } from '@/lib/org-branding';
 
 export const dynamic = 'force-dynamic';
 import { EventHeader } from '@/components/EventHeader';
@@ -18,6 +20,9 @@ export default async function EventPage({ params }: PageProps) {
 
   if (!eventData) notFound();
 
+  const slug = (await headers()).get('x-org-slug');
+  const org = slug ? await getOrgBySlug(slug) : null;
+
   const coverage = getEventCoverage(eventData);
   const timezone = await getOrganizationTimezone(eventData.organization_id);
   const openSlots = eventData.slots.reduce(
@@ -28,6 +33,25 @@ export default async function EventPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-sand">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+        {org && (
+          <div className="mb-6">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-muted hover:text-charcoal transition-colors"
+            >
+              {org.logo_url ? (
+                <img
+                  src={org.logo_url}
+                  alt=""
+                  className="h-8 w-auto object-contain"
+                />
+              ) : (
+                <span className="text-sm font-medium font-body">{org.name}</span>
+              )}
+            </Link>
+          </div>
+        )}
+
         <EventHeader event={eventData} />
 
         <TrackEventPageView
@@ -41,17 +65,33 @@ export default async function EventPage({ params }: PageProps) {
             total={coverage.total}
             percentage={coverage.percentage}
             signupType={eventData.signup_type}
+            primaryColor={org?.primary_color ?? undefined}
           />
         </div>
 
         <div className="mt-8">
-          <EventPageClient event={eventData} timezone={timezone} />
+          <EventPageClient
+            event={eventData}
+            timezone={timezone}
+            primaryColor={org?.primary_color ?? undefined}
+          />
         </div>
 
         <p className="mt-12 text-center text-sm text-muted">
-          <Link href="/" className="hover:text-charcoal transition-colors">
-            Organized with SignupSmartly
-          </Link>
+          {org ? (
+            <Link
+              href="https://www.signupsmartly.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-charcoal transition-colors"
+            >
+              {org.name}
+            </Link>
+          ) : (
+            <Link href="/" className="hover:text-charcoal transition-colors">
+              Organized with SignupSmartly
+            </Link>
+          )}
         </p>
       </div>
     </main>

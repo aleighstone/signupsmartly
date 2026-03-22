@@ -16,6 +16,9 @@ export interface Database {
           logo_url: string | null;
           timezone: string;
           created_at: string;
+          slug: string | null;
+          primary_color: string | null;
+          custom_domain: string | null;
         };
         Insert: {
           id?: string;
@@ -23,6 +26,9 @@ export interface Database {
           logo_url?: string | null;
           timezone?: string;
           created_at?: string;
+          slug?: string | null;
+          primary_color?: string | null;
+          custom_domain?: string | null;
         };
         Update: {
           id?: string;
@@ -30,6 +36,9 @@ export interface Database {
           logo_url?: string | null;
           timezone?: string;
           created_at?: string;
+          slug?: string | null;
+          primary_color?: string | null;
+          custom_domain?: string | null;
         };
       };
       users: {
