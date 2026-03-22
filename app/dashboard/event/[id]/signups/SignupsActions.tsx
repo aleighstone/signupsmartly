@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePostHog } from '@posthog/react';
-import type { EventWithSlots } from '@/types/database';
+import { format } from 'date-fns';
+import type { EventWithSlots, Slot } from '@/types/database';
+import { formatTimeRange } from '@/lib/calendar';
 
 interface SignupsActionsProps {
   event: EventWithSlots;
@@ -24,6 +26,74 @@ interface SignupsActionsProps {
 const buttonClass =
   'rounded-xl border-2 border-charcoal px-4 py-2 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors font-body';
 
+function formatSlotDateTime(slot: Slot): string {
+  if (!slot.start_time) return '';
+  const start = new Date(slot.start_time);
+  const dateStr = format(start, 'MMMM d, yyyy');
+  const timeStr = formatTimeRange(slot.start_time, slot.end_time);
+  return timeStr && timeStr !== 'All day' ? `${dateStr} ${timeStr}` : dateStr;
+}
+
+function buildExportListText(event: EventWithSlots, isSimple: boolean): string {
+  const lines: string[] = [];
+
+  lines.push(event.title);
+
+  if (event.start_date) {
+    const start = new Date(event.start_date);
+    const end = event.end_date ? new Date(event.end_date) : null;
+    const sameDay = !end || start.toDateString() === end.toDateString();
+    if (sameDay) {
+      lines.push(format(start, 'EEEE, MMMM d, yyyy'));
+    } else {
+      lines.push(`${format(start, 'MMMM d, yyyy')} – ${format(end!, 'MMMM d, yyyy')}`);
+    }
+  }
+
+  if (event.location) lines.push(event.location);
+  if (event.description?.trim()) lines.push(event.description.trim());
+
+  lines.push('');
+
+  const eventSpansMultipleDays = (() => {
+    if (!event.start_date || !event.end_date) return false;
+    const start = new Date(event.start_date);
+    const end = new Date(event.end_date);
+    return start.toDateString() !== end.toDateString();
+  })();
+
+  const slots = [...event.slots];
+  if (isSimple) {
+    slots.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  } else {
+    slots.sort((a, b) => {
+      const aStart = a.start_time ? new Date(a.start_time).getTime() : 0;
+      const bStart = b.start_time ? new Date(b.start_time).getTime() : 0;
+      return aStart - bStart;
+    });
+  }
+
+  for (const slot of slots) {
+    lines.push(slot.role_name);
+
+    if (eventSpansMultipleDays && !isSimple && slot.start_time) {
+      const dt = formatSlotDateTime(slot);
+      if (dt) lines.push(dt);
+    }
+
+    if (slot.instructions?.trim()) lines.push(slot.instructions.trim());
+
+    for (let i = 1; i <= slot.capacity; i++) {
+      const signup = slot.signups[i - 1];
+      lines.push(`${i}. ${signup?.name ?? ''}`);
+    }
+
+    lines.push('');
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
 export function SignupsActions({
   event,
   rows,
@@ -33,13 +103,31 @@ export function SignupsActions({
 }: SignupsActionsProps) {
   const posthog = usePostHog();
   const [showCopyModal, setShowCopyModal] = useState(false);
+  const [showExportListModal, setShowExportListModal] = useState(false);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [listCopied, setListCopied] = useState(false);
+  const exportDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!copied) return;
-    const t = setTimeout(() => setCopied(false), 2000);
+    if (!copied && !listCopied) return;
+    const t = setTimeout(() => {
+      setCopied(false);
+      setListCopied(false);
+    }, 2000);
     return () => clearTimeout(t);
-  }, [copied]);
+  }, [copied, listCopied]);
+
+  useEffect(() => {
+    if (!showExportDropdown) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(e.target as Node)) {
+        setShowExportDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showExportDropdown]);
 
   const csvHeaders = isSimple
     ? ['Item', 'Name', 'Email', 'Comment', 'Signup Timestamp', 'Source']
@@ -55,7 +143,10 @@ export function SignupsActions({
     .map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
     .join('\n');
 
+  const exportListText = buildExportListText(event, isSimple);
+
   const exportCsv = () => {
+    setShowExportDropdown(false);
     if (posthog) {
       posthog.capture('csv_exported', {
         signup_type: event.signup_type,
@@ -71,6 +162,22 @@ export function SignupsActions({
     URL.revokeObjectURL(url);
   };
 
+  const openExportListModal = () => {
+    setShowExportDropdown(false);
+    setShowExportListModal(true);
+    if (posthog) {
+      posthog.capture('export_list_opened', { event_id: eventId });
+    }
+  };
+
+  const handleCopyList = async () => {
+    await navigator.clipboard.writeText(exportListText);
+    setListCopied(true);
+    if (posthog) {
+      posthog.capture('export_list_copied', { event_id: eventId });
+    }
+  };
+
   const signupUrl = signupPageUrl;
 
   const handleCopy = async () => {
@@ -83,6 +190,7 @@ export function SignupsActions({
   };
 
   const handlePrint = () => {
+    setShowExportDropdown(false);
     if (posthog) {
       posthog.capture('signups_printed', {
         event_id: eventId,
@@ -126,18 +234,46 @@ export function SignupsActions({
         >
           Copy Signup URL
         </button>
-        <button type="button" onClick={exportCsv} className={buttonClass}>
-          Export CSV
-        </button>
-        <button type="button" onClick={handlePrint} className={buttonClass}>
-          Print
-        </button>
-        <Link
-          href={`/dashboard/event/${eventId}/edit`}
-          className="text-sm text-muted hover:text-charcoal transition-colors font-body"
-        >
-          Edit event
+        <Link href={`/dashboard/event/${eventId}/edit`} className={buttonClass + ' text-center no-underline'}>
+          Edit Event
         </Link>
+        <div className="relative" ref={exportDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setShowExportDropdown((v) => !v)}
+            className={buttonClass + ' w-full flex items-center justify-center gap-1'}
+            aria-expanded={showExportDropdown}
+            aria-haspopup="true"
+          >
+            Export
+            <span className="text-xs">▼</span>
+          </button>
+          {showExportDropdown && (
+            <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-xl border border-charcoal/10 bg-surface py-1 shadow-soft-md">
+              <button
+                type="button"
+                onClick={exportCsv}
+                className="block w-full px-4 py-2 text-left text-sm text-charcoal hover:bg-charcoal/5 font-body"
+              >
+                Export CSV
+              </button>
+              <button
+                type="button"
+                onClick={openExportListModal}
+                className="block w-full px-4 py-2 text-left text-sm text-charcoal hover:bg-charcoal/5 font-body"
+              >
+                Export List
+              </button>
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="block w-full px-4 py-2 text-left text-sm text-charcoal hover:bg-charcoal/5 font-body"
+              >
+                Print
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {showCopyModal && (
@@ -187,6 +323,59 @@ export function SignupsActions({
                 className="rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white font-body hover:bg-sage/90 transition-colors"
               >
                 {copied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showExportListModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="export-list-modal-title"
+        >
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowExportListModal(false)}
+            aria-hidden="true"
+          />
+          <div
+            className="relative mx-4 w-full max-w-lg max-h-[80vh] flex flex-col rounded-2xl bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-charcoal/10">
+              <h2
+                id="export-list-modal-title"
+                className="font-heading text-lg font-semibold text-charcoal"
+              >
+                Export List
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowExportListModal(false)}
+                className="text-xl leading-none text-muted hover:text-charcoal"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              <pre
+                className="whitespace-pre-wrap font-body text-sm text-charcoal bg-sand/30 rounded-xl p-4"
+                style={{ fontFamily: 'inherit' }}
+              >
+                {exportListText}
+              </pre>
+            </div>
+            <div className="p-4 border-t border-charcoal/10">
+              <button
+                type="button"
+                onClick={handleCopyList}
+                className="rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white font-body hover:bg-sage/90 transition-colors"
+              >
+                {listCopied ? 'Copied!' : 'Copy'}
               </button>
             </div>
           </div>
