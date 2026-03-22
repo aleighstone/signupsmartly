@@ -146,6 +146,12 @@ export default async function DashboardPage() {
                     >
                       Signup Page
                     </a>
+                    <Link
+                      href={`/dashboard/event/${event.id}/edit`}
+                      className="rounded-xl border-2 border-charcoal px-4 py-2 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors font-body"
+                    >
+                      Edit
+                    </Link>
                   </div>
                 </div>
               </li>

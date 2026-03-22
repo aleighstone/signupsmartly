@@ -647,3 +647,296 @@ export async function sendEventCreatedConfirmation(params: {
     throw new Error(`Failed to send event created email: ${error.message}`);
   }
 }
+
+// --- Edit event notification emails ---
+
+export async function sendSignupCancelledByOrganizer(params: {
+  signup: Signup;
+  slot: Slot;
+  event: Event;
+  reason?: string | null;
+}): Promise<void> {
+  const { signup, slot, event, reason } = params;
+  if (!signup.email) return;
+
+  const logoUrl = `${APP_URL}/smartly-icon.png`;
+  const isSimple = event.signup_type === 'simple';
+  const labelSpotOrItem = isSimple ? 'Item' : 'Spot';
+
+  const safeFormatDate = (d: string | null): string => {
+    if (!d) return 'TBD';
+    const dateStr = d.includes('T') ? d : `${d}T00:00:00`;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'TBD';
+    return format(date, 'EEEE, MMMM d, yyyy');
+  };
+  const safeFormatTime = (t: string | null): string | null => {
+    if (!t) return null;
+    const date = new Date(t);
+    if (isNaN(date.getTime())) return null;
+    return format(date, 'h:mm a');
+  };
+
+  const eventRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Event:</strong> ${event.title}</p>`;
+  const dateRow = event.start_date
+    ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Date:</strong> ${safeFormatDate(event.start_date)}</p>`
+    : '';
+  const slotRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>${labelSpotOrItem}:</strong> ${slot.role_name}</p>`;
+  const startTimeStr = safeFormatTime(slot.start_time);
+  const endTimeStr = safeFormatTime(slot.end_time);
+  const timeRow =
+    !isSimple && startTimeStr && endTimeStr
+      ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Time:</strong> ${startTimeStr} – ${endTimeStr}</p>`
+      : '';
+  const locationRow = event.location
+    ? `<p style="margin: 0; padding: 12px 0;"><strong>Location:</strong> ${event.location}</p>`
+    : '';
+
+  const detailRows = [eventRow, dateRow, slotRow, timeRow, locationRow].filter(Boolean).join('');
+  const reasonBlock =
+    reason && reason.trim()
+      ? `<div style="margin-top: 16px; padding: 12px 16px; background-color: #F9F9F9; border-radius: 8px; border-left: 3px solid #27272A;">
+  <p style="margin: 0; font-size: 14px; color: #27272A;">
+    <strong>Note from organizer:</strong> ${reason.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+  </p>
+</div>`
+      : '';
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signup Cancelled</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #27272A; margin: 0; padding: 0; background-color: #FAF9F6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
+      <div style="background-color: #27272A; padding: 20px 24px; display: flex; align-items: center;">
+        <img src="${logoUrl}" alt="SignupSmartly" width="28" height="28" style="display: block; margin-right: 16px;">
+        <span style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 1.25rem; color: #FFFFFF;">SignupSmartly</span>
+      </div>
+      <div style="padding: 24px;">
+        <h1 style="font-size: 24px; font-weight: 600; color: #27272A; margin: 0 0 20px;">Your signup has been cancelled</h1>
+        <p style="margin: 0 0 16px; color: #27272A;">Your sign-up for the following ${labelSpotOrItem.toLowerCase()} has been removed by the event organizer.</p>
+        <div style="background-color: #F0F9F0; border-radius: 8px; padding: 0 20px; margin-bottom: 24px;">
+          ${detailRows}
+        </div>
+        ${reasonBlock}
+      </div>
+      <div style="padding: 16px 24px; border-top: 1px solid #E5F2E5; font-size: 14px; color: #71717A;">
+        Questions? Contact the event organizer directly.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: signup.email,
+    subject: `SignupSmartly: Your signup for ${event.title} has been cancelled`,
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send cancellation email: ${error.message}`);
+  }
+}
+
+export async function sendEventDateChanged(params: {
+  signup: Signup;
+  slot: Slot;
+  event: Event;
+  oldStartDate: string | null;
+  oldEndDate: string | null;
+}): Promise<void> {
+  const { signup, slot, event, oldStartDate, oldEndDate } = params;
+  if (!signup.email) return;
+
+  const logoUrl = `${APP_URL}/smartly-icon.png`;
+  const cancelUrl = `${APP_URL}/signup/cancel?token=${signup.cancel_token}`;
+  const manageUrl = `${APP_URL}/signup/preferences?token=${signup.cancel_token}`;
+  const isSimple = event.signup_type === 'simple';
+  const labelSpotOrItem = isSimple ? 'Item' : 'Spot';
+
+  const safeFormatDate = (d: string | null): string => {
+    if (!d) return 'TBD';
+    const dateStr = d.includes('T') ? d : `${d}T00:00:00`;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'TBD';
+    return format(date, 'EEEE, MMMM d, yyyy');
+  };
+  const safeFormatTime = (t: string | null): string | null => {
+    if (!t) return null;
+    const date = new Date(t);
+    if (isNaN(date.getTime())) return null;
+    return format(date, 'h:mm a');
+  };
+
+  const eventRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Event:</strong> ${event.title}</p>`;
+  const updatedDateRow = event.start_date
+    ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong style="color: #15803D;">Updated date:</strong> ${safeFormatDate(event.start_date)}</p>`
+    : '';
+  const oldDateRow =
+    oldStartDate || oldEndDate
+      ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><span style="color: #71717A;">Previous date:</span> <span style="text-decoration: line-through;">${safeFormatDate(oldStartDate || oldEndDate)}</span></p>`
+      : '';
+  const slotRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>${labelSpotOrItem}:</strong> ${slot.role_name}</p>`;
+  const startTimeStr = safeFormatTime(slot.start_time);
+  const endTimeStr = safeFormatTime(slot.end_time);
+  const timeRow =
+    !isSimple && startTimeStr && endTimeStr
+      ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Time:</strong> ${startTimeStr} – ${endTimeStr}</p>`
+      : '';
+  const locationRow = event.location
+    ? `<p style="margin: 0; padding: 12px 0;"><strong>Location:</strong> ${event.location}</p>`
+    : '';
+
+  const detailRows = [eventRow, updatedDateRow, oldDateRow, slotRow, timeRow, locationRow].filter(Boolean).join('');
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Date Update</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #27272A; margin: 0; padding: 0; background-color: #FAF9F6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
+      <div style="background-color: #27272A; padding: 20px 24px; display: flex; align-items: center;">
+        <img src="${logoUrl}" alt="SignupSmartly" width="28" height="28" style="display: block; margin-right: 16px;">
+        <span style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 1.25rem; color: #FFFFFF;">SignupSmartly</span>
+      </div>
+      <div style="padding: 24px;">
+        <h1 style="font-size: 24px; font-weight: 600; color: #27272A; margin: 0 0 20px;">The date for this event has been updated</h1>
+        <p style="margin: 0 0 16px; color: #27272A;">The organizer has updated the date for an event you're signed up for. Here are the updated details:</p>
+        <div style="background-color: #F0F9F0; border-radius: 8px; padding: 0 20px; margin-bottom: 24px;">
+          ${detailRows}
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
+          <a href="${generateAddToCalendarUrl({ event, slot, volunteerName: signup.name })}" style="display: inline-block; background-color: #15803D; color: #FFFFFF; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Re-add to Calendar</a>
+          <a href="${cancelUrl}" style="display: inline-block; background-color: #FFFFFF; color: #27272A; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; border: 2px solid #27272A;">Cancel my signup</a>
+        </div>
+      </div>
+      <div style="padding: 16px 24px; border-top: 1px solid #E5F2E5; font-size: 14px; color: #71717A;">
+        <a href="${manageUrl}" style="color: #15803D; text-decoration: underline;">Manage reminder preferences →</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: signup.email,
+    subject: `SignupSmartly: Date update for ${event.title}`,
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send date changed email: ${error.message}`);
+  }
+}
+
+export async function sendEventLocationChanged(params: {
+  signup: Signup;
+  slot: Slot;
+  event: Event;
+  oldLocation: string | null;
+}): Promise<void> {
+  const { signup, slot, event, oldLocation } = params;
+  if (!signup.email) return;
+
+  const logoUrl = `${APP_URL}/smartly-icon.png`;
+  const cancelUrl = `${APP_URL}/signup/cancel?token=${signup.cancel_token}`;
+  const manageUrl = `${APP_URL}/signup/preferences?token=${signup.cancel_token}`;
+  const isSimple = event.signup_type === 'simple';
+  const labelSpotOrItem = isSimple ? 'Item' : 'Spot';
+
+  const safeFormatDate = (d: string | null): string => {
+    if (!d) return 'TBD';
+    const dateStr = d.includes('T') ? d : `${d}T00:00:00`;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'TBD';
+    return format(date, 'EEEE, MMMM d, yyyy');
+  };
+  const safeFormatTime = (t: string | null): string | null => {
+    if (!t) return null;
+    const date = new Date(t);
+    if (isNaN(date.getTime())) return null;
+    return format(date, 'h:mm a');
+  };
+
+  const eventRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Event:</strong> ${event.title}</p>`;
+  const newLocationRow = event.location
+    ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong style="color: #15803D;">New location:</strong> ${event.location}</p>`
+    : '';
+  const oldLocationRow =
+    oldLocation && oldLocation.trim()
+      ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><span style="color: #71717A;">Previous location:</span> <span style="text-decoration: line-through;">${oldLocation.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span></p>`
+      : '';
+  const dateRow = event.start_date
+    ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Date:</strong> ${safeFormatDate(event.start_date)}</p>`
+    : '';
+  const slotRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>${labelSpotOrItem}:</strong> ${slot.role_name}</p>`;
+  const startTimeStr = safeFormatTime(slot.start_time);
+  const endTimeStr = safeFormatTime(slot.end_time);
+  const timeRow =
+    !isSimple && startTimeStr && endTimeStr
+      ? `<p style="margin: 0; padding: 12px 0;"><strong>Time:</strong> ${startTimeStr} – ${endTimeStr}</p>`
+      : '';
+
+  const detailRows = [eventRow, newLocationRow, oldLocationRow, dateRow, slotRow, timeRow].filter(Boolean).join('');
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Location Update</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #27272A; margin: 0; padding: 0; background-color: #FAF9F6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
+      <div style="background-color: #27272A; padding: 20px 24px; display: flex; align-items: center;">
+        <img src="${logoUrl}" alt="SignupSmartly" width="28" height="28" style="display: block; margin-right: 16px;">
+        <span style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 1.25rem; color: #FFFFFF;">SignupSmartly</span>
+      </div>
+      <div style="padding: 24px;">
+        <h1 style="font-size: 24px; font-weight: 600; color: #27272A; margin: 0 0 20px;">The location for this event has been updated</h1>
+        <p style="margin: 0 0 16px; color: #27272A;">The organizer has updated the location for an event you're signed up for.</p>
+        <div style="background-color: #F0F9F0; border-radius: 8px; padding: 0 20px; margin-bottom: 24px;">
+          ${detailRows}
+        </div>
+        <a href="${cancelUrl}" style="display: inline-block; background-color: #FFFFFF; color: #27272A; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; border: 2px solid #27272A;">Cancel my signup</a>
+      </div>
+      <div style="padding: 16px 24px; border-top: 1px solid #E5F2E5; font-size: 14px; color: #71717A;">
+        <a href="${manageUrl}" style="color: #15803D; text-decoration: underline;">Manage reminder preferences →</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: signup.email,
+    subject: `SignupSmartly: Location update for ${event.title}`,
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send location changed email: ${error.message}`);
+  }
+}
