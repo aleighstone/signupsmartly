@@ -633,18 +633,9 @@ export function CreateEventForm({
             </section>
 
             <section className="rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-charcoal font-heading">
-                  Scheduled spots
-                </h2>
-                <button
-                  type="button"
-                  onClick={addScheduledSlot}
-                  className="text-sm font-medium text-charcoal hover:text-muted transition-colors"
-                >
-                  + Add spot
-                </button>
-              </div>
+              <h2 className="text-lg font-semibold text-charcoal font-heading mb-4">
+                Scheduled spots
+              </h2>
               <div className="space-y-6">
                 {scheduledSlots.map((_, index) => (
                   <div
@@ -746,6 +737,13 @@ export function CreateEventForm({
                   </div>
                 ))}
               </div>
+              <button
+                type="button"
+                onClick={addScheduledSlot}
+                className="btn-secondary mt-4 min-w-0"
+              >
+                + Add spot
+              </button>
             </section>
 
             <button
@@ -816,18 +814,9 @@ export function CreateEventForm({
             </section>
 
             <section className="rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-charcoal font-heading">
-                  Items
-                </h2>
-                <button
-                  type="button"
-                  onClick={addSimpleSlot}
-                  className="text-sm font-medium text-charcoal hover:text-muted transition-colors"
-                >
-                  + Add item
-                </button>
-              </div>
+              <h2 className="text-lg font-semibold text-charcoal font-heading mb-4">
+                Items
+              </h2>
               <div className="space-y-6">
                 {simpleSlots.map((_, index) => (
                   <div
@@ -889,6 +878,13 @@ export function CreateEventForm({
                   </div>
                 ))}
               </div>
+              <button
+                type="button"
+                onClick={addSimpleSlot}
+                className="btn-secondary mt-4 min-w-0"
+              >
+                + Add item
+              </button>
             </section>
 
             <button

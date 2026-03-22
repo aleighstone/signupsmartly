@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
-import { getEventWithSlotsForDashboard, getEventCoverage } from '@/lib/db';
+import { getEventWithSlotsForDashboard, getEventCoverage, getOrgSlugForUser } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
 import { CoverageWithStillNeeded } from './CoverageWithStillNeeded';
 import { EventNotificationOverride } from './EventNotificationOverride';
@@ -59,6 +59,11 @@ export default async function SignupsPage({ params }: PageProps) {
 
   const eventData = await getEventWithSlotsForDashboard(id);
   if (!eventData) notFound();
+
+  const orgSlug = await getOrgSlugForUser(user.id);
+  const signupPageUrl = orgSlug
+    ? `https://${orgSlug}.signupsmartly.com/event/${id}`
+    : `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/event/${id}`;
 
   const coverage = getEventCoverage(eventData);
   const isSimple = eventData.signup_type === 'simple';
@@ -150,7 +155,7 @@ export default async function SignupsPage({ params }: PageProps) {
             />
           </div>
         </div>
-        <SignupsActions event={eventData} rows={csvRows} isSimple={isSimple} eventId={id} />
+        <SignupsActions event={eventData} rows={csvRows} isSimple={isSimple} eventId={id} signupPageUrl={signupPageUrl} />
       </div>
 
       <SignupsTable

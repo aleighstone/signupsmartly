@@ -204,6 +204,18 @@ export async function getOrganizationTimezone(organizationId: string): Promise<s
   return (data as { timezone: string }).timezone || 'America/New_York';
 }
 
+export async function getOrgSlugForUser(userId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('organization_members')
+    .select('organizations(slug)')
+    .eq('user_id', userId)
+    .in('role', ['owner', 'organizer'])
+    .limit(1)
+    .maybeSingle();
+  const row = data as { organizations: { slug: string | null } | null } | null;
+  return row?.organizations?.slug ?? null;
+}
+
 export { getSlotRemainingCapacity } from './slot-utils';
 
 export async function hasEventWithVolunteerSignup(userId: string): Promise<boolean> {

@@ -17,6 +17,7 @@ interface SignupsActionsProps {
   }[];
   isSimple: boolean;
   eventId: string;
+  signupPageUrl: string;
 }
 
 const buttonClass =
@@ -27,6 +28,7 @@ export function SignupsActions({
   rows,
   isSimple,
   eventId,
+  signupPageUrl,
 }: SignupsActionsProps) {
   const posthog = usePostHog();
   const [showCopyModal, setShowCopyModal] = useState(false);
@@ -68,10 +70,7 @@ export function SignupsActions({
     URL.revokeObjectURL(url);
   };
 
-  const signupUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/event/${eventId}`
-      : '';
+  const signupUrl = signupPageUrl;
 
   const handleCopy = async () => {
     if (!signupUrl) return;

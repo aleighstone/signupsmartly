@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { ensureUserAndOrg } from '@/lib/ensure-user-org';
 import { TrackDashboardView } from '@/app/providers/PostHogTracker';
-import { getEventsForUser, getEventWithSlotsForDashboard, getEventCoverage, hasEventWithVolunteerSignup } from '@/lib/db';
+import { getEventsForUser, getEventWithSlotsForDashboard, getEventCoverage, hasEventWithVolunteerSignup, getOrgSlugForUser } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
 import { CoverageMeter } from '@/components/CoverageMeter';
 import { NpsBanner } from '@/components/NpsBanner';
@@ -48,6 +48,12 @@ export default async function DashboardPage() {
 
     events = await getEventsForUser(userId);
   }
+
+  const orgSlug = userId ? await getOrgSlugForUser(userId) : null;
+  const eventUrl = (eventId: string) =>
+    orgSlug
+      ? `https://${orgSlug}.signupsmartly.com/event/${eventId}`
+      : `/event/${eventId}`;
 
   const hasVolunteerSignup = userId ? await hasEventWithVolunteerSignup(userId) : false;
   const showNps =
@@ -133,7 +139,7 @@ export default async function DashboardPage() {
                       View My Signups
                     </Link>
                     <a
-                      href={`/event/${event.id}`}
+                      href={eventUrl(event.id)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-secondary"

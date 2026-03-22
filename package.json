@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "repair-slots": "dotenv -e .env.local -- tsx scripts/repair-slot-times.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -23,6 +24,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "dotenv-cli": "^7.4.2",
+    "tsx": "^4.19.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

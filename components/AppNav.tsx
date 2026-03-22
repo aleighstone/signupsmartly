@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
+import { createClient } from '@/lib/supabase-browser';
 
 const menuItems = [
   { href: '/dashboard/settings', label: 'Settings' },
@@ -42,8 +43,30 @@ function HamburgerIcon({ open }: { open: boolean }) {
 
 export function AppNav() {
   const [open, setOpen] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', user.id)
+        .single();
+      const name =
+        (userRow as { name?: string } | null)?.name ||
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email?.split('@')[0] ||
+        null;
+      setUserName(name);
+    };
+    loadUser();
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -98,6 +121,14 @@ export function AppNav() {
                 className="absolute right-0 top-full z-50 mt-2 min-w-[200px] rounded-xl border border-charcoal/10 bg-surface py-2 shadow-soft-md"
                 role="menu"
               >
+                {userName && (
+                  <>
+                    <div className="px-4 py-3 text-sm font-medium text-charcoal font-body">
+                      {userName}
+                    </div>
+                    <div className="border-t border-charcoal/10" />
+                  </>
+                )}
                 {menuItems.map((item) => (
                   <Link
                     key={item.href}
