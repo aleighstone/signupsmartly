@@ -386,17 +386,25 @@ export function CreateEventForm({
           published: true,
           slots: data.slots.map((s) => {
             const date = s.spot_date;
-            const startTime = s.start_time?.trim() || '00:00';
-            const endTime = s.end_time?.trim() || '23:59';
+            const startTimeStr = s.start_time?.trim();
+            const endTimeStr = s.end_time?.trim();
+            // Store times literally — no timezone conversion. Organizer enters 7:30, we store
+            // as 7:30 UTC so it displays as 7:30. Volunteers see the same time.
+            const toLiteralIso = (dateStr: string, timeStr: string): string => {
+              const [hh, mm] = timeStr.split(':').map((x) => parseInt(x, 10) || 0);
+              const padded = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+              return `${dateStr}T${padded}:00.000Z`;
+            };
+
             return {
               role_name: s.role_name,
               role_description: s.instructions || null,
-              start_time: date
-                ? new Date(`${date}T${startTime}`).toISOString()
-                : null,
-              end_time: date
-                ? new Date(`${date}T${endTime}`).toISOString()
-                : null,
+              start_time:
+                date && startTimeStr
+                  ? toLiteralIso(date, startTimeStr)
+                  : null,
+              end_time:
+                date && endTimeStr ? toLiteralIso(date, endTimeStr) : null,
               capacity: s.capacity,
               instructions: null,
             };

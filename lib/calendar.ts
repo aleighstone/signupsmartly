@@ -54,37 +54,35 @@ export function formatEventDateRange(
 }
 
 /**
- * Format a time range in a specific timezone for consistent display across server and client.
- * Slot times are stored as UTC; we format in the organization's timezone so volunteers
- * see the same times the organizer intended.
+ * Format a time range. Slot times are stored as literal values (no timezone conversion):
+ * organizer enters 7:30, we store and display 7:30. Always use 'UTC' so display matches
+ * storage exactly. When endTime is null, shows only start time (no range).
  */
 export function formatTimeRangeInTimezone(
   startTime: string | null,
   endTime: string | null,
   timezone: string
 ): string {
-  if (!startTime || !endTime) {
-    return 'All day';
-  }
   const opts: Intl.DateTimeFormatOptions = {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
     timeZone: timezone,
   };
+  if (!startTime) return 'All day';
   const startStr = new Intl.DateTimeFormat('en-US', opts).format(new Date(startTime));
+  if (!endTime) return startStr;
   const endStr = new Intl.DateTimeFormat('en-US', opts).format(new Date(endTime));
   return `${startStr} – ${endStr}`;
 }
 
 /**
- * Format time range. Pass timezone for consistent display across server/client.
- * Uses organization timezone so volunteers see the times the organizer intended.
+ * Format slot time range. Uses UTC so display matches storage — no timezone conversion.
+ * Organizers enter times; volunteers see the same times.
  */
 export function formatTimeRange(
   startTime: string | null,
-  endTime: string | null,
-  timezone: string = 'America/New_York'
+  endTime: string | null
 ): string {
-  return formatTimeRangeInTimezone(startTime, endTime, timezone);
+  return formatTimeRangeInTimezone(startTime, endTime, 'UTC');
 }

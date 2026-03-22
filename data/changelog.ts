@@ -14,6 +14,7 @@ export const changelog: Release[] = [
   {
     date: 'March 22, 2026',
     changes: [
+      { type: 'fixed', text: 'Fixed scheduled signup times — the app no longer converts timezones; organizers enter times and volunteers see the same times.' },
       { type: 'new', text: 'Sign up and sign in with Google — one click, no password needed.' },
       { type: 'new', text: 'Event created confirmation email — get an email with your public signup link and a link back to your dashboard whenever you create a new signup.' },
       { type: 'new', text: 'Copy Signup URL — copy your public volunteer signup link directly from the signups page.' },

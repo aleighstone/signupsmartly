@@ -6,7 +6,6 @@ import { getOrgBySlug } from '@/lib/org-branding';
 import { generateAddToCalendarUrl } from '@/lib/calendar';
 import type { Event, Slot } from '@/types/database';
 import { formatTimeRange } from '@/lib/calendar';
-import { getOrganizationTimezone } from '@/lib/db';
 import { TrackSignupSubmitted } from '@/app/providers/PostHogTracker';
 import { format } from 'date-fns';
 
@@ -61,19 +60,15 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
     signup_type?: 'scheduled' | 'simple';
   };
 
-  const timezone = eventAny.organization_id
-    ? await getOrganizationTimezone(eventAny.organization_id)
-    : 'America/New_York';
-
   const calendarUrl = generateAddToCalendarUrl({
     event: eventAny as Event,
     slot: slotAny as Slot,
     volunteerName: signupTyped.name,
   });
   const cancelUrl = `/signup/cancel?token=${signupTyped.cancel_token}`;
-  const hasTime = slotAny.start_time && slotAny.end_time;
+  const hasTime = !!slotAny.start_time;
   const timeRange = hasTime
-    ? formatTimeRange(slotAny.start_time || null, slotAny.end_time || null, timezone)
+    ? formatTimeRange(slotAny.start_time || null, slotAny.end_time || null)
     : null;
   const dateSource = slotAny.start_time || eventAny.start_date || null;
   const dateText = dateSource

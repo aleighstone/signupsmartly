@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { headers } from 'next/headers';
-import { getEventWithSlots, getEventCoverage, getOrganizationTimezone } from '@/lib/db';
+import { getEventWithSlots, getEventCoverage } from '@/lib/db';
 import { getOrgBySlug } from '@/lib/org-branding';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +24,6 @@ export default async function EventPage({ params }: PageProps) {
   const org = slug ? await getOrgBySlug(slug) : null;
 
   const coverage = getEventCoverage(eventData);
-  const timezone = await getOrganizationTimezone(eventData.organization_id);
   const openSlots = eventData.slots.reduce(
     (sum, s) => sum + Math.max(0, s.capacity - s.signups.length),
     0
@@ -72,7 +71,6 @@ export default async function EventPage({ params }: PageProps) {
         <div className="mt-8">
           <EventPageClient
             event={eventData}
-            timezone={timezone}
             primaryColor={org?.primary_color ?? undefined}
           />
         </div>

@@ -9,7 +9,6 @@ interface SlotListProps {
   slots: SlotWithSignups[];
   onSignUp: (slot: SlotWithSignups) => void;
   signupType?: 'scheduled' | 'simple';
-  timezone?: string;
   primaryColor?: string;
 }
 
@@ -19,7 +18,6 @@ function SlotCard({
   onSignUp,
   onSignUpClick,
   isSimple,
-  timezone = 'America/New_York',
   primaryColor,
 }: {
   slot: SlotWithSignups;
@@ -27,10 +25,9 @@ function SlotCard({
   onSignUp: () => void;
   onSignUpClick?: () => void;
   isSimple: boolean;
-  timezone?: string;
   primaryColor?: string;
 }) {
-  const timeRange = formatTimeRange(slot.start_time, slot.end_time, timezone);
+  const timeRange = formatTimeRange(slot.start_time, slot.end_time);
   const unitLabel = isSimple ? 'item' : 'spot';
   const spotsText =
     remaining === 1
@@ -70,7 +67,6 @@ export function SlotList({
   slots,
   onSignUp,
   signupType = 'scheduled',
-  timezone = 'America/New_York',
   primaryColor,
 }: SlotListProps) {
   const posthog = usePostHog();
@@ -110,7 +106,6 @@ export function SlotList({
                     }
                   }}
                   isSimple={isSimple}
-                  timezone={timezone}
                   primaryColor={primaryColor}
                 />
               </li>
@@ -127,11 +122,7 @@ export function SlotList({
           </h2>
           <ul className="space-y-3">
             {filledSlots.map((slot) => {
-              const timeRange = formatTimeRange(
-                slot.start_time,
-                slot.end_time,
-                timezone
-              );
+              const timeRange = formatTimeRange(slot.start_time, slot.end_time);
               const names = slot.signups
                 .map((s) => s.name)
                 .join(', ');
@@ -143,7 +134,7 @@ export function SlotList({
                   <p className="font-medium text-charcoal font-body">
                     {slot.role_name}
                   </p>
-                  {!isSimple && (
+                  {!isSimple && timeRange && (
                     <p className="text-sm text-muted font-body">{timeRange}</p>
                   )}
                   <p className="mt-1 text-sm text-muted font-body">{names}</p>
