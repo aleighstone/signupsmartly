@@ -9,11 +9,16 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+const FALCONS_SLUG = 'falconstrack';
+const FALCONS_DISPLAY_NAME = 'LA Falcons Track Parent Volunteers';
+
 export default async function OrgHomePage({ params }: PageProps) {
   const { slug } = await params;
   const org = await getOrgBySlug(slug);
   if (!org) notFound();
 
+  const isFalcons = slug === FALCONS_SLUG;
+  const displayName = isFalcons ? FALCONS_DISPLAY_NAME : org.name;
   const events = await getPublishedEventsForOrg(org.id);
 
   return (
@@ -28,10 +33,10 @@ export default async function OrgHomePage({ params }: PageProps) {
             />
           )}
           <h1 className={`text-3xl font-semibold text-charcoal font-heading ${org.logo_url ? 'mt-4' : ''}`}>
-            {org.name}
+            {displayName}
           </h1>
           <p className="mt-2 text-muted font-body">
-            Volunteer sign-ups for {org.name}
+            Volunteer sign-ups for {displayName}
           </p>
         </div>
 
@@ -90,16 +95,38 @@ export default async function OrgHomePage({ params }: PageProps) {
           </ul>
         )}
 
-        <p className="mt-12 text-center text-sm text-muted">
-          <Link
-            href="https://www.signupsmartly.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-charcoal transition-colors"
-          >
-            Organized with SignupSmartly
-          </Link>
-        </p>
+        <footer className="mt-12 text-center text-sm text-muted space-y-1">
+          <p>
+            <Link
+              href="https://www.signupsmartly.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-charcoal transition-colors"
+            >
+              Organized with SignupSmartly
+            </Link>
+          </p>
+          {isFalcons && (
+            <p>
+              For more info visit{' '}
+              <a
+                href="https://www.falconstrack.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-charcoal transition-colors"
+              >
+                www.falconstrack.com
+              </a>{' '}
+              or{' '}
+              <a
+                href="mailto:lafalcons1990@gmail.com"
+                className="hover:text-charcoal transition-colors"
+              >
+                contact us
+              </a>
+            </p>
+          )}
+        </footer>
       </div>
     </main>
   );

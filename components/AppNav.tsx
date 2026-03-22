@@ -123,7 +123,7 @@ export function AppNav() {
               >
                 {userName && (
                   <>
-                    <div className="px-4 py-3 text-sm font-medium text-charcoal font-body">
+                    <div className="px-4 py-3 text-sm font-medium text-muted font-body">
                       {userName}
                     </div>
                     <div className="border-t border-charcoal/10" />

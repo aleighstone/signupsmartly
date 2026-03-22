@@ -40,13 +40,17 @@ function buildExportListText(event: EventWithSlots, isSimple: boolean): string {
   lines.push(event.title);
 
   if (event.start_date) {
-    const start = new Date(event.start_date);
-    const end = event.end_date ? new Date(event.end_date) : null;
-    const sameDay = !end || start.toDateString() === end.toDateString();
+    const startDatePart = event.start_date.slice(0, 10);
+    const endDatePart = event.end_date?.slice(0, 10);
+    const sameDay = !endDatePart || startDatePart === endDatePart;
+    const toLocalDate = (s: string) => {
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    };
     if (sameDay) {
-      lines.push(format(start, 'EEEE, MMMM d, yyyy'));
+      lines.push(format(toLocalDate(startDatePart), 'EEEE, MMMM d, yyyy'));
     } else {
-      lines.push(`${format(start, 'MMMM d, yyyy')} – ${format(end!, 'MMMM d, yyyy')}`);
+      lines.push(`${format(toLocalDate(startDatePart), 'MMMM d, yyyy')} – ${format(toLocalDate(endDatePart!), 'MMMM d, yyyy')}`);
     }
   }
 
@@ -57,9 +61,9 @@ function buildExportListText(event: EventWithSlots, isSimple: boolean): string {
 
   const eventSpansMultipleDays = (() => {
     if (!event.start_date || !event.end_date) return false;
-    const start = new Date(event.start_date);
-    const end = new Date(event.end_date);
-    return start.toDateString() !== end.toDateString();
+    const startPart = event.start_date.slice(0, 10);
+    const endPart = event.end_date.slice(0, 10);
+    return startPart !== endPart;
   })();
 
   const slots = [...event.slots];
@@ -241,12 +245,21 @@ export function SignupsActions({
           <button
             type="button"
             onClick={() => setShowExportDropdown((v) => !v)}
-            className={buttonClass + ' w-full flex items-center justify-center gap-1'}
+            className={buttonClass + ' w-full flex items-center justify-center gap-2'}
             aria-expanded={showExportDropdown}
             aria-haspopup="true"
           >
             Export
-            <span className="text-xs">▼</span>
+            <svg
+              width="10"
+              height="6"
+              viewBox="0 0 10 6"
+              fill="currentColor"
+              aria-hidden
+              className="shrink-0"
+            >
+              <path d="M5 6L0 0h10L5 6z" />
+            </svg>
           </button>
           {showExportDropdown && (
             <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-xl border border-charcoal/10 bg-surface py-1 shadow-soft-md">

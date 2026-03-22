@@ -22,6 +22,7 @@ export default async function EventPage({ params }: PageProps) {
 
   const slug = (await headers()).get('x-org-slug');
   const org = slug ? await getOrgBySlug(slug) : null;
+  const isFalcons = slug === 'falconstrack';
 
   const coverage = getEventCoverage(eventData);
   const openSlots = eventData.slots.reduce(
@@ -34,20 +35,26 @@ export default async function EventPage({ params }: PageProps) {
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
         {org && (
           <div className="mb-6">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-muted hover:text-charcoal transition-colors"
-            >
-              {org.logo_url ? (
-                <img
-                  src={org.logo_url}
-                  alt=""
-                  className="h-8 w-auto object-contain"
-                />
-              ) : (
-                <span className="text-sm font-medium font-body">{org.name}</span>
-              )}
-            </Link>
+            {isFalcons ? (
+              <span className="text-sm font-medium text-muted font-body">
+                LA Falcons Track Parent Volunteers
+              </span>
+            ) : (
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 text-muted hover:text-charcoal transition-colors"
+              >
+                {org.logo_url ? (
+                  <img
+                    src={org.logo_url}
+                    alt=""
+                    className="h-8 w-auto object-contain"
+                  />
+                ) : (
+                  <span className="text-sm font-medium font-body">{org.name}</span>
+                )}
+              </Link>
+            )}
           </div>
         )}
 
@@ -75,22 +82,38 @@ export default async function EventPage({ params }: PageProps) {
           />
         </div>
 
-        <p className="mt-12 text-center text-sm text-muted">
-          {org ? (
+        <footer className="mt-12 text-center text-sm text-muted space-y-1">
+          <p>
             <Link
               href="https://www.signupsmartly.com"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-charcoal transition-colors"
             >
-              {org.name}
-            </Link>
-          ) : (
-            <Link href="/" className="hover:text-charcoal transition-colors">
               Organized with SignupSmartly
             </Link>
+          </p>
+          {isFalcons && (
+            <p>
+              For more info visit{' '}
+              <a
+                href="https://www.falconstrack.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-charcoal transition-colors"
+              >
+                www.falconstrack.com
+              </a>{' '}
+              or{' '}
+              <a
+                href="mailto:lafalcons1990@gmail.com"
+                className="hover:text-charcoal transition-colors"
+              >
+                contact us
+              </a>
+            </p>
           )}
-        </p>
+        </footer>
       </div>
     </main>
   );
