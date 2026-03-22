@@ -230,17 +230,6 @@ export default function TermsPage() {
               Terms of Service
             </Link>
           </p>
-          <p>
-            Brought to you by{' '}
-            <a
-              href="https://www.digitaleigh.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-charcoal hover:underline"
-            >
-              Digitaleigh Co.
-            </a>
-          </p>
         </div>
       </footer>
     </main>
