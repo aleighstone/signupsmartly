@@ -47,24 +47,24 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
         <table className="min-w-full divide-y divide-charcoal/10">
           <thead>
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
+              <th className="align-top px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
                 {label}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
+              <th className="align-top px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
                 Name
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
+              <th className="align-top px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
                 Email
               </th>
               {!isSimple && (
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
+                <th className="align-top px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
                   Time
                 </th>
               )}
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
+              <th className="align-top px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
                 Comment
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
+              <th className="align-top px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted font-body">
                 Signup Timestamp
               </th>
             </tr>
@@ -75,10 +75,10 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                 key={row.isEmpty ? `empty-${row.slotId}-${i}` : `signup-${row.signup!.id}`}
                 className={row.isEmpty ? 'bg-charcoal/[0.02]' : ''}
               >
-                <td className={`px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>
+                <td className={`align-top px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>
                   {row.role}
                 </td>
-                <td className={`px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>
+                <td className={`align-top px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>
                   {row.isEmpty ? (
                     <button
                       type="button"
@@ -98,18 +98,18 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                     </span>
                   )}
                 </td>
-                <td className={`px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-muted'}`}>
+                <td className={`align-top px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-muted'}`}>
                   {row.isEmpty ? '' : (row.signup!.email ?? '—')}
                 </td>
                 {!isSimple && (
-                  <td className={`px-4 py-3 text-sm font-body ${row.isEmpty ? 'text-muted' : 'text-muted'}`}>
+                  <td className={`align-top px-4 py-3 text-sm font-body ${row.isEmpty ? 'text-muted' : 'text-muted'}`}>
                     {row.time ?? ''}
                   </td>
                 )}
-                <td className={`px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-muted'}`}>
+                <td className={`align-top px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-muted'}`}>
                   {row.isEmpty ? '' : (row.signup!.comment ?? '—')}
                 </td>
-                <td className={`px-4 py-3 text-sm ${row.isEmpty ? 'text-muted' : 'text-muted'}`}>
+                <td className={`align-top px-4 py-3 text-sm ${row.isEmpty ? 'text-muted' : 'text-muted'}`}>
                   {row.isEmpty ? '' : row.signup!.createdAt}
                 </td>
               </tr>
