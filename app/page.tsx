@@ -71,13 +71,17 @@ export default function Home() {
       <footer className="border-t border-charcoal/10 py-6">
         <div className="text-center text-sm text-muted space-y-1 font-body">
           <p>SignupSmartly — organize volunteers smartly.</p>
-          <p className="flex items-center justify-center gap-3">
+          <p className="flex items-center justify-center gap-3 flex-wrap">
             <Link href="/privacy" className="text-charcoal hover:underline">
               Privacy Policy
             </Link>
             <span className="text-muted">·</span>
             <Link href="/terms" className="text-charcoal hover:underline">
               Terms of Service
+            </Link>
+            <span className="text-muted">·</span>
+            <Link href="/whats-new" className="text-charcoal hover:underline">
+              What&apos;s New
             </Link>
           </p>
           <p>
