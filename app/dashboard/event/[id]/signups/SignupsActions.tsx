@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { usePostHog } from '@posthog/react';
 import type { EventWithSlots } from '@/types/database';
 
@@ -131,6 +132,12 @@ export function SignupsActions({
         <button type="button" onClick={handlePrint} className={buttonClass}>
           Print
         </button>
+        <Link
+          href={`/dashboard/event/${eventId}/edit`}
+          className="text-sm text-muted hover:text-charcoal transition-colors font-body"
+        >
+          Edit event
+        </Link>
       </div>
 
       {showCopyModal && (

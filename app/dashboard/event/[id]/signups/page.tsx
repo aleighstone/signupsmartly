@@ -145,12 +145,6 @@ export default async function SignupsPage({ params }: PageProps) {
           <p className="text-muted font-body">
             {formatEventDateRange(eventData.start_date, eventData.end_date)}
           </p>
-          <Link
-            href={`/dashboard/event/${id}/edit`}
-            className="mt-2 inline-block text-sm text-muted hover:text-charcoal transition-colors font-body"
-          >
-            Edit event →
-          </Link>
           <div className="mt-3 max-w-sm">
             <CoverageWithStillNeeded
               filled={coverage.filled}
