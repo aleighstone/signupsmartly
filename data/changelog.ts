@@ -22,17 +22,18 @@ export const changelog: Release[] = [
       { type: 'new', text: 'Print — print a clean, formatted version of your signups list straight from the dashboard.' },
       { type: 'improved', text: 'NPS survey is now more compact and no longer stretches across wide screens.' },
     ],
+  },
+  {
     date: 'March 20, 2026',
     changes: [
-      { type: 'new', text: 'Event confirmation email — checking off our first feature request! Get an email with your public signup link and a link back to your dashboard whenever you create a new signup.'},
-      
+      { type: 'new', text: 'Event confirmation email — checking off our first feature request! Get an email with your public signup link and a link back to your dashboard whenever you create a new signup.' },
     ],
+  },
+  {
     date: 'March 18, 2026',
     changes: [
-      { type: 'improved', text: 'Improved security and privacy with database-level access controls (RLS) ensuring organizers only access data they're authorized to see.'},
-        { type: 'new', text: 'SignupSmartly v1 is released to the public! Thanks to all the early adopters who helped us test and improve the product.'}
-        
-      
+      { type: 'improved', text: 'Improved security and privacy with database-level access controls (RLS) ensuring organizers only access data they are authorized to see.' },
+      { type: 'new', text: 'SignupSmartly v1 is released to the public! Thanks to all the early adopters who helped us test and improve the product.' },
     ],
   },
 ];
