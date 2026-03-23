@@ -66,8 +66,10 @@ export default function WhatsNewPage() {
               <ul className="mt-4 space-y-3">
                 {release.changes.map((change, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <ChangeTag type={change.type} />
-                    <span className="text-charcoal font-body leading-relaxed">
+                    <span className="w-[72px] shrink-0">
+                      <ChangeTag type={change.type} />
+                    </span>
+                    <span className="text-charcoal font-body leading-relaxed flex-1 min-w-0">
                       {change.text}
                     </span>
                   </li>
