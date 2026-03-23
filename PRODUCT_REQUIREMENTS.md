@@ -34,6 +34,7 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 - Sign up button opens modal
 - Link: "Organized with SignupSmartly"
 - Dynamic: no caching so signup counts update immediately
+- **Org subdomain:** When visited via `{slug}.signupsmartly.com`, shows org branding (logo, primary color); back link and footer vary by org (see Org Subdomains)
 
 ### Signup Modal
 
@@ -65,6 +66,16 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 - **Signup modal:** Below Comment, show Reminder section when event has date — checkbox "Send me a reminder email" (checked by default); dropdown "1 day before" / "Morning of the event".
 - **Preferences page (`/signup/preferences?token=…`):** Linked from confirmation email, reminder email, and confirmation page footer. Uses `cancel_token`; 404 if not found or cancelled. Shows event/slot name and current preference; toggle on/off and change timing; success/error inline.
 - **Backend:** `signups.reminder_opt_in`, `signups.reminder_offset` ('1_day' | 'morning_of'), `signups.reminder_sent_at`. Timing: "1 day before" = 24h before slot/event; "morning of" = 8:00 AM org timezone. Single daily cron sends pending reminders; skip/tombstone if >24h overdue or signup cancelled.
+
+---
+
+## Org Subdomains
+
+- **URL pattern:** `{slug}.signupsmartly.com` (e.g. `falconstrack.signupsmartly.com`)
+- **Org home (`/` on subdomain):** Rewritten to `/org/[slug]`; shows org name/logo, tagline, list of published events with coverage meters and Sign Up buttons; footer "Organized with SignupSmartly" linking to marketing homepage
+- **Event pages on subdomain:** Back link to org home (or custom label); primary color on buttons; footer "Organized with SignupSmartly"
+- **Branding:** Organizations have `slug`, `primary_color`, `logo_url`; applied when `x-org-slug` header is set by middleware
+- **Falcons customizations (slug `falconstrack`):** Display name "LA Falcons Track Parent Volunteers" (not linked at top); footer "Organized with SignupSmartly" linking to signupsmartly.com; additional footer line "For more info visit www.falconstrack.com or contact us" (contact us = `mailto:lafalcons1990@gmail.com`)
 
 ---
 
@@ -110,6 +121,11 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 ---
 
 ## Organizer Dashboard
+
+### App Nav (hamburger menu)
+
+- Logo, Create Signup button, hamburger menu
+- **Menu (authenticated):** User name (muted/grey), Settings, What's New, Submit Feedback, Sign Out
 
 ### Dashboard (`/dashboard`)
 
@@ -193,8 +209,19 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 - **Table behavior:** No truncation; text wraps in all columns
 - **Coverage (# still needed):** Make clickable; opens modal listing spots/items that still need filling
 - **Notification settings:** Inline dropdown "Notifications for this event:" — Use my default / Instantly / Daily digest / Weekly digest / Never; auto-saves on change
-- Export CSV (columns adapt by signup type)
+- **Actions (button order):** Copy Signup URL, Edit Event, Export (dropdown)
+- **Export dropdown:** Single "Export" button with options: Export CSV, Export List, Print
+  - **Export CSV:** Columns adapt by signup type; downloads CSV file
+  - **Export List:** Plain-text format for copying into emails; opens modal with formatted text and Copy button; includes header (event title, date/range, location, description), per-slot: slot name, instructions, numbered list of signups (or blank for empty slots); slot order: scheduled by start_time ascending, simple by created_at; single-day events show date only in header; multi-day events show date+time next to each scheduled spot
+  - **Print:** Triggers `window.print()`; existing print styles hide nav and actions
 - *(Generate Volunteer Recap removed; may return later)*
+
+### Edit Event (`/dashboard/event/[id]/edit`)
+
+- Edit event details and spots/items
+- **Scheduled spots:** Date, Start time, End time, Spot name, Capacity, Instructions (optional)
+- **Simple items:** Item name, Capacity, Instructions (optional)
+- Linked from Signups page via "Edit Event" button
 
 ---
 
@@ -233,7 +260,7 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 
 ## Data Model
 
-- **Organizations** — name, timezone
+- **Organizations** — name, timezone, slug (unique, for subdomain), primary_color, logo_url, custom_domain (future)
 - **Users** — organizers (auth)
   - NPS: `nps_dismissed_at`, `nps_submitted_at`
   - `notification_preference` — 'instant' | 'daily' | 'weekly' | 'never' (default: 'daily')
@@ -290,7 +317,11 @@ Use these flows to QA the app end-to-end.
 | Save as template (post-creation) | After creating an event, in modal: "Yes, Save it" → enter template name → confirm | Template saved; appears in template picker on next create |
 | Use template | Create Signup → "use one of my templates" → select template | Form pre-fills spots/items, description, location; title and dates empty |
 | View My Signups | Dashboard → View My Signups on an event | Signups page loads; table shows Spot/Item, Name, Email, Time (if scheduled), Comment, Signup Timestamp |
-| Export CSV | Signups page → Export CSV | CSV downloads with appropriate columns for signup type |
+| Export CSV | Signups page → Export → Export CSV | CSV downloads with appropriate columns for signup type |
+| Export List | Signups page → Export → Export List | Modal shows plain-text list; Copy copies to clipboard |
+| Print | Signups page → Export → Print | Page prints; nav and action buttons hidden |
+| Edit Event | Signups page → Edit Event | Edit event page loads; can edit spots/items including Instructions |
+| Edit Event instructions | Edit Event → add/edit Instructions on a spot or item → Save | Instructions persist; appear in Export List and signup modal |
 | Coverage (# still needed) click | Signups page or event page → click coverage / "# still needed" | Modal lists spots or items that still need filling |
 
 ### Volunteer: Sign up & cancel
@@ -302,6 +333,13 @@ Use these flows to QA the app end-to-end.
 | Signup modal instructions | Open signup modal for a spot with instructions | Instructions shown below spot name |
 | Confirmation: date/time logic | Sign up for slot with no date or no time | Date shown only when present; time shown only when both start/end exist; no "All day" when no times |
 | Cancel via email | Open cancel link from confirmation email | Cancel page; confirm cancel; signup removed from spot/item |
+
+### Org subdomain
+
+| Scenario | Steps | Expected |
+|----------|-------|----------|
+| Falcons org home | Visit falconstrack.signupsmartly.com | "LA Falcons Track Parent Volunteers" at top (not linked); events listed; footer "Organized with SignupSmartly" + "For more info visit www.falconstrack.com or contact us" |
+| Falcons event page | From Falcons org home → Sign Up on event | Top shows "LA Falcons Track Parent Volunteers" (not linked); footer same as org home |
 
 ### Dashboard & event page
 
