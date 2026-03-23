@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "repair-slots": "dotenv -e .env.local -- tsx scripts/repair-slot-times.ts"
+    "repair-slots": "dotenv -e .env.local -- tsx scripts/repair-slot-times.ts",
+    "seed-demo": "dotenv -e .env.local -- tsx scripts/seed-demo-events.ts",
+    "delete-falcons-events": "dotenv -e .env.local -- tsx scripts/delete-falcons-events.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
