@@ -106,15 +106,13 @@ export default function UseCasesPage() {
           </h1>
           <p className="mt-5 text-lg text-muted leading-relaxed font-body">
             Sports teams, classrooms, clubs, neighborhood groups — if you need
-            people to sign up for something, SignupSmartly handles it. No account required. Just a link.
+            people to sign up for something, SignupSmartly handles it.<br />No account required. Just a link.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-sage/15 px-3.5 py-1.5 text-sm font-medium text-sage-hover font-body">
-              <span className="h-1.5 w-1.5 rounded-full bg-sage-hover" />
+            <span className="inline-flex items-center rounded-full bg-sage/15 px-3.5 py-1.5 text-sm font-medium text-sage-hover font-body">
               Scheduled — for events with time slots
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-3.5 py-1.5 text-sm font-medium text-sky-700 font-body">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+            <span className="inline-flex items-center rounded-full bg-sky-100 px-3.5 py-1.5 text-sm font-medium text-sky-700 font-body">
               Simple list — for &quot;who&apos;s bringing what&quot;
             </span>
           </div>
@@ -162,7 +160,7 @@ export default function UseCasesPage() {
                   href="/signup"
                   className="btn-primary mt-8 inline-block px-5 py-2.5 text-sm"
                 >
-                  Try it free →
+                  Try it now →
                 </Link>
               </div>
 

@@ -28,7 +28,7 @@ export default function Home() {
           <p className="mt-6 text-lg text-muted leading-relaxed font-body">
             A cleaner way to coordinate volunteer and sign up lists for community
             events, classrooms, and sports. Create events, add slots, share a
-            link. No ads, no clutter.
+            link.<br />No ads, no clutter.
           </p>
 
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
