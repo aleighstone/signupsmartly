@@ -86,3 +86,19 @@ export function formatTimeRange(
 ): string {
   return formatTimeRangeInTimezone(startTime, endTime, 'UTC');
 }
+
+/**
+ * Format signup timestamp for display. No timezone conversion — shows UTC as stored.
+ */
+export function formatSignupTimestamp(isoString: string): string {
+  const d = new Date(isoString);
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(d);
+}

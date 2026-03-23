@@ -5,7 +5,7 @@ import { getEventWithSlotsForDashboard, getEventCoverage, getOrgSlugForUser } fr
 import { AppLayout } from '@/components/AppLayout';
 import { CoverageWithStillNeeded } from './CoverageWithStillNeeded';
 import { EventNotificationOverride } from './EventNotificationOverride';
-import { formatEventDateRange, formatTimeRange } from '@/lib/calendar';
+import { formatEventDateRange, formatTimeRange, formatSignupTimestamp } from '@/lib/calendar';
 import { SignupsActions } from './SignupsActions';
 import { SignupsTable } from './SignupsTable';
 import { TrackSignupsPageView } from '@/app/providers/PostHogTracker';
@@ -85,7 +85,7 @@ export default async function SignupsPage({ params }: PageProps) {
           name: signup.name,
           email: signup.email,
           comment: signup.comment,
-          createdAt: new Date(signup.created_at).toLocaleString(),
+          createdAt: formatSignupTimestamp(signup.created_at),
           source: signupSource(signup),
         },
       });
@@ -95,7 +95,7 @@ export default async function SignupsPage({ params }: PageProps) {
         email: signup.email ?? '',
         time: slotTime,
         comment: signup.comment,
-        createdAt: new Date(signup.created_at).toLocaleString(),
+        createdAt: formatSignupTimestamp(signup.created_at),
         source: signupSource(signup),
       });
     }
