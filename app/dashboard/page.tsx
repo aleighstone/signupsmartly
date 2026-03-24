@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { ensureUserAndOrg } from '@/lib/ensure-user-org';
 import { TrackDashboardView } from '@/app/providers/PostHogTracker';
+import { TrackMetaCompleteRegistration } from '@/app/providers/MetaPixelTracker';
 import { getEventsForUser, getEventWithSlotsForDashboard, getEventCoverage, hasEventWithVolunteerSignup, getOrgSlugForUser } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
 import { CoverageMeter } from '@/components/CoverageMeter';
@@ -69,6 +70,7 @@ export default async function DashboardPage() {
 
   return (
     <AppLayout>
+      <TrackMetaCompleteRegistration userId={authUser && userId ? userId : null} />
       <TrackDashboardView eventCount={events.length} />
       <h1 className="text-2xl font-semibold text-charcoal font-heading">Your Signups</h1>
 
