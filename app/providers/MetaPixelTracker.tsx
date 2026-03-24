@@ -31,9 +31,22 @@ export function TrackMetaCompleteRegistration({
       /* private mode / blocked storage — still attempt one track for this mount */
     }
 
+    const eventId = crypto.randomUUID();
+
     if (typeof window.fbq === 'function') {
-      window.fbq('track', 'CompleteRegistration');
+      window.fbq('track', 'CompleteRegistration', {}, { eventID: eventId });
     }
+
+    void fetch('/api/meta/conversion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        event_name: 'CompleteRegistration',
+        event_id: eventId,
+        event_source_url: window.location.href,
+      }),
+    });
 
     try {
       window.localStorage.setItem(key, '1');
@@ -41,6 +54,45 @@ export function TrackMetaCompleteRegistration({
       /* ignore */
     }
   }, [userId]);
+
+  return null;
+}
+
+/**
+ * ViewContent for key marketing pages — pixel + CAPI with matching event_id.
+ * Anonymous visitors are allowed (CAPI route does not require auth for ViewContent).
+ */
+export function TrackMetaViewContent({
+  contentName,
+}: {
+  contentName: string;
+}) {
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const eventId = crypto.randomUUID();
+
+    if (typeof window.fbq === 'function') {
+      window.fbq(
+        'track',
+        'ViewContent',
+        { content_name: contentName },
+        { eventID: eventId }
+      );
+    }
+
+    void fetch('/api/meta/conversion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        event_name: 'ViewContent',
+        event_id: eventId,
+        event_source_url: window.location.href,
+        content_name: contentName,
+      }),
+    });
+  }, [contentName]);
 
   return null;
 }

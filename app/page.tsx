@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Logo } from '@/components/Logo';
+import { TrackMetaViewContent } from '@/app/providers/MetaPixelTracker';
 
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col bg-sand" data-page="home">
+      <TrackMetaViewContent contentName="SignupSmartly home" />
       <header className="border-b border-charcoal/10 bg-surface shadow-soft">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 sm:gap-4 sm:px-6">
           <Logo className="shrink-0" />

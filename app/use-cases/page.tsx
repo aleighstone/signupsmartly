@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Logo } from '@/components/Logo';
+import { TrackMetaViewContent } from '@/app/providers/MetaPixelTracker';
 
 const useCases = [
   {
@@ -76,6 +77,7 @@ const useCases = [
 export default function UseCasesPage() {
   return (
     <main className="min-h-screen flex flex-col bg-sand" data-page="use-cases">
+      <TrackMetaViewContent contentName="Use cases" />
 
       {/* ── Header ─────────────────────────────────────────────── */}
       <header className="border-b border-charcoal/10 bg-surface shadow-soft">
