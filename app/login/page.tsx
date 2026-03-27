@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase-browser';
@@ -28,6 +28,80 @@ function GoogleIcon() {
       />
     </svg>
   );
+}
+
+function LoginUrlErrorBanner() {
+  const searchParams = useSearchParams();
+  const posthog = usePostHog();
+  const code = searchParams.get('error');
+
+  useEffect(() => {
+    if (code === 'link_expired' && posthog) {
+      posthog.capture('auth_confirmation_link_expired', {
+        source: 'login_query',
+      });
+    }
+  }, [code, posthog]);
+
+  if (code === 'link_expired') {
+    return (
+      <div
+        className="rounded-xl border border-charcoal/20 bg-surface px-4 py-3 text-left text-sm text-charcoal shadow-soft font-body"
+        role="alert"
+      >
+        <p className="font-medium text-charcoal">
+          This confirmation link has expired or was already used
+        </p>
+        <p className="mt-2 text-muted leading-relaxed">
+          Links from your email are valid for a limited time (about an hour).
+          You can sign in below if you already set a password, or sign up again
+          with the same email to get a fresh confirmation message.
+        </p>
+        <p className="mt-2 text-muted leading-relaxed">
+          <Link href="/signup" className="font-medium text-charcoal underline hover:no-underline">
+            Sign up again
+          </Link>
+          {' · '}
+          <Link
+            href="/login/request-link"
+            className="font-medium text-charcoal underline hover:no-underline"
+          >
+            Email me a sign-in link
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
+  if (code === 'auth') {
+    return (
+      <p
+        className="rounded-xl border border-charcoal/20 bg-surface px-4 py-3 text-sm text-charcoal font-body"
+        role="alert"
+      >
+        We couldn&apos;t complete sign in from that link. Try again below, or
+        use{' '}
+        <Link href="/login/request-link" className="font-medium underline hover:no-underline">
+          email sign-in link
+        </Link>
+        .
+      </p>
+    );
+  }
+
+  if (code === 'no_org') {
+    return (
+      <p
+        className="rounded-xl border border-coral/30 bg-coral/10 px-4 py-3 text-sm text-charcoal font-body"
+        role="alert"
+      >
+        Your account is missing organization data. Please contact support if
+        this keeps happening.
+      </p>
+    );
+  }
+
+  return null;
 }
 
 export default function LoginPage() {
@@ -106,6 +180,9 @@ export default function LoginPage() {
         </div>
 
         <div className="flex flex-col gap-5 rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft">
+          <Suspense fallback={null}>
+            <LoginUrlErrorBanner />
+          </Suspense>
           {error && (
             <p className="text-sm text-white rounded-xl bg-coral p-3 font-body">
               {error}
