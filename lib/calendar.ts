@@ -132,3 +132,38 @@ export function formatSignupTimestamp(isoString: string): string {
     hour12: true,
   }).format(d);
 }
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * Convert stored slot timestamps into `<input type="date">` / `<input type="time">`
+ * values using UTC (same literal semantics as formatTimeRange). Avoids brittle
+ * string slicing on ISO variants (single-digit hours, missing `T`, etc.).
+ */
+export function slotTimestampsToFormFields(
+  startTime: string | null,
+  endTime: string | null,
+  fallbackDateYmd: string | null | undefined
+): { spot_date: string; start_time: string; end_time: string } {
+  const toYmdHm = (iso: string | null) => {
+    if (!iso?.trim()) return { ymd: '', hm: '' };
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return { ymd: '', hm: '' };
+    const ymd = `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
+    const hm = `${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}`;
+    return { ymd, hm };
+  };
+
+  const s = toYmdHm(startTime);
+  const e = toYmdHm(endTime);
+  const fb =
+    fallbackDateYmd && fallbackDateYmd.length >= 10
+      ? fallbackDateYmd.slice(0, 10)
+      : '';
+
+  return {
+    spot_date: s.ymd || fb,
+    start_time: s.hm,
+    end_time: e.hm,
+  };
+}

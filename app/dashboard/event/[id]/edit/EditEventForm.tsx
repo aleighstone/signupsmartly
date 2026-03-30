@@ -6,6 +6,7 @@ import { usePostHog } from '@posthog/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { slotTimestampsToFormFields } from '@/lib/calendar';
 import type { EventWithSlots } from '@/types/database';
 
 interface EditEventFormProps {
@@ -88,15 +89,22 @@ export function EditEventForm({ event }: EditEventFormProps) {
         event.signup_type === 'scheduled' && event.end_date
           ? event.end_date.slice(0, 10)
           : '',
-      slots: event.slots.map((s) => ({
-        id: s.id,
-        spot_date: s.start_time ? s.start_time.slice(0, 10) : (event.start_date?.slice(0, 10) || ''),
-        role_name: s.role_name,
-        start_time: s.start_time ? s.start_time.slice(11, 16) : '',
-        end_time: s.end_time ? s.end_time.slice(11, 16) : '',
-        capacity: s.capacity,
-        instructions: s.instructions || '',
-      })),
+      slots: event.slots.map((s) => {
+        const { spot_date, start_time, end_time } = slotTimestampsToFormFields(
+          s.start_time,
+          s.end_time,
+          event.start_date
+        );
+        return {
+          id: s.id,
+          spot_date,
+          role_name: s.role_name,
+          start_time,
+          end_time,
+          capacity: s.capacity,
+          instructions: s.instructions || '',
+        };
+      }),
     },
   });
 
@@ -539,11 +547,11 @@ function SlotsSectionSimple({
         {slotsLabel}
       </h2>
       <div className="space-y-6">
-        {slots.map((_, index) => {
+        {slots.map((slotRow, index) => {
           const capErr = hasCapacityError(index, slots[index].capacity);
           return (
             <div
-              key={index}
+              key={slotRow.id ?? `simple-slot-${index}`}
               className="rounded-xl border border-charcoal/10 p-4 space-y-4 bg-sand/30"
             >
               <div className="flex justify-between">
@@ -632,9 +640,9 @@ function SlotsSectionScheduled({
         {slotsLabel}
       </h2>
       <div className="space-y-6">
-        {slots.map((_, index) => (
+        {slots.map((slotRow, index) => (
           <div
-            key={index}
+            key={slotRow.id ?? `scheduled-slot-${index}`}
             className="rounded-xl border border-charcoal/10 p-4 space-y-4 bg-sand/30"
           >
             <div className="flex justify-between">
