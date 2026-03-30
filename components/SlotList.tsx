@@ -3,7 +3,10 @@
 import { usePostHog } from '@posthog/react';
 import { formatScheduledSlotWhen } from '@/lib/calendar';
 import type { SlotWithSignups } from '@/types/database';
-import { getSlotRemainingCapacity } from '@/lib/slot-utils';
+import {
+  getSlotRemainingCapacity,
+  sortSlotsForVolunteerDisplay,
+} from '@/lib/slot-utils';
 
 interface SlotListProps {
   slots: SlotWithSignups[];
@@ -39,9 +42,17 @@ function SlotCard({
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
-        <h3 className="font-medium text-charcoal font-body">{slot.role_name}</h3>
-        {!isSimple && (
-          <p className="text-sm text-muted font-body">{whenScheduled}</p>
+        {isSimple ? (
+          <h3 className="font-medium text-charcoal font-body">{slot.role_name}</h3>
+        ) : (
+          <>
+            <h3 className="text-base font-semibold text-charcoal font-heading">
+              {whenScheduled}
+            </h3>
+            <h4 className="mt-1 text-sm font-medium text-charcoal font-body">
+              {slot.role_name}
+            </h4>
+          </>
         )}
         <p className="mt-1 text-sm text-muted font-body">{spotsText}</p>
         {(slot.role_description || slot.instructions) && (
@@ -73,8 +84,9 @@ export function SlotList({
 }: SlotListProps) {
   const posthog = usePostHog();
   const isSimple = signupType === 'simple';
-  const openSlots = slots.filter((s) => getSlotRemainingCapacity(s) > 0);
-  const filledSlots = slots.filter((s) => getSlotRemainingCapacity(s) === 0);
+  const orderedSlots = sortSlotsForVolunteerDisplay(slots, signupType);
+  const openSlots = orderedSlots.filter((s) => getSlotRemainingCapacity(s) > 0);
+  const filledSlots = orderedSlots.filter((s) => getSlotRemainingCapacity(s) === 0);
   const filledLabel = isSimple ? 'Filled Items' : 'Filled Roles';
   const allFilledText = isSimple
     ? 'All items are filled. Thank you!'
@@ -136,11 +148,19 @@ export function SlotList({
                   key={slot.id}
                   className="rounded-xl border border-charcoal/10 bg-surface/60 px-4 py-3 shadow-soft"
                 >
-                  <p className="font-medium text-charcoal font-body">
-                    {slot.role_name}
-                  </p>
-                  {!isSimple && whenScheduled && (
-                    <p className="text-sm text-muted font-body">{whenScheduled}</p>
+                  {isSimple ? (
+                    <p className="font-medium text-charcoal font-body">
+                      {slot.role_name}
+                    </p>
+                  ) : (
+                    <>
+                      <h3 className="text-base font-semibold text-charcoal font-heading">
+                        {whenScheduled}
+                      </h3>
+                      <h4 className="mt-1 text-sm font-medium text-charcoal font-body">
+                        {slot.role_name}
+                      </h4>
+                    </>
                   )}
                   <p className="mt-1 text-sm text-muted font-body">{names}</p>
                 </li>
