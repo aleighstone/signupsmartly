@@ -16,6 +16,8 @@ export type SignupFormData = z.infer<typeof signupSchema>;
 
 interface SignupFormProps {
   slotRoleName: string;
+  /** Date + time for scheduled slots (shown under title). */
+  slotWhen?: string | null;
   slotDetails?: string | null;
   showReminders: boolean;
   modalTitleId?: string;
@@ -28,6 +30,7 @@ interface SignupFormProps {
 
 export function SignupForm({
   slotRoleName,
+  slotWhen,
   slotDetails,
   showReminders,
   modalTitleId,
@@ -69,6 +72,11 @@ export function SignupForm({
         >
           Sign up for {slotRoleName}
         </h2>
+        {slotWhen && (
+          <p className="mt-1 text-sm font-medium text-charcoal font-body">
+            {slotWhen}
+          </p>
+        )}
         {slotDetails && (
           <p className="mt-1 text-sm text-muted font-body">{slotDetails}</p>
         )}

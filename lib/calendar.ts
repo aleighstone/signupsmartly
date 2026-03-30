@@ -87,6 +87,36 @@ export function formatTimeRange(
   return formatTimeRangeInTimezone(startTime, endTime, 'UTC');
 }
 
+/** Calendar date from slot timestamps, UTC — matches how we show times (no local TZ shift). */
+export function formatSlotDateUTC(isoString: string | null): string {
+  if (!isoString) return '';
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(isoString));
+}
+
+/**
+ * Full volunteer-facing line: date + time range for scheduled slots.
+ * If the slot spans two UTC calendar days, both dates are shown.
+ */
+export function formatScheduledSlotWhen(
+  startTime: string | null,
+  endTime: string | null
+): string {
+  const timePart = formatTimeRange(startTime, endTime);
+  if (!startTime) return timePart;
+  const startDate = formatSlotDateUTC(startTime);
+  const endDate = endTime ? formatSlotDateUTC(endTime) : null;
+  if (endDate && endDate !== startDate) {
+    return `${startDate} – ${endDate} · ${timePart}`;
+  }
+  return `${startDate} · ${timePart}`;
+}
+
 /**
  * Format signup timestamp for display. No timezone conversion — shows UTC as stored.
  */

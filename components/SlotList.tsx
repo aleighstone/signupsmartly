@@ -1,7 +1,7 @@
 'use client';
 
 import { usePostHog } from '@posthog/react';
-import { formatTimeRange } from '@/lib/calendar';
+import { formatScheduledSlotWhen } from '@/lib/calendar';
 import type { SlotWithSignups } from '@/types/database';
 import { getSlotRemainingCapacity } from '@/lib/slot-utils';
 
@@ -27,7 +27,7 @@ function SlotCard({
   isSimple: boolean;
   primaryColor?: string;
 }) {
-  const timeRange = formatTimeRange(slot.start_time, slot.end_time);
+  const whenScheduled = formatScheduledSlotWhen(slot.start_time, slot.end_time);
   const unitLabel = isSimple ? 'item' : 'spot';
   const spotsText =
     remaining === 1
@@ -40,7 +40,9 @@ function SlotCard({
     <div className="flex flex-col gap-3 rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
         <h3 className="font-medium text-charcoal font-body">{slot.role_name}</h3>
-        {!isSimple && <p className="text-sm text-muted font-body">{timeRange}</p>}
+        {!isSimple && (
+          <p className="text-sm text-muted font-body">{whenScheduled}</p>
+        )}
         <p className="mt-1 text-sm text-muted font-body">{spotsText}</p>
         {(slot.role_description || slot.instructions) && (
           <p className="mt-1 text-sm text-muted line-clamp-2 font-body">
@@ -122,7 +124,10 @@ export function SlotList({
           </h2>
           <ul className="space-y-3">
             {filledSlots.map((slot) => {
-              const timeRange = formatTimeRange(slot.start_time, slot.end_time);
+              const whenScheduled = formatScheduledSlotWhen(
+                slot.start_time,
+                slot.end_time
+              );
               const names = slot.signups
                 .map((s) => s.name)
                 .join(', ');
@@ -134,8 +139,8 @@ export function SlotList({
                   <p className="font-medium text-charcoal font-body">
                     {slot.role_name}
                   </p>
-                  {!isSimple && timeRange && (
-                    <p className="text-sm text-muted font-body">{timeRange}</p>
+                  {!isSimple && whenScheduled && (
+                    <p className="text-sm text-muted font-body">{whenScheduled}</p>
                   )}
                   <p className="mt-1 text-sm text-muted font-body">{names}</p>
                 </li>

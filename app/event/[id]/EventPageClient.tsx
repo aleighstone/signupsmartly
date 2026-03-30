@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SlotList } from '@/components/SlotList';
 import { SignupModal } from '@/components/SignupModal';
+import { formatScheduledSlotWhen } from '@/lib/calendar';
 import type { EventWithSlots, SlotWithSignups } from '@/types/database';
 import type { SignupFormData } from '@/components/SignupForm';
 
@@ -69,6 +70,14 @@ export function EventPageClient({ event, primaryColor }: EventPageClientProps) {
         isOpen={!!modalSlot}
         onClose={handleCloseModal}
         slotRoleName={modalSlot?.role_name ?? ''}
+        slotWhen={
+          modalSlot && event.signup_type === 'scheduled'
+            ? formatScheduledSlotWhen(
+                modalSlot.start_time,
+                modalSlot.end_time
+              )
+            : null
+        }
         slotDetails={modalSlot?.instructions ?? modalSlot?.role_description ?? null}
         showReminders={event.signup_type === 'scheduled' || !!event.start_date}
         onSubmit={handleSubmit}
