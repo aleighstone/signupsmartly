@@ -12,6 +12,13 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: 'March 27, 2026',
+    changes: [
+      { type: 'fixed', text: 'Volunteer signup page — scheduled spots now show the date as well as the time (including in the sign-up modal), so it is clear which day each shift is for.' },
+      { type: 'fixed', text: 'Edit signup — slot dates and times now load reliably into the edit form with your saved values, instead of sometimes appearing empty.' },
+    ],
+  },
+  {
     date: 'March 22, 2026',
     changes: [
       { type: 'fixed', text: 'Fixed scheduled signup times — the app no longer converts timezones; Volunteers now see the same time as organizers with no timezone translation logic.' },
