@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { slotTimestampsToFormFields } from '@/lib/calendar';
+import { sortScheduledSlotsForSave } from '@/lib/slot-utils';
 import type { EventWithSlots } from '@/types/database';
 
 interface EditEventFormProps {
@@ -231,8 +232,8 @@ export function EditEventForm({ event }: EditEventFormProps) {
     }
 
     const data = scheduledForm.getValues();
-    const dates = scheduledSlots.map((s) => s.spot_date)
-      .filter(Boolean) as string[];
+    const sortedSlots = sortScheduledSlotsForSave(scheduledSlots);
+    const dates = sortedSlots.map((s) => s.spot_date).filter(Boolean) as string[];
     const startDate = dates.length ? dates[0] : null;
     const endDate =
       dates.length
@@ -241,7 +242,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
           : dates.reduce((a, b) => (a > b ? a : b))
         : null;
 
-    const slotsPayload = scheduledSlots.map((s) => {
+    const slotsPayload = sortedSlots.map((s) => {
         const date = s.spot_date || startDate || '';
         const startTimeStr = s.start_time?.trim();
         const endTimeStr = s.end_time?.trim();

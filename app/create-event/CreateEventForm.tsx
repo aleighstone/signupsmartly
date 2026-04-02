@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { sortScheduledSlotsForSave } from '@/lib/slot-utils';
 
 type SignupType = 'scheduled' | 'simple' | 'template';
 
@@ -366,7 +367,8 @@ export function CreateEventForm({
   const onSubmitScheduled = async (data: ScheduledFormData) => {
     setIsSubmitting(true);
     try {
-      const dates = data.slots.map((s) => s.spot_date).filter(Boolean);
+      const sortedSlots = sortScheduledSlotsForSave(data.slots);
+      const dates = sortedSlots.map((s) => s.spot_date).filter(Boolean);
       const startDate = dates.length ? dates[0] : null;
       const endDate = dates.length
         ? (dates.length === 1 ? dates[0] : dates.reduce((a, b) => (a > b ? a : b)))
@@ -384,7 +386,7 @@ export function CreateEventForm({
           start_date: startDate ? `${startDate}T00:00:00Z` : null,
           end_date: endDate ? `${endDate}T23:59:59Z` : null,
           published: true,
-          slots: data.slots.map((s) => {
+          slots: sortedSlots.map((s) => {
             const date = s.spot_date;
             const startTimeStr = s.start_time?.trim();
             const endTimeStr = s.end_time?.trim();
@@ -416,7 +418,7 @@ export function CreateEventForm({
       if (posthog) {
         posthog.capture('signup_created', {
           signup_type: 'scheduled',
-          slot_count: data.slots.length,
+          slot_count: sortedSlots.length,
         });
       }
       setLastCreated({
@@ -424,7 +426,7 @@ export function CreateEventForm({
         signupType: 'scheduled',
         description: data.description || null,
         location: data.location || null,
-        slots: data.slots.map((s) => ({
+        slots: sortedSlots.map((s) => ({
           role_name: s.role_name,
           capacity: s.capacity,
           start_time: s.start_time || undefined,
