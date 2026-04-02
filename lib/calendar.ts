@@ -99,16 +99,36 @@ export function formatSlotDateUTC(isoString: string | null): string {
   }).format(new Date(isoString));
 }
 
+/** When a scheduled slot has no stored start_time, fall back to event-level dates (matches Event header). */
+export type ScheduledSlotEventDateFallback = {
+  startDate: string | null;
+  endDate: string | null;
+};
+
 /**
  * Full volunteer-facing line: date + time range for scheduled slots.
  * If the slot spans two UTC calendar days, both dates are shown.
+ * If `startTime` is missing, uses `eventFallback` dates when provided so volunteers
+ * still see the event window (e.g. "Apr 1 – Apr 3, 2026 · All day").
  */
 export function formatScheduledSlotWhen(
   startTime: string | null,
-  endTime: string | null
+  endTime: string | null,
+  eventFallback?: ScheduledSlotEventDateFallback | null
 ): string {
   const timePart = formatTimeRange(startTime, endTime);
-  if (!startTime) return timePart;
+  if (!startTime) {
+    if (eventFallback?.startDate) {
+      const dateLine = formatEventDateRange(
+        eventFallback.startDate,
+        eventFallback.endDate
+      );
+      if (dateLine) {
+        return `${dateLine} · ${timePart}`;
+      }
+    }
+    return timePart;
+  }
   const startDate = formatSlotDateUTC(startTime);
   const endDate = endTime ? formatSlotDateUTC(endTime) : null;
   if (endDate && endDate !== startDate) {

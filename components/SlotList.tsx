@@ -1,6 +1,7 @@
 'use client';
 
 import { usePostHog } from '@posthog/react';
+import type { ScheduledSlotEventDateFallback } from '@/lib/calendar';
 import { formatScheduledSlotWhen } from '@/lib/calendar';
 import type { SlotWithSignups } from '@/types/database';
 import {
@@ -12,6 +13,8 @@ interface SlotListProps {
   slots: SlotWithSignups[];
   onSignUp: (slot: SlotWithSignups) => void;
   signupType?: 'scheduled' | 'simple';
+  /** Scheduled slots with null start_time use these event dates in the primary line. */
+  eventDateFallback?: ScheduledSlotEventDateFallback | null;
   primaryColor?: string;
 }
 
@@ -21,6 +24,7 @@ function SlotCard({
   onSignUp,
   onSignUpClick,
   isSimple,
+  eventDateFallback,
   primaryColor,
 }: {
   slot: SlotWithSignups;
@@ -28,9 +32,14 @@ function SlotCard({
   onSignUp: () => void;
   onSignUpClick?: () => void;
   isSimple: boolean;
+  eventDateFallback?: ScheduledSlotEventDateFallback | null;
   primaryColor?: string;
 }) {
-  const whenScheduled = formatScheduledSlotWhen(slot.start_time, slot.end_time);
+  const whenScheduled = formatScheduledSlotWhen(
+    slot.start_time,
+    slot.end_time,
+    isSimple ? null : eventDateFallback
+  );
   const unitLabel = isSimple ? 'item' : 'spot';
   const spotsText =
     remaining === 1
@@ -80,6 +89,7 @@ export function SlotList({
   slots,
   onSignUp,
   signupType = 'scheduled',
+  eventDateFallback = null,
   primaryColor,
 }: SlotListProps) {
   const posthog = usePostHog();
@@ -120,6 +130,7 @@ export function SlotList({
                     }
                   }}
                   isSimple={isSimple}
+                  eventDateFallback={eventDateFallback}
                   primaryColor={primaryColor}
                 />
               </li>
@@ -138,7 +149,8 @@ export function SlotList({
             {filledSlots.map((slot) => {
               const whenScheduled = formatScheduledSlotWhen(
                 slot.start_time,
-                slot.end_time
+                slot.end_time,
+                isSimple ? null : eventDateFallback
               );
               const names = slot.signups
                 .map((s) => s.name)

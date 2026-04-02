@@ -64,6 +64,11 @@ export function EventPageClient({ event, primaryColor }: EventPageClientProps) {
         slots={event.slots}
         onSignUp={handleSignUp}
         signupType={event.signup_type}
+        eventDateFallback={
+          event.signup_type === 'scheduled'
+            ? { startDate: event.start_date, endDate: event.end_date }
+            : null
+        }
         primaryColor={primaryColor}
       />
       <SignupModal
@@ -74,7 +79,8 @@ export function EventPageClient({ event, primaryColor }: EventPageClientProps) {
           modalSlot && event.signup_type === 'scheduled'
             ? formatScheduledSlotWhen(
                 modalSlot.start_time,
-                modalSlot.end_time
+                modalSlot.end_time,
+                { startDate: event.start_date, endDate: event.end_date }
               )
             : null
         }

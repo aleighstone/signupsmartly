@@ -12,6 +12,12 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: 'April 2, 2026',
+    changes: [
+      { type: 'improved', text: 'Scheduled spots now sort automatically by date and time when you save — so you can enter spots in any order and they\'ll always appear chronologically.' },
+    ],
+  },
+  {
     date: 'March 27, 2026',
     changes: [
       { type: 'fixed', text: 'Volunteer signup page — scheduled spots now show the date as well as the time (including in the sign-up modal), so it is clear which day each shift is for.' },
