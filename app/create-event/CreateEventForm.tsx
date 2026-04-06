@@ -809,24 +809,42 @@ export function CreateEventForm({
                         placeholder="Any notes for volunteers"
                       />
                     </div>
-                    <div className="border-t border-charcoal/10 pt-4">
-                      <div className="flex flex-col gap-3">
-                        <p className="text-xs font-medium text-muted font-body">
-                          Signup settings for this spot
-                        </p>
-                        <label className="flex cursor-pointer items-center gap-3 text-sm text-charcoal font-body">
+                    <div className="border-t border-charcoal/10 pt-4 space-y-4">
+                      <p className="text-sm font-medium text-charcoal font-body">
+                        Signup settings for this spot
+                      </p>
+                      <div className="space-y-3">
+                        <label className="flex cursor-pointer items-start gap-3">
                           <input
                             type="checkbox"
                             {...scheduledForm.register(`slots.${index}.comment_required`)}
-                            className="h-4 w-4 shrink-0 rounded border-2 border-charcoal text-sage focus:ring-2 focus:ring-sage/40 focus:ring-offset-0"
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
                           />
-                          <span>Require a comment when signing up</span>
+                          <span className="text-sm font-medium text-charcoal font-body">
+                            Require a comment response when signing up
+                          </span>
+                        </label>
+                        <label className="flex cursor-pointer items-start gap-3">
+                          <input
+                            type="checkbox"
+                            {...scheduledForm.register(`slots.${index}.comment_show_publicly`)}
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
+                          />
+                          <span>
+                            <span className="block text-sm font-medium text-charcoal font-body">
+                              Show comment responses on the public signup page
+                            </span>
+                            <span className="mt-0.5 block text-xs text-muted font-body leading-relaxed">
+                              When enabled, what volunteers write may appear next to their name when
+                              others view the list.
+                            </span>
+                          </span>
                         </label>
                       </div>
-                      <div className="mt-6 space-y-2">
+                      <div>
                         <label
                           htmlFor={`create-scheduled-comment-title-${index}`}
-                          className="block text-sm text-charcoal font-body"
+                          className="block text-sm font-medium text-charcoal mb-1 font-body"
                         >
                           Customize the title of the comment field (max 60 characters).
                         </label>
@@ -835,30 +853,14 @@ export function CreateEventForm({
                           type="text"
                           maxLength={60}
                           {...scheduledForm.register(`slots.${index}.comment_label`)}
-                          className="w-full rounded-xl border border-charcoal/20 bg-surface px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
+                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                           placeholder="Comment"
                         />
                         {scheduledForm.formState.errors.slots?.[index]?.comment_label && (
-                          <p className="text-sm text-coral font-body">
+                          <p className="mt-1 text-sm text-coral font-body">
                             {scheduledForm.formState.errors.slots?.[index]?.comment_label?.message}
                           </p>
                         )}
-                        <label className="flex cursor-pointer items-start gap-3 pt-3">
-                          <input
-                            type="checkbox"
-                            {...scheduledForm.register(`slots.${index}.comment_show_publicly`)}
-                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
-                          />
-                          <span>
-                            <span className="block text-sm font-medium text-charcoal font-body">
-                              Show responses on the public signup page
-                            </span>
-                            <span className="mt-0.5 block text-xs text-muted font-body">
-                              When enabled, what volunteers write may appear next to their name when
-                              others view the list.
-                            </span>
-                          </span>
-                        </label>
                       </div>
                     </div>
                   </div>
@@ -1020,24 +1022,42 @@ export function CreateEventForm({
                         className="w-full max-w-[100px] rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                       />
                     </div>
-                    <div className="border-t border-charcoal/10 pt-4">
-                      <div className="flex flex-col gap-3">
-                        <p className="text-xs font-medium text-muted font-body">
-                          Signup settings for this spot
-                        </p>
-                        <label className="flex cursor-pointer items-center gap-3 text-sm text-charcoal font-body">
+                    <div className="border-t border-charcoal/10 pt-4 space-y-4">
+                      <p className="text-sm font-medium text-charcoal font-body">
+                        Signup settings for this spot
+                      </p>
+                      <div className="space-y-3">
+                        <label className="flex cursor-pointer items-start gap-3">
                           <input
                             type="checkbox"
                             {...simpleForm.register(`slots.${index}.comment_required`)}
-                            className="h-4 w-4 shrink-0 rounded border-2 border-charcoal text-sage focus:ring-2 focus:ring-sage/40 focus:ring-offset-0"
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
                           />
-                          <span>Require a comment when signing up</span>
+                          <span className="text-sm font-medium text-charcoal font-body">
+                            Require a comment response when signing up
+                          </span>
+                        </label>
+                        <label className="flex cursor-pointer items-start gap-3">
+                          <input
+                            type="checkbox"
+                            {...simpleForm.register(`slots.${index}.comment_show_publicly`)}
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
+                          />
+                          <span>
+                            <span className="block text-sm font-medium text-charcoal font-body">
+                              Show comment responses on the public signup page
+                            </span>
+                            <span className="mt-0.5 block text-xs text-muted font-body leading-relaxed">
+                              When enabled, what volunteers write may appear next to their name when
+                              others view the list.
+                            </span>
+                          </span>
                         </label>
                       </div>
-                      <div className="mt-6 space-y-2">
+                      <div>
                         <label
                           htmlFor={`create-simple-comment-title-${index}`}
-                          className="block text-sm text-charcoal font-body"
+                          className="block text-sm font-medium text-charcoal mb-1 font-body"
                         >
                           Customize the title of the comment field (max 60 characters).
                         </label>
@@ -1046,30 +1066,14 @@ export function CreateEventForm({
                           type="text"
                           maxLength={60}
                           {...simpleForm.register(`slots.${index}.comment_label`)}
-                          className="w-full rounded-xl border border-charcoal/20 bg-surface px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
+                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                           placeholder="Comment"
                         />
                         {simpleForm.formState.errors.slots?.[index]?.comment_label && (
-                          <p className="text-sm text-coral font-body">
+                          <p className="mt-1 text-sm text-coral font-body">
                             {simpleForm.formState.errors.slots?.[index]?.comment_label?.message}
                           </p>
                         )}
-                        <label className="flex cursor-pointer items-start gap-3 pt-3">
-                          <input
-                            type="checkbox"
-                            {...simpleForm.register(`slots.${index}.comment_show_publicly`)}
-                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
-                          />
-                          <span>
-                            <span className="block text-sm font-medium text-charcoal font-body">
-                              Show responses on the public signup page
-                            </span>
-                            <span className="mt-0.5 block text-xs text-muted font-body">
-                              When enabled, what volunteers write may appear next to their name when
-                              others view the list.
-                            </span>
-                          </span>
-                        </label>
                       </div>
                     </div>
                   </div>
