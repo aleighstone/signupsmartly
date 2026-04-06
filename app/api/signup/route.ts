@@ -7,6 +7,19 @@ import { reportProductionError } from '@/lib/error-reporter';
 import { effectiveNotificationPreference } from '@/lib/notifications';
 import { serviceSupabase } from '@/lib/supabase-service';
 
+function sameEmail(a: string, b: string) {
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
+}
+
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'code' in err &&
+    (err as { code: string }).code === '23505'
+  );
+}
+
 const signupSchema = z.object({
   slotId: z.string().uuid(),
   name: z.string().min(1).max(100),
@@ -75,14 +88,43 @@ export async function POST(request: Request) {
       );
     }
 
-    const signup = await createSignup({
-      slotId,
-      name,
-      email,
-      comment: trimmedComment || undefined,
-      reminder_opt_in,
-      reminder_offset,
-    });
+    const { data: activeForSlot } = await serviceSupabase
+      .from('signups')
+      .select('id, email')
+      .eq('slot_id', slotId)
+      .eq('cancelled', false);
+
+    const activeRows = (activeForSlot ?? []) as { id: string; email: string | null }[];
+    const existing = activeRows.find((row) => sameEmail(row.email ?? '', email));
+    if (existing) {
+      return NextResponse.json({ signupId: existing.id });
+    }
+
+    let signup: Awaited<ReturnType<typeof createSignup>>;
+    try {
+      signup = await createSignup({
+        slotId,
+        name,
+        email,
+        comment: trimmedComment || undefined,
+        reminder_opt_in,
+        reminder_offset,
+      });
+    } catch (insertErr) {
+      if (isUniqueViolation(insertErr)) {
+        const { data: afterRace } = await serviceSupabase
+          .from('signups')
+          .select('id, email')
+          .eq('slot_id', slotId)
+          .eq('cancelled', false);
+        const raceRows = (afterRace ?? []) as { id: string; email: string | null }[];
+        const winner = raceRows.find((row) => sameEmail(row.email ?? '', email));
+        if (winner) {
+          return NextResponse.json({ signupId: winner.id });
+        }
+      }
+      throw insertErr;
+    }
 
     // Volunteer confirmation email should not block signup success
     try {

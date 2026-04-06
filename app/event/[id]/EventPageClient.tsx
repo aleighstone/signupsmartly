@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SlotList } from '@/components/SlotList';
 import { SignupModal } from '@/components/SignupModal';
@@ -22,16 +22,20 @@ export function EventPageClient({ event }: EventPageClientProps) {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Prevents double-submit (double-click, Enter+click) before React re-renders. */
+  const submitInFlightRef = useRef(false);
 
   const showSignups = event.show_signups ?? true;
 
   const handleSignUp = (slot: SlotWithSignups) => {
+    submitInFlightRef.current = false;
     setModalSlot(slot);
     setError(null);
   };
 
   const handleCloseModal = () => {
     if (!isSubmitting) {
+      submitInFlightRef.current = false;
       setModalSlot(null);
       setError(null);
     }
@@ -39,6 +43,8 @@ export function EventPageClient({ event }: EventPageClientProps) {
 
   const handleSubmit = async (data: SignupFormData) => {
     if (!modalSlot) return;
+    if (submitInFlightRef.current) return;
+    submitInFlightRef.current = true;
     setIsSubmitting(true);
     setError(null);
     try {
@@ -57,12 +63,14 @@ export function EventPageClient({ event }: EventPageClientProps) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Signup failed');
       router.push(`/signup/confirm?id=${json.signupId}`);
+      // Keep isSubmitting true and ref locked until navigation unmounts — do not re-enable
+      // the button while still on this page (avoids duplicate signups).
     } catch (e) {
+      submitInFlightRef.current = false;
+      setIsSubmitting(false);
       setError(
         e instanceof Error ? e.message : 'Something went wrong, please try again.'
       );
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
