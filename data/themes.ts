@@ -18,11 +18,9 @@ export const colorThemes: ColorTheme[] = [
   // ── School & University ──────────────────────────────────────
   { key: 'michigan-maize', name: 'Michigan Maize', category: 'school', primary: '#FFCB05', btnText: '#1C1917' },
   { key: 'michigan-blue', name: 'Michigan Blue', category: 'school', primary: '#00274C', btnText: '#FFFFFF' },
-  { key: 'alabama-crimson', name: 'Alabama Crimson', category: 'school', primary: '#9E1B32', btnText: '#FFFFFF' },
   { key: 'oregon-green', name: 'Oregon Green', category: 'school', primary: '#154733', btnText: '#FFFFFF' },
   { key: 'oregon-yellow', name: 'Oregon Yellow', category: 'school', primary: '#FEE123', btnText: '#1C1917' },
   { key: 'usc-cardinal', name: 'USC Cardinal', category: 'school', primary: '#990000', btnText: '#FFFFFF' },
-  { key: 'stanford-cardinal', name: 'Stanford Cardinal', category: 'school', primary: '#8C1515', btnText: '#FFFFFF' },
   { key: 'notre-dame-navy', name: 'Notre Dame Navy', category: 'school', primary: '#0C2340', btnText: '#FFFFFF' },
   { key: 'texas-orange', name: 'Texas Orange', category: 'school', primary: '#BF5700', btnText: '#FFFFFF' },
   { key: 'georgia-red', name: 'Georgia Red', category: 'school', primary: '#BA0C2F', btnText: '#FFFFFF' },
@@ -30,27 +28,21 @@ export const colorThemes: ColorTheme[] = [
   { key: 'duke-blue', name: 'Duke Blue', category: 'school', primary: '#003087', btnText: '#FFFFFF' },
   { key: 'kentucky-blue', name: 'Kentucky Blue', category: 'school', primary: '#0033A0', btnText: '#FFFFFF' },
   { key: 'ucla-blue', name: 'UCLA Blue', category: 'school', primary: '#2D68C4', btnText: '#FFFFFF' },
-  { key: 'florida-blue', name: 'Florida Blue', category: 'school', primary: '#003087', btnText: '#FFFFFF' },
   { key: 'penn-state-navy', name: 'Penn State Navy', category: 'school', primary: '#001E44', btnText: '#FFFFFF' },
   { key: 'clemson-orange', name: 'Clemson Orange', category: 'school', primary: '#C04E18', btnText: '#FFFFFF' },
-  { key: 'auburn-orange', name: 'Auburn Orange', category: 'school', primary: '#B85210', btnText: '#FFFFFF' },
 
   // ── Sports Teams ────────────────────────────────────────────
   { key: 'dodger-blue', name: 'Dodger Blue', category: 'sports', primary: '#005A9C', btnText: '#FFFFFF' },
   { key: 'yankee-navy', name: 'Yankee Navy', category: 'sports', primary: '#132448', btnText: '#FFFFFF' },
-  { key: 'red-sox-red', name: 'Red Sox Red', category: 'sports', primary: '#BD3039', btnText: '#FFFFFF' },
   { key: 'lakers-purple', name: 'Lakers Purple', category: 'sports', primary: '#552583', btnText: '#FFFFFF' },
   { key: 'warriors-blue', name: 'Warriors Blue', category: 'sports', primary: '#1D428A', btnText: '#FFFFFF' },
   { key: '49ers-red', name: '49ers Red', category: 'sports', primary: '#AA0000', btnText: '#FFFFFF' },
   { key: 'packers-green', name: 'Packers Green', category: 'sports', primary: '#203731', btnText: '#FFFFFF' },
-  { key: 'cowboys-navy', name: 'Cowboys Navy', category: 'sports', primary: '#003594', btnText: '#FFFFFF' },
-  { key: 'chelsea-blue', name: 'Chelsea Blue', category: 'sports', primary: '#034694', btnText: '#FFFFFF' },
   { key: 'manchester-red', name: 'Manchester Red', category: 'sports', primary: '#DA291C', btnText: '#FFFFFF' },
 
   // ── General & Aesthetic ─────────────────────────────────────
   { key: 'default', name: 'Default ★', category: 'general', primary: '#4A7C59', btnText: '#FFFFFF' },
   { key: 'sage', name: 'Sage', category: 'general', primary: '#4A7C59', btnText: '#FFFFFF' },
-  { key: 'ocean', name: 'Ocean', category: 'general', primary: '#0077B6', btnText: '#FFFFFF' },
   { key: 'coral', name: 'Coral', category: 'general', primary: '#A8392A', btnText: '#FFFFFF' },
   { key: 'lavender', name: 'Lavender', category: 'general', primary: '#5B4FB5', btnText: '#FFFFFF' },
   { key: 'rose', name: 'Rose', category: 'general', primary: '#C2185B', btnText: '#FFFFFF' },
@@ -63,14 +55,12 @@ export const colorThemes: ColorTheme[] = [
   { key: 'blush', name: 'Blush', category: 'general', primary: '#A85560', btnText: '#FFFFFF' },
   { key: 'indigo', name: 'Indigo', category: 'general', primary: '#4338CA', btnText: '#FFFFFF' },
   { key: 'dusty-rose', name: 'Dusty Rose', category: 'general', primary: '#9B555E', btnText: '#FFFFFF' },
-  { key: 'olive', name: 'Olive', category: 'general', primary: '#4F5E2A', btnText: '#FFFFFF' },
 
   // ── Unicorn & Whimsical ─────────────────────────────────────
   { key: 'fuchsia', name: 'Fuchsia', category: 'unicorn', primary: '#A21CAF', btnText: '#FFFFFF' },
   { key: 'magenta', name: 'Magenta', category: 'unicorn', primary: '#C026D3', btnText: '#FFFFFF' },
   { key: 'bubblegum', name: 'Bubblegum', category: 'unicorn', primary: '#DB2777', btnText: '#FFFFFF' },
   { key: 'violet', name: 'Violet', category: 'unicorn', primary: '#7C3AED', btnText: '#FFFFFF' },
-  { key: 'periwinkle', name: 'Periwinkle', category: 'unicorn', primary: '#4352B3', btnText: '#FFFFFF' },
   { key: 'iridescent-teal', name: 'Iridescent Teal', category: 'unicorn', primary: '#0E7490', btnText: '#FFFFFF' },
   { key: 'electric-blue', name: 'Electric Blue', category: 'unicorn', primary: '#1746A2', btnText: '#FFFFFF' },
   { key: 'wisteria', name: 'Wisteria', category: 'unicorn', primary: '#6B46C1', btnText: '#FFFFFF' },
@@ -127,4 +117,10 @@ export function resolveFontTheme(fontKey: string | null | undefined): FontTheme 
 
 export function googleFontsStylesheetHref(font: FontTheme): string {
   return `https://fonts.googleapis.com/css2?family=${font.family}:wght@${font.weights}&display=swap`;
+}
+
+/** Single stylesheet for every picker font (organizer UI); use with display=swap when injecting. */
+export function googleFontsAllPickerStylesheetHref(): string {
+  const families = fontThemes.map((f) => `family=${f.family}:wght@${f.weights}`).join('&');
+  return `https://fonts.googleapis.com/css2?${families}&display=swap`;
 }

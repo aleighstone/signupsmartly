@@ -1,7 +1,59 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import type { ColorTheme, FontTheme } from '@/data/themes';
-import { colorThemes, fontFamilyCss, fontThemes } from '@/data/themes';
+import {
+  colorThemes,
+  fontFamilyCss,
+  fontThemes,
+  googleFontsAllPickerStylesheetHref,
+} from '@/data/themes';
+
+/** Matches select chevrons (CreateEventForm, SignupForm, etc.): `M19 9l-7 7-7-7` */
+function ChevronDownIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M19 9l-7 7-7-7"
+      />
+    </svg>
+  );
+}
+
+/** Inverse of app down chevron */
+function ChevronUpIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M5 15l7-7 7 7"
+      />
+    </svg>
+  );
+}
 
 export function ColorPicker({
   value,
@@ -103,6 +155,8 @@ export function FontPicker({
   );
 }
 
+const FONT_PICKER_STYLESHEET_ID = 'signupsmartly-font-picker-google-fonts';
+
 export function CustomizeAppearanceSection({
   colorKey,
   fontKey,
@@ -114,13 +168,56 @@ export function CustomizeAppearanceSection({
   onColorChange: (key: string) => void;
   onFontChange: (key: string) => void;
 }) {
+  const [loadPickerFonts, setLoadPickerFonts] = useState(false);
+
+  useEffect(() => {
+    if (!loadPickerFonts || typeof document === 'undefined') return;
+
+    const ensureHeadLink = (
+      id: string,
+      rel: string,
+      href: string,
+      crossOrigin?: 'anonymous'
+    ) => {
+      if (document.getElementById(id)) return;
+      const link = document.createElement('link');
+      link.id = id;
+      link.rel = rel;
+      link.href = href;
+      if (crossOrigin) link.crossOrigin = crossOrigin;
+      document.head.appendChild(link);
+    };
+
+    ensureHeadLink('signupsmartly-font-picker-preconnect-g', 'preconnect', 'https://fonts.googleapis.com');
+    ensureHeadLink(
+      'signupsmartly-font-picker-preconnect-gstatic',
+      'preconnect',
+      'https://fonts.gstatic.com',
+      'anonymous'
+    );
+
+    if (!document.getElementById(FONT_PICKER_STYLESHEET_ID)) {
+      const link = document.createElement('link');
+      link.id = FONT_PICKER_STYLESHEET_ID;
+      link.rel = 'stylesheet';
+      link.href = googleFontsAllPickerStylesheetHref();
+      document.head.appendChild(link);
+    }
+  }, [loadPickerFonts]);
+
   return (
-    <details className="group rounded-xl border border-charcoal/10 bg-surface">
+    <details
+      className="group rounded-xl border border-charcoal/10 bg-surface"
+      onToggle={(e) => {
+        if (e.currentTarget.open) setLoadPickerFonts(true);
+      }}
+    >
       <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-charcoal font-body list-none flex items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
         <span>Customize appearance</span>
-        <span className="text-muted text-xs shrink-0">
-          <span className="group-open:hidden">Color &amp; font</span>
-          <span className="hidden group-open:inline">▲</span>
+        <span className="flex items-center gap-1.5 shrink-0 text-muted">
+          <span className="text-xs group-open:hidden">Color &amp; font</span>
+          <ChevronDownIcon className="shrink-0 group-open:hidden" />
+          <ChevronUpIcon className="hidden shrink-0 group-open:block" />
         </span>
       </summary>
       <div className="px-4 pb-4 space-y-6 border-t border-charcoal/10 pt-4">
