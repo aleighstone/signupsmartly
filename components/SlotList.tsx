@@ -87,12 +87,12 @@ function SlotCard({
             </h4>
           </>
         )}
-        <p className="mt-1 text-sm text-muted font-body">
+        <p className="mt-1 text-sm text-charcoal font-body">
           {spotsText}
           {showSeeWho ? (
             <>
               {' · '}
-              <span className="text-charcoal">
+              <span>
                 {filled} of {capacity} filled
               </span>
               {' · '}

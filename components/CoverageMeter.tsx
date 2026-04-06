@@ -49,13 +49,10 @@ export function CoverageMeter({
           }}
         />
       </div>
-      <p className="text-sm text-muted font-body">
+      <p className="text-sm text-charcoal font-body">
         {filled} of {total} {signupType === 'simple' ? 'items' : 'spots'} filled
         {remaining > 0 && (
-          <span
-            className={`ml-1 font-medium ${volunteerPageThemed ? '' : 'text-charcoal'}`}
-            style={volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined}
-          >
+          <span className="ml-1 font-medium">
             · {remaining} still needed
           </span>
         )}
