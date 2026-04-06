@@ -31,10 +31,15 @@ export async function getEventWithSlots(
   if (eventError || !event) return null;
 
   const eventRow = event as Event;
-  // Public event pages only need signup names (for "filled" UI), so avoid selecting
-  // sensitive fields like `email`, `comment`, and `cancel_token`.
+  const showSignupsPublic =
+    publishedOnly && (eventRow.show_signups ?? true);
+
+  // Public: never select email/cancel_token. Comments only when we may return them
+  // (show_signups); still redact per-slot in the mapper unless comment_show_publicly.
   const signupsSelect = publishedOnly
-    ? 'signups (id, name, cancelled)'
+    ? showSignupsPublic
+      ? 'signups (id, name, comment, cancelled)'
+      : 'signups (id, name, cancelled)'
     : 'signups (*)';
   const { data: slots, error: slotsError } = await supabase
     .from('slots')
@@ -50,10 +55,27 @@ export async function getEventWithSlots(
 
   if (slotsError) return null;
 
-  const slotsWithSignups: SlotWithSignups[] = (slots || []).map((s: Slot & { signups: Signup[] }) => ({
-    ...s,
-    signups: s.signups.filter((sig) => !sig.cancelled),
-  }));
+  const slotsWithSignups: SlotWithSignups[] = (slots || []).map(
+    (s: Slot & { signups: Signup[] }) => {
+      const active = s.signups.filter((sig) => !sig.cancelled);
+      if (!publishedOnly) {
+        return { ...s, signups: active };
+      }
+      const signups = active.map((sig) => {
+        const safeComment =
+          showSignupsPublic && s.comment_show_publicly
+            ? (sig.comment ?? null)
+            : null;
+        return {
+          ...sig,
+          email: null,
+          comment: safeComment,
+          cancel_token: '',
+        } as Signup;
+      });
+      return { ...s, signups };
+    }
+  );
 
   return {
     ...eventRow,

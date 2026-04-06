@@ -35,6 +35,7 @@ const scheduledSlotSchema = z.object({
   instructions: z.string().optional(),
   comment_label: z.string().max(60, 'Max 60 characters').optional(),
   comment_required: z.boolean().optional(),
+  comment_show_publicly: z.boolean().optional(),
 });
 
 const simpleSlotSchema = z.object({
@@ -43,12 +44,14 @@ const simpleSlotSchema = z.object({
   capacity: z.number().min(1, 'At least 1'),
   comment_label: z.string().max(60, 'Max 60 characters').optional(),
   comment_required: z.boolean().optional(),
+  comment_show_publicly: z.boolean().optional(),
 });
 
 const scheduledFormSchema = z.object({
   title: z.string().min(1, 'Title required'),
   description: z.string().optional(),
   location: z.string().min(1, 'Location required'),
+  show_signups: z.boolean().optional(),
   slots: z.array(scheduledSlotSchema).min(1, 'Add at least one spot'),
 });
 
@@ -57,6 +60,7 @@ const simpleFormSchema = z.object({
   description: z.string().optional(),
   location: z.string().optional(),
   start_date: z.string().optional(),
+  show_signups: z.boolean().optional(),
   slots: z.array(simpleSlotSchema).min(1, 'Add at least one item'),
 });
 
@@ -275,6 +279,7 @@ export function CreateEventForm({
       title: '',
       description: '',
       location: '',
+      show_signups: true,
       slots: [
         {
           spot_date: '',
@@ -285,6 +290,7 @@ export function CreateEventForm({
           instructions: '',
           comment_label: '',
           comment_required: false,
+          comment_show_publicly: false,
         },
       ],
     },
@@ -297,6 +303,7 @@ export function CreateEventForm({
       description: '',
       location: '',
       start_date: '',
+      show_signups: true,
       slots: [
         {
           role_name: '',
@@ -304,6 +311,7 @@ export function CreateEventForm({
           capacity: 1,
           comment_label: '',
           comment_required: false,
+          comment_show_publicly: false,
         },
       ],
     },
@@ -325,6 +333,7 @@ export function CreateEventForm({
         instructions: '',
         comment_label: '',
         comment_required: false,
+        comment_show_publicly: false,
       },
     ]);
   };
@@ -332,7 +341,14 @@ export function CreateEventForm({
   const addSimpleSlot = () => {
     simpleForm.setValue('slots', [
       ...simpleSlots,
-      { role_name: '', role_description: '', capacity: 1 },
+      {
+        role_name: '',
+        role_description: '',
+        capacity: 1,
+        comment_label: '',
+        comment_required: false,
+        comment_show_publicly: false,
+      },
     ]);
   };
 
@@ -361,6 +377,7 @@ export function CreateEventForm({
         title: '',
         description: t.description || '',
         location: t.location || '',
+        show_signups: true,
         slots: t.template_slots.map((s) => ({
           spot_date: '',
           role_name: s.slot_name,
@@ -370,6 +387,7 @@ export function CreateEventForm({
           instructions: s.instructions || '',
           comment_label: '',
           comment_required: false,
+          comment_show_publicly: false,
         })),
       });
     } else {
@@ -378,12 +396,14 @@ export function CreateEventForm({
         description: t.description || '',
         location: t.location || '',
         start_date: '',
+        show_signups: true,
         slots: t.template_slots.map((s) => ({
           role_name: s.slot_name,
           role_description: s.instructions || '',
           capacity: s.capacity,
           comment_label: '',
           comment_required: false,
+          comment_show_publicly: false,
         })),
       });
     }
@@ -413,6 +433,7 @@ export function CreateEventForm({
           start_date: startDate ? `${startDate}T00:00:00Z` : null,
           end_date: endDate ? `${endDate}T23:59:59Z` : null,
           published: true,
+          show_signups: data.show_signups ?? true,
           slots: sortedSlots.map((s) => {
             const date = s.spot_date;
             const startTimeStr = s.start_time?.trim();
@@ -438,6 +459,7 @@ export function CreateEventForm({
               instructions: null,
               comment_label: s.comment_label?.trim() || undefined,
               comment_required: s.comment_required ?? false,
+              comment_show_publicly: s.comment_show_publicly ?? false,
             };
           }),
         }),
@@ -488,6 +510,7 @@ export function CreateEventForm({
           start_date: dateVal ? `${dateVal}T00:00:00Z` : null,
           end_date: dateVal ? `${dateVal}T23:59:59Z` : null,
           published: true,
+          show_signups: data.show_signups ?? true,
           slots: data.slots.map((s) => ({
             role_name: s.role_name,
             role_description: s.role_description || null,
@@ -497,6 +520,7 @@ export function CreateEventForm({
             instructions: null,
             comment_label: s.comment_label?.trim() || undefined,
             comment_required: s.comment_required ?? false,
+            comment_show_publicly: s.comment_show_publicly ?? false,
           })),
         }),
       });
@@ -662,6 +686,24 @@ export function CreateEventForm({
                     </p>
                   )}
                 </div>
+                <div className="border-t border-charcoal/10 pt-4">
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      {...scheduledForm.register('show_signups')}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-charcoal font-body">
+                        Show who has signed up
+                      </span>
+                      <span className="mt-0.5 block text-xs text-muted font-body">
+                        Volunteers can tap a slot to see who else has signed up. Turn off for
+                        anonymous signups.
+                      </span>
+                    </span>
+                  </label>
+                </div>
               </div>
             </section>
 
@@ -801,6 +843,22 @@ export function CreateEventForm({
                             {scheduledForm.formState.errors.slots?.[index]?.comment_label?.message}
                           </p>
                         )}
+                        <label className="flex cursor-pointer items-start gap-3 pt-3">
+                          <input
+                            type="checkbox"
+                            {...scheduledForm.register(`slots.${index}.comment_show_publicly`)}
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
+                          />
+                          <span>
+                            <span className="block text-sm font-medium text-charcoal font-body">
+                              Show responses on the public signup page
+                            </span>
+                            <span className="mt-0.5 block text-xs text-muted font-body">
+                              When enabled, what volunteers write may appear next to their name when
+                              others view the list.
+                            </span>
+                          </span>
+                        </label>
                       </div>
                     </div>
                   </div>
@@ -878,6 +936,24 @@ export function CreateEventForm({
                     {...simpleForm.register('start_date')}
                     className="w-full max-w-xs rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                   />
+                </div>
+                <div className="border-t border-charcoal/10 pt-4">
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      {...simpleForm.register('show_signups')}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-charcoal font-body">
+                        Show who has signed up
+                      </span>
+                      <span className="mt-0.5 block text-xs text-muted font-body">
+                        Volunteers can tap a slot to see who else has signed up. Turn off for
+                        anonymous signups.
+                      </span>
+                    </span>
+                  </label>
                 </div>
               </div>
             </section>
@@ -978,6 +1054,22 @@ export function CreateEventForm({
                             {simpleForm.formState.errors.slots?.[index]?.comment_label?.message}
                           </p>
                         )}
+                        <label className="flex cursor-pointer items-start gap-3 pt-3">
+                          <input
+                            type="checkbox"
+                            {...simpleForm.register(`slots.${index}.comment_show_publicly`)}
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
+                          />
+                          <span>
+                            <span className="block text-sm font-medium text-charcoal font-body">
+                              Show responses on the public signup page
+                            </span>
+                            <span className="mt-0.5 block text-xs text-muted font-body">
+                              When enabled, what volunteers write may appear next to their name when
+                              others view the list.
+                            </span>
+                          </span>
+                        </label>
                       </div>
                     </div>
                   </div>

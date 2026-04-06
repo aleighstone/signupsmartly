@@ -107,6 +107,7 @@ export interface Database {
           created_by: string | null;
           created_at: string;
           notification_override: 'instant' | 'daily' | 'weekly' | 'never' | null;
+          show_signups: boolean;
         };
         Insert: {
           id?: string;
@@ -121,6 +122,7 @@ export interface Database {
           created_by?: string | null;
           created_at?: string;
           notification_override?: 'instant' | 'daily' | 'weekly' | 'never' | null;
+          show_signups?: boolean;
         };
         Update: {
           id?: string;
@@ -135,6 +137,7 @@ export interface Database {
           created_by?: string | null;
           created_at?: string;
           notification_override?: 'instant' | 'daily' | 'weekly' | 'never' | null;
+          show_signups?: boolean;
         };
       };
       slots: {
@@ -149,6 +152,7 @@ export interface Database {
           instructions: string | null;
           comment_label: string;
           comment_required: boolean;
+          comment_show_publicly: boolean;
           created_at: string;
         };
         Insert: {
@@ -162,6 +166,7 @@ export interface Database {
           instructions?: string | null;
           comment_label?: string;
           comment_required?: boolean;
+          comment_show_publicly?: boolean;
           created_at?: string;
         };
         Update: {
@@ -175,6 +180,7 @@ export interface Database {
           instructions?: string | null;
           comment_label?: string;
           comment_required?: boolean;
+          comment_show_publicly?: boolean;
           created_at?: string;
         };
       };

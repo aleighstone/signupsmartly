@@ -13,6 +13,8 @@ interface SignupModalProps {
   slotDetails?: string | null;
   commentLabel?: string;
   commentRequired?: boolean;
+  showSignupsPublic?: boolean;
+  commentShowPublicly?: boolean;
   showReminders: boolean;
   onSubmit: (data: SignupFormData) => Promise<void>;
   isSubmitting?: boolean;
@@ -29,6 +31,8 @@ export function SignupModal({
   slotDetails,
   commentLabel,
   commentRequired,
+  showSignupsPublic,
+  commentShowPublicly,
   showReminders,
   onSubmit,
   isSubmitting = false,
@@ -72,6 +76,8 @@ export function SignupModal({
           slotDetails={slotDetails}
           commentLabel={commentLabel}
           commentRequired={commentRequired}
+          showSignupsPublic={showSignupsPublic}
+          commentShowPublicly={commentShowPublicly}
           showReminders={showReminders}
           onSubmit={onSubmit}
           onCancel={onClose}

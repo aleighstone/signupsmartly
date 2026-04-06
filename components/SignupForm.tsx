@@ -4,7 +4,12 @@ import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { DEFAULT_COMMENT_LABEL } from '@/lib/slot-comment';
+import { DEFAULT_COMMENT_LABEL, normalizeCommentLabel } from '@/lib/slot-comment';
+
+function disclosureFieldWord(commentLabel: string | undefined): string {
+  const n = normalizeCommentLabel(commentLabel ?? '');
+  return n === DEFAULT_COMMENT_LABEL ? 'comment' : n;
+}
 
 const baseSignupSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
@@ -37,6 +42,9 @@ interface SignupFormProps {
   commentLabel?: string;
   /** When true, comment must be non-empty after trim. */
   commentRequired?: boolean;
+  /** When true, show privacy note about name (and comment if public) on the signup page. */
+  showSignupsPublic?: boolean;
+  commentShowPublicly?: boolean;
   showReminders: boolean;
   modalTitleId?: string;
   onSubmit: (data: SignupFormData) => Promise<void>;
@@ -52,6 +60,8 @@ export function SignupForm({
   slotDetails,
   commentLabel = DEFAULT_COMMENT_LABEL,
   commentRequired = false,
+  showSignupsPublic = false,
+  commentShowPublicly = false,
   showReminders,
   modalTitleId,
   onSubmit,
@@ -173,6 +183,15 @@ export function SignupForm({
         />
         {errors.comment && (
           <p className="mt-1 text-sm text-coral font-body">{errors.comment.message}</p>
+        )}
+        {showSignupsPublic && (
+          <p className="mt-3 text-xs text-muted font-body">
+            Your name
+            {commentShowPublicly
+              ? ` and ${disclosureFieldWord(commentLabel)}`
+              : ''}{' '}
+            will be visible to others viewing this signup page.
+          </p>
         )}
       </div>
       {showReminders && (

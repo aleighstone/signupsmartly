@@ -311,6 +311,34 @@ For each slot on the public signup page:
 
 ---
 
+## Critical: existing event edit behaviour
+
+When an organizer edits an existing event, `EditEventForm.tsx` must seed its
+form state from the values already stored in the DB — not from hardcoded
+defaults. This applies to every new field in this spec and the comment-label
+spec:
+
+**Event level:** `show_signups` must be read from `event.show_signups` and used
+as the initial checkbox state. If it is `true` (the DB default), the checkbox
+renders checked. If an organizer previously unchecked it and saved, it comes
+back as `false` and renders unchecked.
+
+**Slot level:** `comment_label`, `comment_required`, and `comment_show_publicly`
+must each be read from the existing slot record and used to seed the
+corresponding form fields. Do not fall back to hardcoded defaults for existing
+slots.
+
+**Why this matters:** if the form initialises new fields with hardcoded defaults
+instead of DB values, an organizer editing an unrelated field (e.g. changing
+the event title) will silently overwrite their previously saved settings on
+submit — resetting `show_signups` to `true`, clearing a custom `comment_label`,
+etc. This must not happen.
+
+The pattern to follow is the same as all existing slot fields: read from
+`event.slots.map((s) => ({ ..., comment_label: s.comment_label ?? 'Comment', ... }))`.
+
+---
+
 ## Edge cases
 
 | Case | Behaviour |

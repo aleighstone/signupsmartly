@@ -12,6 +12,9 @@ import {
 interface SlotListProps {
   slots: SlotWithSignups[];
   onSignUp: (slot: SlotWithSignups) => void;
+  /** When true, show "See who" / "View signups" for multi-capacity slots. */
+  showSignups: boolean;
+  onOpenSignups: (slot: SlotWithSignups) => void;
   signupType?: 'scheduled' | 'simple';
   /** Scheduled slots with null start_time use these event dates in the primary line. */
   eventDateFallback?: ScheduledSlotEventDateFallback | null;
@@ -21,16 +24,24 @@ interface SlotListProps {
 function SlotCard({
   slot,
   remaining,
+  filled,
+  capacity,
   onSignUp,
   onSignUpClick,
+  onOpenSignups,
+  showSignups,
   isSimple,
   eventDateFallback,
   primaryColor,
 }: {
   slot: SlotWithSignups;
   remaining: number;
+  filled: number;
+  capacity: number;
   onSignUp: () => void;
   onSignUpClick?: () => void;
+  onOpenSignups: (slot: SlotWithSignups) => void;
+  showSignups: boolean;
   isSimple: boolean;
   eventDateFallback?: ScheduledSlotEventDateFallback | null;
   primaryColor?: string;
@@ -45,6 +56,9 @@ function SlotCard({
     remaining === 1
       ? `1 ${unitLabel} remaining`
       : `${remaining} ${unitLabel}s remaining`;
+
+  const showSeeWho =
+    showSignups && filled > 0 && capacity > 1;
 
   const buttonStyle = primaryColor ? { backgroundColor: primaryColor } : undefined;
 
@@ -63,7 +77,25 @@ function SlotCard({
             </h4>
           </>
         )}
-        <p className="mt-1 text-sm text-muted font-body">{spotsText}</p>
+        <p className="mt-1 text-sm text-muted font-body">
+          {spotsText}
+          {showSeeWho ? (
+            <>
+              {' · '}
+              <span className="text-charcoal">
+                {filled} of {capacity} filled
+              </span>
+              {' · '}
+              <button
+                type="button"
+                onClick={() => onOpenSignups(slot)}
+                className="font-medium text-sage hover:text-sage-hover underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 rounded"
+              >
+                See who →
+              </button>
+            </>
+          ) : null}
+        </p>
         {(slot.role_description || slot.instructions) && (
           <p className="mt-1 text-sm text-muted line-clamp-2 font-body">
             {slot.role_description || slot.instructions}
@@ -88,6 +120,8 @@ function SlotCard({
 export function SlotList({
   slots,
   onSignUp,
+  showSignups,
+  onOpenSignups,
   signupType = 'scheduled',
   eventDateFallback = null,
   primaryColor,
@@ -102,6 +136,16 @@ export function SlotList({
     ? 'All items are filled. Thank you!'
     : 'All roles are filled. Thank you!';
 
+  const handleOpenSignups = (slot: SlotWithSignups) => {
+    if (posthog) {
+      posthog.capture('public_signups_modal_opened', {
+        signup_type: signupType,
+        slot_name: slot.role_name,
+      });
+    }
+    onOpenSignups(slot);
+  };
+
   return (
     <div className="space-y-8">
       <section>
@@ -115,26 +159,35 @@ export function SlotList({
           </p>
         ) : (
           <ul className="space-y-3">
-            {openSlots.map((slot) => (
-              <li key={slot.id}>
-                <SlotCard
-                  slot={slot}
-                  remaining={getSlotRemainingCapacity(slot)}
-                  onSignUp={() => onSignUp(slot)}
-                  onSignUpClick={() => {
-                    if (posthog) {
-                      posthog.capture('signup_modal_opened', {
-                        signup_type: signupType,
-                        slot_name: slot.role_name,
-                      });
-                    }
-                  }}
-                  isSimple={isSimple}
-                  eventDateFallback={eventDateFallback}
-                  primaryColor={primaryColor}
-                />
-              </li>
-            ))}
+            {openSlots.map((slot) => {
+              const remaining = getSlotRemainingCapacity(slot);
+              const filled = slot.signups.length;
+              const capacity = slot.capacity;
+              return (
+                <li key={slot.id}>
+                  <SlotCard
+                    slot={slot}
+                    remaining={remaining}
+                    filled={filled}
+                    capacity={capacity}
+                    onSignUp={() => onSignUp(slot)}
+                    onOpenSignups={handleOpenSignups}
+                    showSignups={showSignups}
+                    onSignUpClick={() => {
+                      if (posthog) {
+                        posthog.capture('signup_modal_opened', {
+                          signup_type: signupType,
+                          slot_name: slot.role_name,
+                        });
+                      }
+                    }}
+                    isSimple={isSimple}
+                    eventDateFallback={eventDateFallback}
+                    primaryColor={primaryColor}
+                  />
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
@@ -152,9 +205,11 @@ export function SlotList({
                 slot.end_time,
                 isSimple ? null : eventDateFallback
               );
-              const names = slot.signups
-                .map((s) => s.name)
-                .join(', ');
+              const names = slot.signups.map((s) => s.name).join(', ');
+              const multiCapLink =
+                showSignups && slot.capacity > 1;
+              const countLabel = isSimple ? 'signed up' : 'volunteers';
+
               return (
                 <li
                   key={slot.id}
@@ -174,7 +229,17 @@ export function SlotList({
                       </h4>
                     </>
                   )}
-                  <p className="mt-1 text-sm text-muted font-body">{names}</p>
+                  {multiCapLink ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenSignups(slot)}
+                      className="mt-1 text-left text-sm font-medium text-sage hover:text-sage-hover underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 rounded font-body"
+                    >
+                      {slot.signups.length} {countLabel} · View signups →
+                    </button>
+                  ) : (
+                    <p className="mt-1 text-sm text-muted font-body">{names}</p>
+                  )}
                 </li>
               );
             })}

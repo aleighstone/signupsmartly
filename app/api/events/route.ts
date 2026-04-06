@@ -13,6 +13,7 @@ const slotSchema = z.object({
   instructions: z.string().nullable().optional(),
   comment_label: z.string().max(60).optional(),
   comment_required: z.boolean().optional(),
+  comment_show_publicly: z.boolean().optional(),
 });
 
 const createEventSchema = z.object({
@@ -25,6 +26,7 @@ const createEventSchema = z.object({
   start_date: z.string().nullable().optional(),
   end_date: z.string().nullable().optional(),
   published: z.boolean().optional(),
+  show_signups: z.boolean().optional(),
   slots: z.array(slotSchema).min(1),
 });
 
@@ -52,6 +54,7 @@ export async function POST(request: Request) {
       start_date: eventData.start_date || null,
       end_date: eventData.end_date || null,
       published: eventData.published ?? true,
+      show_signups: eventData.show_signups ?? true,
     };
 
     const { data: event, error: eventError } = await supabase
@@ -76,6 +79,7 @@ export async function POST(request: Request) {
       instructions: s.instructions ?? null,
       comment_label: normalizeCommentLabel(s.comment_label),
       comment_required: s.comment_required ?? false,
+      comment_show_publicly: s.comment_show_publicly ?? false,
     }));
 
     const { error: slotsError } = await supabase

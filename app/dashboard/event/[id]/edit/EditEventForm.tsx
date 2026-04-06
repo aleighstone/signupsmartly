@@ -29,6 +29,7 @@ const scheduledSlotSchema = z.object({
   instructions: z.string().optional(),
   comment_label: z.string().max(60, 'Max 60 characters').optional(),
   comment_required: z.boolean().optional(),
+  comment_show_publicly: z.boolean().optional(),
 });
 
 const simpleSlotSchema = z.object({
@@ -38,6 +39,7 @@ const simpleSlotSchema = z.object({
   role_description: z.string().optional(),
   comment_label: z.string().max(60, 'Max 60 characters').optional(),
   comment_required: z.boolean().optional(),
+  comment_show_publicly: z.boolean().optional(),
 });
 
 const scheduledFormSchema = z.object({
@@ -46,6 +48,7 @@ const scheduledFormSchema = z.object({
   location: z.string().optional(),
   start_date: z.string().optional(),
   end_date: z.string().optional(),
+  show_signups: z.boolean().optional(),
   slots: z.array(scheduledSlotSchema).min(1),
 });
 
@@ -54,6 +57,7 @@ const simpleFormSchema = z.object({
   description: z.string().optional(),
   location: z.string().optional(),
   start_date: z.string().optional(),
+  show_signups: z.boolean().optional(),
   slots: z.array(simpleSlotSchema).min(1),
 });
 
@@ -95,6 +99,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
         event.signup_type === 'scheduled' && event.end_date
           ? event.end_date.slice(0, 10)
           : '',
+      show_signups: event.show_signups ?? true,
       slots: event.slots.map((s) => {
         const { spot_date, start_time, end_time } = slotTimestampsToFormFields(
           s.start_time,
@@ -114,6 +119,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
               ? ''
               : s.comment_label,
           comment_required: s.comment_required ?? false,
+          comment_show_publicly: s.comment_show_publicly ?? false,
         };
       }),
     },
@@ -126,6 +132,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
       description: event.description || '',
       location: event.location || '',
       start_date: event.start_date ? event.start_date.slice(0, 10) : '',
+      show_signups: event.show_signups ?? true,
       slots: event.slots.map((s) => ({
         id: s.id,
         role_name: s.role_name,
@@ -136,6 +143,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
             ? ''
             : s.comment_label,
         comment_required: s.comment_required ?? false,
+        comment_show_publicly: s.comment_show_publicly ?? false,
       })),
     },
   });
@@ -170,6 +178,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
           role_description: '',
           comment_label: '',
           comment_required: false,
+          comment_show_publicly: false,
         },
       ]);
     } else {
@@ -186,6 +195,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
           instructions: '',
           comment_label: '',
           comment_required: false,
+          comment_show_publicly: false,
         },
       ]);
     }
@@ -244,6 +254,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
           end_time: null as string | null,
           comment_label: s.comment_label?.trim() || undefined,
           comment_required: s.comment_required ?? false,
+          comment_show_publicly: s.comment_show_publicly ?? false,
         }));
       return {
         title: data.title,
@@ -251,6 +262,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
         location: data.location || null,
         start_date: data.start_date ? `${data.start_date}T00:00:00Z` : null,
         end_date: data.start_date ? `${data.start_date}T23:59:59Z` : null,
+        show_signups: data.show_signups ?? true,
         slots: slotsPayload,
         deleted_slot_ids: deletedSlotIds,
       };
@@ -281,6 +293,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
           end_time: date && endTimeStr ? toLiteralIso(date, endTimeStr) : null,
           comment_label: s.comment_label?.trim() || undefined,
           comment_required: s.comment_required ?? false,
+          comment_show_publicly: s.comment_show_publicly ?? false,
         };
       });
 
@@ -290,6 +303,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
       location: data.location || null,
       start_date: startDate ? `${startDate}T00:00:00Z` : null,
       end_date: endDate ? `${endDate}T23:59:59Z` : null,
+      show_signups: data.show_signups ?? true,
       slots: slotsPayload,
       deleted_slot_ids: deletedSlotIds,
     };
@@ -545,6 +559,24 @@ function EventDetailsSection({
             />
           </div>
         )}
+        <div className="border-t border-charcoal/10 pt-4">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              {...form.register('show_signups')}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
+            />
+            <span>
+              <span className="block text-sm font-medium text-charcoal font-body">
+                Show who has signed up
+              </span>
+              <span className="mt-0.5 block text-xs text-muted font-body">
+                Volunteers can tap a slot to see who else has signed up. Turn off for anonymous
+                signups.
+              </span>
+            </span>
+          </label>
+        </div>
       </div>
     </section>
   );
@@ -673,6 +705,22 @@ function SlotsSectionSimple({
                       {(form.formState.errors.slots as Array<{ comment_label?: { message?: string } }>)[index].comment_label?.message}
                     </p>
                   )}
+                  <label className="flex cursor-pointer items-start gap-3 pt-3">
+                    <input
+                      type="checkbox"
+                      {...form.register(`slots.${index}.comment_show_publicly`)}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-charcoal font-body">
+                        Show responses on the public signup page
+                      </span>
+                      <span className="mt-0.5 block text-xs text-muted font-body">
+                        When enabled, what volunteers write may appear next to their name when others
+                        view the list.
+                      </span>
+                    </span>
+                  </label>
                 </div>
               </div>
             </div>
@@ -844,6 +892,22 @@ function SlotsSectionScheduled({
                     {(form.formState.errors.slots as Array<{ comment_label?: { message?: string } }>)[index].comment_label?.message}
                   </p>
                 )}
+                <label className="flex cursor-pointer items-start gap-3 pt-3">
+                  <input
+                    type="checkbox"
+                    {...form.register(`slots.${index}.comment_show_publicly`)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-charcoal font-body">
+                      Show responses on the public signup page
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted font-body">
+                      When enabled, what volunteers write may appear next to their name when others
+                      view the list.
+                    </span>
+                  </span>
+                </label>
               </div>
             </div>
           </div>

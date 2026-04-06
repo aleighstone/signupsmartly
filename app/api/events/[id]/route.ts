@@ -12,6 +12,7 @@ const patchEventSchema = z.object({
   location: z.string().nullable().optional(),
   start_date: z.string().nullable().optional(),
   end_date: z.string().nullable().optional(),
+  show_signups: z.boolean().optional(),
   slots: z.array(
     z.object({
       id: z.string().uuid().optional(),
@@ -23,6 +24,7 @@ const patchEventSchema = z.object({
       role_description: z.string().nullable().optional(),
       comment_label: z.string().max(60).optional(),
       comment_required: z.boolean().optional(),
+      comment_show_publicly: z.boolean().optional(),
     })
   ),
   deleted_slot_ids: z
@@ -92,6 +94,7 @@ export async function PATCH(
       location,
       start_date,
       end_date,
+      show_signups,
       slots,
       deleted_slot_ids = [],
     } = parsed.data;
@@ -135,6 +138,7 @@ export async function PATCH(
         location: location ?? null,
         start_date: start_date ?? null,
         end_date: end_date ?? null,
+        ...(show_signups !== undefined ? { show_signups } : {}),
       })
       .eq('id', id);
 
@@ -187,6 +191,7 @@ export async function PATCH(
             role_description: slot.role_description ?? null,
             comment_label: normalizeCommentLabel(slot.comment_label),
             comment_required: slot.comment_required ?? false,
+            comment_show_publicly: slot.comment_show_publicly ?? false,
           })
           .eq('id', slot.id)
           .eq('event_id', id);
@@ -204,6 +209,7 @@ export async function PATCH(
           role_description: slot.role_description ?? null,
           comment_label: normalizeCommentLabel(slot.comment_label),
           comment_required: slot.comment_required ?? false,
+          comment_show_publicly: slot.comment_show_publicly ?? false,
         });
       }
     }
