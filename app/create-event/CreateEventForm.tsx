@@ -810,9 +810,9 @@ export function CreateEventForm({
                       />
                     </div>
                     <div className="border-t border-charcoal/10 pt-4 space-y-4">
-                      <p className="text-sm font-medium text-charcoal font-body">
+                      <span className="block text-sm font-medium text-muted font-body">
                         Signup settings for this spot
-                      </p>
+                      </span>
                       <div className="space-y-3">
                         <label className="flex cursor-pointer items-start gap-3">
                           <input
@@ -1023,9 +1023,9 @@ export function CreateEventForm({
                       />
                     </div>
                     <div className="border-t border-charcoal/10 pt-4 space-y-4">
-                      <p className="text-sm font-medium text-charcoal font-body">
-                        Signup settings for this spot
-                      </p>
+                      <span className="block text-sm font-medium text-muted font-body">
+                        Signup settings for this item
+                      </span>
                       <div className="space-y-3">
                         <label className="flex cursor-pointer items-start gap-3">
                           <input

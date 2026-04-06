@@ -672,9 +672,9 @@ function SlotsSectionSimple({
                 />
               </div>
               <div className="border-t border-charcoal/10 pt-4 space-y-4">
-                <p className="text-sm font-medium text-charcoal font-body">
-                  Signup settings for this spot
-                </p>
+                <span className="block text-sm font-medium text-muted font-body">
+                  Signup settings for this {slotLabel.toLowerCase()}
+                </span>
                 <div className="space-y-3">
                   <label className="flex cursor-pointer items-start gap-3">
                     <input
@@ -861,9 +861,9 @@ function SlotsSectionScheduled({
               />
             </div>
             <div className="border-t border-charcoal/10 pt-4 space-y-4">
-              <p className="text-sm font-medium text-charcoal font-body">
-                Signup settings for this spot
-              </p>
+              <span className="block text-sm font-medium text-muted font-body">
+                Signup settings for this {slotLabel.toLowerCase()}
+              </span>
               <div className="space-y-3">
                 <label className="flex cursor-pointer items-start gap-3">
                   <input
