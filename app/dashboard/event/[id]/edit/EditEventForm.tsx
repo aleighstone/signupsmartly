@@ -639,39 +639,41 @@ function SlotsSectionSimple({
                   placeholder="Any notes for volunteers"
                 />
               </div>
-              <div className="space-y-3 border-t border-charcoal/10 pt-4">
-                <p className="text-xs font-medium text-muted font-body">
-                  Volunteer note field
-                </p>
-                <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                    Custom label
-                    <span className="text-muted font-normal"> (optional)</span>
+              <div className="border-t border-charcoal/10 pt-4">
+                <div className="flex flex-col gap-3">
+                  <p className="text-xs font-medium text-muted font-body">
+                    Signup settings for this spot
+                  </p>
+                  <label className="flex cursor-pointer items-center gap-3 text-sm text-charcoal font-body">
+                    <input
+                      type="checkbox"
+                      {...form.register(`slots.${index}.comment_required`)}
+                      className="h-4 w-4 shrink-0 rounded border-2 border-charcoal text-sage focus:ring-2 focus:ring-sage/40 focus:ring-offset-0"
+                    />
+                    <span>Require a comment when signing up</span>
+                  </label>
+                </div>
+                <div className="mt-6 space-y-2">
+                  <label
+                    htmlFor={`edit-simple-comment-title-${index}`}
+                    className="block text-sm text-charcoal font-body"
+                  >
+                    Customize the title of the comment field (max 60 characters).
                   </label>
                   <input
+                    id={`edit-simple-comment-title-${index}`}
                     type="text"
                     maxLength={60}
                     {...form.register(`slots.${index}.comment_label`)}
-                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 placeholder:text-muted/70"
+                    className="w-full rounded-xl border border-charcoal/20 bg-surface px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 placeholder:text-muted/70"
                     placeholder="Comment"
                   />
                   {(form.formState.errors.slots as Array<{ comment_label?: { message?: string } }> | undefined)?.[index]?.comment_label && (
-                    <p className="mt-1 text-sm text-coral font-body">
+                    <p className="text-sm text-coral font-body">
                       {(form.formState.errors.slots as Array<{ comment_label?: { message?: string } }>)[index].comment_label?.message}
                     </p>
                   )}
-                  <p className="mt-1 text-xs text-muted font-body">
-                    Shown above the note box to volunteers. Leave blank to use &quot;Comment&quot; (max 60 characters).
-                  </p>
                 </div>
-                <label className="flex cursor-pointer items-start gap-3 text-sm text-charcoal font-body">
-                  <input
-                    type="checkbox"
-                    {...form.register(`slots.${index}.comment_required`)}
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-sage/40"
-                  />
-                  <span>Require a response in this field when signing up</span>
-                </label>
               </div>
             </div>
           );
@@ -808,39 +810,41 @@ function SlotsSectionScheduled({
                 placeholder="Any notes for volunteers"
               />
             </div>
-            <div className="space-y-3 border-t border-charcoal/10 pt-4">
-              <p className="text-xs font-medium text-muted font-body">
-                Volunteer note field
-              </p>
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                  Custom label
-                  <span className="text-muted font-normal"> (optional)</span>
+            <div className="border-t border-charcoal/10 pt-4">
+              <div className="flex flex-col gap-3">
+                <p className="text-xs font-medium text-muted font-body">
+                  Signup settings for this spot
+                </p>
+                <label className="flex cursor-pointer items-center gap-3 text-sm text-charcoal font-body">
+                  <input
+                    type="checkbox"
+                    {...form.register(`slots.${index}.comment_required`)}
+                    className="h-4 w-4 shrink-0 rounded border-2 border-charcoal text-sage focus:ring-2 focus:ring-sage/40 focus:ring-offset-0"
+                  />
+                  <span>Require a comment when signing up</span>
+                </label>
+              </div>
+              <div className="mt-6 space-y-2">
+                <label
+                  htmlFor={`edit-scheduled-comment-title-${index}`}
+                  className="block text-sm text-charcoal font-body"
+                >
+                  Customize the title of the comment field (max 60 characters).
                 </label>
                 <input
+                  id={`edit-scheduled-comment-title-${index}`}
                   type="text"
                   maxLength={60}
                   {...form.register(`slots.${index}.comment_label`)}
-                  className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 placeholder:text-muted/70"
+                  className="w-full rounded-xl border border-charcoal/20 bg-surface px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 placeholder:text-muted/70"
                   placeholder="Comment"
                 />
                 {(form.formState.errors.slots as Array<{ comment_label?: { message?: string } }> | undefined)?.[index]?.comment_label && (
-                  <p className="mt-1 text-sm text-coral font-body">
+                  <p className="text-sm text-coral font-body">
                     {(form.formState.errors.slots as Array<{ comment_label?: { message?: string } }>)[index].comment_label?.message}
                   </p>
                 )}
-                <p className="mt-1 text-xs text-muted font-body">
-                  Shown above the note box to volunteers. Leave blank to use &quot;Comment&quot; (max 60 characters).
-                </p>
               </div>
-              <label className="flex cursor-pointer items-start gap-3 text-sm text-charcoal font-body">
-                <input
-                  type="checkbox"
-                  {...form.register(`slots.${index}.comment_required`)}
-                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-sage/40"
-                />
-                <span>Require a response in this field when signing up</span>
-              </label>
             </div>
           </div>
         ))}
