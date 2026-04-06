@@ -3,12 +3,7 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { getEventWithSlots, getEventCoverage } from '@/lib/db';
 import { getOrgBySlug } from '@/lib/org-branding';
-import {
-  fontFamilyCss,
-  googleFontsStylesheetHref,
-  resolveColorTheme,
-  resolveFontTheme,
-} from '@/data/themes';
+import { buildVolunteerFacingThemeHead } from '@/data/themes';
 
 export const dynamic = 'force-dynamic';
 import { EventHeader } from '@/components/EventHeader';
@@ -36,30 +31,14 @@ export default async function EventPage({ params }: PageProps) {
     0
   );
 
-  const rawTheme = eventData.theme;
-  const themeObj =
-    rawTheme && typeof rawTheme === 'object' && !Array.isArray(rawTheme)
-      ? (rawTheme as Record<string, unknown>)
-      : null;
-  const storedColorKey =
-    themeObj && typeof themeObj.colorKey === 'string' ? themeObj.colorKey : undefined;
-  const storedFontKey =
-    themeObj && typeof themeObj.fontKey === 'string' ? themeObj.fontKey : undefined;
-  const colorTheme = resolveColorTheme(storedColorKey);
-  const fontTheme = resolveFontTheme(storedFontKey);
-  const fontsUrl = googleFontsStylesheetHref(fontTheme);
-  const themeStyle = `:root {
-    --theme-primary: ${colorTheme.primary};
-    --theme-btn-text: ${colorTheme.btnText};
-    --theme-font: ${fontFamilyCss(fontTheme)};
-  }`;
+  const { fontsUrl, themeStyleCss } = buildVolunteerFacingThemeHead(eventData.theme);
 
   return (
     <>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href={fontsUrl} rel="stylesheet" />
-      <style dangerouslySetInnerHTML={{ __html: themeStyle }} />
+      <style dangerouslySetInnerHTML={{ __html: themeStyleCss }} />
     <main className="min-h-screen bg-sand">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
         {org && (

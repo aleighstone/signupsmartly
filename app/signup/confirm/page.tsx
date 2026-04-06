@@ -8,6 +8,7 @@ import type { Event, Slot } from '@/types/database';
 import { formatTimeRange } from '@/lib/calendar';
 import { TrackSignupSubmitted } from '@/app/providers/PostHogTracker';
 import { format } from 'date-fns';
+import { buildVolunteerFacingThemeHead } from '@/data/themes';
 
 interface PageProps {
   searchParams: Promise<{ id?: string }>;
@@ -58,6 +59,7 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
     location?: string | null;
     start_date?: string | null;
     signup_type?: 'scheduled' | 'simple';
+    theme?: unknown;
   };
 
   const calendarUrl = generateAddToCalendarUrl({
@@ -82,8 +84,15 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
   const slug = (await headers()).get('x-org-slug');
   const org = slug ? await getOrgBySlug(slug) : null;
 
+  const { fontsUrl, themeStyleCss } = buildVolunteerFacingThemeHead(eventAny.theme);
+
   return (
-    <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4 relative">
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href={fontsUrl} rel="stylesheet" />
+      <style dangerouslySetInnerHTML={{ __html: themeStyleCss }} />
+      <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4 relative">
       <TrackSignupSubmitted
         signupType={isSimple ? 'simple' : 'scheduled'}
         hasComment={hasComment}
@@ -97,7 +106,10 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
         </Link>
       )}
       <div className="w-full max-w-md text-center space-y-6">
-        <h1 className="text-2xl font-semibold text-charcoal font-heading">
+        <h1
+          className="text-2xl font-semibold text-charcoal"
+          style={{ fontFamily: 'var(--theme-font)' }}
+        >
           You&apos;re signed up!
         </h1>
 
@@ -120,7 +132,10 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
           )}
           <div>
             <p className="text-sm text-muted font-body">Event</p>
-            <p className="font-medium text-charcoal font-body">
+            <p
+              className="font-medium text-charcoal font-body"
+              style={{ fontFamily: 'var(--theme-font)' }}
+            >
               {eventAny.title}
             </p>
           </div>
@@ -139,8 +154,11 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
             href={calendarUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`btn-primary-lg ${org?.primary_color ? 'hover:opacity-90' : ''}`}
-            style={org?.primary_color ? { backgroundColor: org.primary_color } : undefined}
+            className="inline-flex min-h-[48px] min-w-[140px] w-full items-center justify-center rounded-full border-2 border-transparent px-6 py-3.5 text-base font-semibold font-body transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-charcoal/30 focus:ring-offset-2"
+            style={{
+              backgroundColor: 'var(--theme-primary)',
+              color: 'var(--theme-btn-text)',
+            }}
           >
             Add to Calendar
           </a>
@@ -179,6 +197,7 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
           </p>
         </div>
       </div>
-    </main>
+      </main>
+    </>
   );
 }

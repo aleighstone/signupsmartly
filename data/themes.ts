@@ -124,3 +124,27 @@ export function googleFontsAllPickerStylesheetHref(): string {
   const families = fontThemes.map((f) => `family=${f.family}:wght@${f.weights}`).join('&');
   return `https://fonts.googleapis.com/css2?${families}&display=swap`;
 }
+
+/** Parse `events.theme` jsonb and build Google Fonts URL + :root CSS for volunteer-facing pages. */
+export function buildVolunteerFacingThemeHead(theme: unknown): {
+  fontsUrl: string;
+  themeStyleCss: string;
+} {
+  const themeObj =
+    theme && typeof theme === 'object' && !Array.isArray(theme)
+      ? (theme as Record<string, unknown>)
+      : null;
+  const storedColorKey =
+    themeObj && typeof themeObj.colorKey === 'string' ? themeObj.colorKey : undefined;
+  const storedFontKey =
+    themeObj && typeof themeObj.fontKey === 'string' ? themeObj.fontKey : undefined;
+  const colorTheme = resolveColorTheme(storedColorKey);
+  const fontTheme = resolveFontTheme(storedFontKey);
+  const fontsUrl = googleFontsStylesheetHref(fontTheme);
+  const themeStyleCss = `:root {
+    --theme-primary: ${colorTheme.primary};
+    --theme-btn-text: ${colorTheme.btnText};
+    --theme-font: ${fontFamilyCss(fontTheme)};
+  }`;
+  return { fontsUrl, themeStyleCss };
+}

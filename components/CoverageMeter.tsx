@@ -36,8 +36,17 @@ export function CoverageMeter({
         aria-valuemax={100}
       >
         <div
-          className={`h-full rounded-full transition-all duration-300 ${!primaryColor ? 'bg-sage' : ''}`}
-          style={{ width: `${percentage}%`, ...(primaryColor ? { backgroundColor: primaryColor } : {}) }}
+          className={`h-full rounded-full transition-all duration-300 ${
+            volunteerPageThemed || primaryColor ? '' : 'bg-sage'
+          }`}
+          style={{
+            width: `${percentage}%`,
+            ...(volunteerPageThemed
+              ? { backgroundColor: 'var(--theme-primary)' }
+              : primaryColor
+                ? { backgroundColor: primaryColor }
+                : {}),
+          }}
         />
       </div>
       <p className="text-sm text-muted font-body">
