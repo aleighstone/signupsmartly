@@ -12,6 +12,14 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: 'April 6, 2026',
+    changes: [
+      { type: 'new', text: 'Themes — customize your signup page with a color theme and font. Choose from 42 color themes (including school colors, team colors, and whimsical palettes) and 21 Google Fonts across sans-serif, serif, and script styles.' },
+      { type: 'new', text: 'See who\'s signed up — volunteers can tap a slot to see who has already claimed a spot. Shown by default; organizers can turn it off for anonymous signups.' },
+      { type: 'new', text: 'Per-spot volunteer notes: set a custom label (e.g. “Potluck dish”) and optionally require volunteers to fill it in when they sign up — works on create, edit, the public signup form, organizer manual add, exports, and the signups table.' },
+    ],
+  },
+  {
     date: 'April 2, 2026',
     changes: [
       { type: 'improved', text: 'Scheduled spots now sort automatically by date and time when you save — so you can enter spots in any order and they\'ll always appear chronologically.' },
@@ -20,9 +28,6 @@ export const changelog: Release[] = [
   {
     date: 'March 27, 2026',
     changes: [
-      { type: 'new', text: 'Themes — customize your signup page with a color theme and font. Choose from 42 color themes (including school colors, team colors, and whimsical palettes) and 21 Google Fonts across sans-serif, serif, and script styles.' },
-      { type: 'new', text: 'See who\'s signed up — volunteers can tap a slot to see who has already claimed a spot. Shown by default; organizers can turn it off for anonymous signups.' },
-      { type: 'new', text: 'Per-spot volunteer notes: set a custom label (e.g. “Potluck dish”) and optionally require volunteers to fill it in when they sign up — works on create, edit, the public signup form, organizer manual add, exports, and the signups table.' },
       { type: 'fixed', text: 'Volunteer signup page — scheduled spots now show the date as well as the time (including in the sign-up modal), so it is clear which day each shift is for.' },
       { type: 'fixed', text: 'Edit signup — slot dates and times now load reliably into the edit form with your saved values, instead of sometimes appearing empty.' },
     ],
