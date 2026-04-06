@@ -10,6 +10,8 @@ import { slotTimestampsToFormFields } from '@/lib/calendar';
 import { sortScheduledSlotsForSave } from '@/lib/slot-utils';
 import { DEFAULT_COMMENT_LABEL } from '@/lib/slot-comment';
 import type { EventWithSlots } from '@/types/database';
+import { CustomizeAppearanceSection } from '@/components/EventThemePickers';
+import { DEFAULT_COLOR_KEY, DEFAULT_FONT_KEY } from '@/data/themes';
 
 interface EditEventFormProps {
   event: EventWithSlots;
@@ -18,6 +20,18 @@ interface EditEventFormProps {
 const isSimple = (e: EventWithSlots) => e.signup_type === 'simple';
 const slotLabel = (e: EventWithSlots) => (isSimple(e) ? 'Item' : 'Spot');
 const slotsLabel = (e: EventWithSlots) => (isSimple(e) ? 'Items' : 'Spots');
+
+function seedThemeKeys(ev: EventWithSlots): { colorKey: string; fontKey: string } {
+  const raw = ev.theme;
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    const o = raw as Record<string, unknown>;
+    return {
+      colorKey: typeof o.colorKey === 'string' ? o.colorKey : DEFAULT_COLOR_KEY,
+      fontKey: typeof o.fontKey === 'string' ? o.fontKey : DEFAULT_FONT_KEY,
+    };
+  }
+  return { colorKey: DEFAULT_COLOR_KEY, fontKey: DEFAULT_FONT_KEY };
+}
 
 const scheduledSlotSchema = z.object({
   id: z.string().uuid().optional(),
@@ -87,6 +101,9 @@ export function EditEventForm({ event }: EditEventFormProps) {
   } | null>(null);
   const [deleteReason, setDeleteReason] = useState('');
   const [deletedSlotIds, setDeletedSlotIds] = useState<Array<{ id: string; reason: string | null }>>([]);
+  const seededTheme = seedThemeKeys(event);
+  const [colorKey, setColorKey] = useState(seededTheme.colorKey);
+  const [fontKey, setFontKey] = useState(seededTheme.fontKey);
 
   const scheduledForm = useForm<ScheduledFormData>({
     resolver: zodResolver(scheduledFormSchema),
@@ -263,6 +280,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
         start_date: data.start_date ? `${data.start_date}T00:00:00Z` : null,
         end_date: data.start_date ? `${data.start_date}T23:59:59Z` : null,
         show_signups: data.show_signups ?? true,
+        theme: { colorKey, fontKey },
         slots: slotsPayload,
         deleted_slot_ids: deletedSlotIds,
       };
@@ -304,6 +322,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
       start_date: startDate ? `${startDate}T00:00:00Z` : null,
       end_date: endDate ? `${endDate}T23:59:59Z` : null,
       show_signups: data.show_signups ?? true,
+      theme: { colorKey, fontKey },
       slots: slotsPayload,
       deleted_slot_ids: deletedSlotIds,
     };
@@ -385,6 +404,12 @@ export function EditEventForm({ event }: EditEventFormProps) {
             getSignupCount={getSignupCount}
             hasCapacityError={hasCapacityError}
           />
+          <CustomizeAppearanceSection
+            colorKey={colorKey}
+            fontKey={fontKey}
+            onColorChange={setColorKey}
+            onFontChange={setFontKey}
+          />
           <button
             type="submit"
             disabled={isSubmitting || anyCapacityError()}
@@ -412,6 +437,12 @@ export function EditEventForm({ event }: EditEventFormProps) {
             onRemove={removeSlot}
             getSignupCount={getSignupCount}
             hasCapacityError={hasCapacityError}
+          />
+          <CustomizeAppearanceSection
+            colorKey={colorKey}
+            fontKey={fontKey}
+            onColorChange={setColorKey}
+            onFontChange={setFontKey}
           />
           <button
             type="submit"

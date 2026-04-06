@@ -27,6 +27,13 @@ const createEventSchema = z.object({
   end_date: z.string().nullable().optional(),
   published: z.boolean().optional(),
   show_signups: z.boolean().optional(),
+  theme: z
+    .object({
+      colorKey: z.string().optional(),
+      fontKey: z.string().optional(),
+    })
+    .optional()
+    .nullable(),
   slots: z.array(slotSchema).min(1),
 });
 
@@ -48,13 +55,15 @@ export async function POST(request: Request) {
     }
 
     const { slots, ...eventData } = parsed.data;
+    const { theme, ...eventFields } = eventData;
     const eventPayload = {
-      ...eventData,
+      ...eventFields,
       signup_type: eventData.signup_type ?? 'scheduled',
       start_date: eventData.start_date || null,
       end_date: eventData.end_date || null,
       published: eventData.published ?? true,
       show_signups: eventData.show_signups ?? true,
+      ...(theme !== undefined ? { theme } : {}),
     };
 
     const { data: event, error: eventError } = await supabase

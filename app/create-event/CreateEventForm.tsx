@@ -7,6 +7,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { sortScheduledSlotsForSave } from '@/lib/slot-utils';
+import { CustomizeAppearanceSection } from '@/components/EventThemePickers';
+import { DEFAULT_COLOR_KEY, DEFAULT_FONT_KEY } from '@/data/themes';
 
 type SignupType = 'scheduled' | 'simple' | 'template';
 
@@ -265,6 +267,8 @@ export function CreateEventForm({
     location: string | null;
     slots: Array<{ role_name: string; role_description?: string | null; capacity: number; start_time?: string; end_time?: string; instructions?: string | null }>;
   } | null>(null);
+  const [colorKey, setColorKey] = useState(DEFAULT_COLOR_KEY);
+  const [fontKey, setFontKey] = useState(DEFAULT_FONT_KEY);
 
   useEffect(() => {
     fetch(`/api/templates?organization_id=${organizationId}`)
@@ -434,6 +438,7 @@ export function CreateEventForm({
           end_date: endDate ? `${endDate}T23:59:59Z` : null,
           published: true,
           show_signups: data.show_signups ?? true,
+          theme: { colorKey, fontKey },
           slots: sortedSlots.map((s) => {
             const date = s.spot_date;
             const startTimeStr = s.start_time?.trim();
@@ -511,6 +516,7 @@ export function CreateEventForm({
           end_date: dateVal ? `${dateVal}T23:59:59Z` : null,
           published: true,
           show_signups: data.show_signups ?? true,
+          theme: { colorKey, fontKey },
           slots: data.slots.map((s) => ({
             role_name: s.role_name,
             role_description: s.role_description || null,
@@ -875,6 +881,13 @@ export function CreateEventForm({
               </button>
             </section>
 
+            <CustomizeAppearanceSection
+              colorKey={colorKey}
+              fontKey={fontKey}
+              onColorChange={setColorKey}
+              onFontChange={setFontKey}
+            />
+
             <button
               type="submit"
               disabled={isSubmitting}
@@ -1087,6 +1100,13 @@ export function CreateEventForm({
                 + Add item
               </button>
             </section>
+
+            <CustomizeAppearanceSection
+              colorKey={colorKey}
+              fontKey={fontKey}
+              onColorChange={setColorKey}
+              onFontChange={setFontKey}
+            />
 
             <button
               type="submit"

@@ -12,10 +12,9 @@ import { DEFAULT_COMMENT_LABEL } from '@/lib/slot-comment';
 
 interface EventPageClientProps {
   event: EventWithSlots;
-  primaryColor?: string;
 }
 
-export function EventPageClient({ event, primaryColor }: EventPageClientProps) {
+export function EventPageClient({ event }: EventPageClientProps) {
   const router = useRouter();
   const [modalSlot, setModalSlot] = useState<SlotWithSignups | null>(null);
   const [signupsModalSlot, setSignupsModalSlot] = useState<SlotWithSignups | null>(
@@ -89,7 +88,7 @@ export function EventPageClient({ event, primaryColor }: EventPageClientProps) {
             ? { startDate: event.start_date, endDate: event.end_date }
             : null
         }
-        primaryColor={primaryColor}
+        volunteerPageThemed
       />
       <SignupsModal
         isOpen={!!signupsModalSlot}
@@ -129,7 +128,7 @@ export function EventPageClient({ event, primaryColor }: EventPageClientProps) {
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         error={error}
-        primaryColor={primaryColor}
+        volunteerPageThemed
       />
     </>
   );

@@ -6,6 +6,8 @@ interface CoverageMeterProps {
   signupType?: 'scheduled' | 'simple';
   /** Override the bar color (e.g. org primary_color) */
   primaryColor?: string | null;
+  /** Public event page: use --theme-primary from injected signup theme */
+  volunteerPageThemed?: boolean;
 }
 
 export function CoverageMeter({
@@ -15,6 +17,7 @@ export function CoverageMeter({
   size = 'md',
   signupType = 'scheduled',
   primaryColor,
+  volunteerPageThemed,
 }: CoverageMeterProps) {
   const remaining = Math.max(0, total - filled);
   const barHeight = size === 'sm' ? 'h-2' : 'h-3';
@@ -40,7 +43,10 @@ export function CoverageMeter({
       <p className="text-sm text-muted font-body">
         {filled} of {total} {signupType === 'simple' ? 'items' : 'spots'} filled
         {remaining > 0 && (
-          <span className="ml-1 text-charcoal font-medium">
+          <span
+            className={`ml-1 font-medium ${volunteerPageThemed ? '' : 'text-charcoal'}`}
+            style={volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined}
+          >
             · {remaining} still needed
           </span>
         )}

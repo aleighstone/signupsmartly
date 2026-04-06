@@ -3,6 +3,12 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { getEventWithSlots, getEventCoverage } from '@/lib/db';
 import { getOrgBySlug } from '@/lib/org-branding';
+import {
+  fontFamilyCss,
+  googleFontsStylesheetHref,
+  resolveColorTheme,
+  resolveFontTheme,
+} from '@/data/themes';
 
 export const dynamic = 'force-dynamic';
 import { EventHeader } from '@/components/EventHeader';
@@ -30,7 +36,30 @@ export default async function EventPage({ params }: PageProps) {
     0
   );
 
+  const rawTheme = eventData.theme;
+  const themeObj =
+    rawTheme && typeof rawTheme === 'object' && !Array.isArray(rawTheme)
+      ? (rawTheme as Record<string, unknown>)
+      : null;
+  const storedColorKey =
+    themeObj && typeof themeObj.colorKey === 'string' ? themeObj.colorKey : undefined;
+  const storedFontKey =
+    themeObj && typeof themeObj.fontKey === 'string' ? themeObj.fontKey : undefined;
+  const colorTheme = resolveColorTheme(storedColorKey);
+  const fontTheme = resolveFontTheme(storedFontKey);
+  const fontsUrl = googleFontsStylesheetHref(fontTheme);
+  const themeStyle = `:root {
+    --theme-primary: ${colorTheme.primary};
+    --theme-btn-text: ${colorTheme.btnText};
+    --theme-font: ${fontFamilyCss(fontTheme)};
+  }`;
+
   return (
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href={fontsUrl} rel="stylesheet" />
+      <style dangerouslySetInnerHTML={{ __html: themeStyle }} />
     <main className="min-h-screen bg-sand">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
         {org && (
@@ -58,7 +87,7 @@ export default async function EventPage({ params }: PageProps) {
           </div>
         )}
 
-        <EventHeader event={eventData} />
+        <EventHeader event={eventData} titleStyle={{ fontFamily: 'var(--theme-font)' }} />
 
         <TrackEventPageView
           signupType={eventData.signup_type}
@@ -71,15 +100,12 @@ export default async function EventPage({ params }: PageProps) {
             total={coverage.total}
             percentage={coverage.percentage}
             signupType={eventData.signup_type}
-            primaryColor={org?.primary_color ?? undefined}
+            volunteerPageThemed
           />
         </div>
 
         <div className="mt-8">
-          <EventPageClient
-            event={eventData}
-            primaryColor={org?.primary_color ?? undefined}
-          />
+          <EventPageClient event={eventData} />
         </div>
 
         <footer className="mt-12 text-center text-sm text-muted space-y-1">
@@ -116,5 +142,6 @@ export default async function EventPage({ params }: PageProps) {
         </footer>
       </div>
     </main>
+    </>
   );
 }

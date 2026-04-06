@@ -1,16 +1,22 @@
+import type { CSSProperties } from 'react';
 import { formatEventDateRange } from '@/lib/calendar';
 import type { Event } from '@/types/database';
 
 interface EventHeaderProps {
   event: Event;
+  /** Public signup page: heading font from CSS variable (inline only; no Tailwind font class). */
+  titleStyle?: CSSProperties;
 }
 
-export function EventHeader({ event }: EventHeaderProps) {
+export function EventHeader({ event, titleStyle }: EventHeaderProps) {
   const dateRange = formatEventDateRange(event.start_date, event.end_date);
 
   return (
     <header className="space-y-2">
-      <h1 className="text-2xl font-semibold tracking-tight text-charcoal sm:text-3xl font-heading">
+      <h1
+        style={titleStyle}
+        className={`text-2xl font-semibold tracking-tight text-charcoal sm:text-3xl ${titleStyle ? '' : 'font-heading'}`}
+      >
         {event.title}
       </h1>
       <dl className="flex flex-col gap-1 text-muted font-body">

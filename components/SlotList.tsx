@@ -19,6 +19,8 @@ interface SlotListProps {
   /** Scheduled slots with null start_time use these event dates in the primary line. */
   eventDateFallback?: ScheduledSlotEventDateFallback | null;
   primaryColor?: string;
+  /** Public event page: buttons, links, and section headings use signup theme CSS variables */
+  volunteerPageThemed?: boolean;
 }
 
 function SlotCard({
@@ -33,6 +35,7 @@ function SlotCard({
   isSimple,
   eventDateFallback,
   primaryColor,
+  volunteerPageThemed,
 }: {
   slot: SlotWithSignups;
   remaining: number;
@@ -45,6 +48,7 @@ function SlotCard({
   isSimple: boolean;
   eventDateFallback?: ScheduledSlotEventDateFallback | null;
   primaryColor?: string;
+  volunteerPageThemed?: boolean;
 }) {
   const whenScheduled = formatScheduledSlotWhen(
     slot.start_time,
@@ -60,7 +64,13 @@ function SlotCard({
   const showSeeWho =
     showSignups && filled > 0 && capacity > 1;
 
-  const buttonStyle = primaryColor ? { backgroundColor: primaryColor } : undefined;
+  const buttonStyle = volunteerPageThemed
+    ? { backgroundColor: 'var(--theme-primary)', color: 'var(--theme-btn-text)' }
+    : primaryColor
+      ? { backgroundColor: primaryColor }
+      : undefined;
+
+  const linkColorStyle = volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined;
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
@@ -89,7 +99,10 @@ function SlotCard({
               <button
                 type="button"
                 onClick={() => onOpenSignups(slot)}
-                className="font-medium text-sage hover:text-sage-hover underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 rounded"
+                className={`font-medium underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 rounded ${
+                  volunteerPageThemed ? '' : 'text-sage hover:text-sage-hover'
+                }`}
+                style={linkColorStyle}
               >
                 See who →
               </button>
@@ -108,7 +121,9 @@ function SlotCard({
           onSignUpClick?.();
           onSignUp();
         }}
-        className="btn-primary shrink-0"
+        className={`shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold font-body transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 ${
+          volunteerPageThemed ? 'focus:ring-charcoal/40' : 'btn-primary'
+        }`}
         style={buttonStyle}
       >
         Sign up
@@ -125,6 +140,7 @@ export function SlotList({
   signupType = 'scheduled',
   eventDateFallback = null,
   primaryColor,
+  volunteerPageThemed,
 }: SlotListProps) {
   const posthog = usePostHog();
   const isSimple = signupType === 'simple';
@@ -149,8 +165,13 @@ export function SlotList({
   return (
     <div className="space-y-8">
       <section>
-        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-charcoal font-heading">
-          <span aria-hidden>⚡</span>
+        <h2
+          className={`mb-4 flex items-center gap-2 text-lg font-semibold text-charcoal ${volunteerPageThemed ? '' : 'font-heading'}`}
+          style={volunteerPageThemed ? { fontFamily: 'var(--theme-font)' } : undefined}
+        >
+          <span aria-hidden style={volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined}>
+            ⚡
+          </span>
           Still Needed
         </h2>
         {openSlots.length === 0 ? (
@@ -184,6 +205,7 @@ export function SlotList({
                     isSimple={isSimple}
                     eventDateFallback={eventDateFallback}
                     primaryColor={primaryColor}
+                    volunteerPageThemed={volunteerPageThemed}
                   />
                 </li>
               );
@@ -194,8 +216,13 @@ export function SlotList({
 
       {filledSlots.length > 0 && (
         <section>
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-charcoal font-heading">
-            <span aria-hidden>✔</span>
+          <h2
+            className={`mb-4 flex items-center gap-2 text-lg font-semibold text-charcoal ${volunteerPageThemed ? '' : 'font-heading'}`}
+            style={volunteerPageThemed ? { fontFamily: 'var(--theme-font)' } : undefined}
+          >
+            <span aria-hidden style={volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined}>
+              ✔
+            </span>
             {filledLabel}
           </h2>
           <ul className="space-y-3">
@@ -233,7 +260,10 @@ export function SlotList({
                     <button
                       type="button"
                       onClick={() => handleOpenSignups(slot)}
-                      className="mt-1 text-left text-sm font-medium text-sage hover:text-sage-hover underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 rounded font-body"
+                      className={`mt-1 text-left text-sm font-medium underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 rounded font-body ${
+                        volunteerPageThemed ? '' : 'text-sage hover:text-sage-hover'
+                      }`}
+                      style={volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined}
                     >
                       {slot.signups.length} {countLabel} · View signups →
                     </button>

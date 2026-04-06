@@ -20,6 +20,7 @@ interface SignupModalProps {
   isSubmitting?: boolean;
   error?: string | null;
   primaryColor?: string;
+  volunteerPageThemed?: boolean;
 }
 
 export function SignupModal({
@@ -38,6 +39,7 @@ export function SignupModal({
   isSubmitting = false,
   error = null,
   primaryColor,
+  volunteerPageThemed,
 }: SignupModalProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -84,6 +86,7 @@ export function SignupModal({
           isSubmitting={isSubmitting}
           error={error}
           primaryColor={primaryColor}
+          volunteerPageThemed={volunteerPageThemed}
         />
       </div>
     </div>

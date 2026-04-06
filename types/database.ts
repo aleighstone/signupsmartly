@@ -108,6 +108,7 @@ export interface Database {
           created_at: string;
           notification_override: 'instant' | 'daily' | 'weekly' | 'never' | null;
           show_signups: boolean;
+          theme: Json | null;
         };
         Insert: {
           id?: string;
@@ -123,6 +124,7 @@ export interface Database {
           created_at?: string;
           notification_override?: 'instant' | 'daily' | 'weekly' | 'never' | null;
           show_signups?: boolean;
+          theme?: Json | null;
         };
         Update: {
           id?: string;
@@ -138,6 +140,7 @@ export interface Database {
           created_at?: string;
           notification_override?: 'instant' | 'daily' | 'weekly' | 'never' | null;
           show_signups?: boolean;
+          theme?: Json | null;
         };
       };
       slots: {

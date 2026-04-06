@@ -13,6 +13,13 @@ const patchEventSchema = z.object({
   start_date: z.string().nullable().optional(),
   end_date: z.string().nullable().optional(),
   show_signups: z.boolean().optional(),
+  theme: z
+    .object({
+      colorKey: z.string().optional(),
+      fontKey: z.string().optional(),
+    })
+    .optional()
+    .nullable(),
   slots: z.array(
     z.object({
       id: z.string().uuid().optional(),
@@ -95,6 +102,7 @@ export async function PATCH(
       start_date,
       end_date,
       show_signups,
+      theme,
       slots,
       deleted_slot_ids = [],
     } = parsed.data;
@@ -139,6 +147,7 @@ export async function PATCH(
         start_date: start_date ?? null,
         end_date: end_date ?? null,
         ...(show_signups !== undefined ? { show_signups } : {}),
+        ...(theme !== undefined ? { theme } : {}),
       })
       .eq('id', id);
 
