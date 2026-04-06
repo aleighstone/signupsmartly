@@ -147,6 +147,8 @@ export interface Database {
           end_time: string | null;
           capacity: number;
           instructions: string | null;
+          comment_label: string;
+          comment_required: boolean;
           created_at: string;
         };
         Insert: {
@@ -158,6 +160,8 @@ export interface Database {
           end_time?: string | null;
           capacity?: number;
           instructions?: string | null;
+          comment_label?: string;
+          comment_required?: boolean;
           created_at?: string;
         };
         Update: {
@@ -169,6 +173,8 @@ export interface Database {
           end_time?: string | null;
           capacity?: number;
           instructions?: string | null;
+          comment_label?: string;
+          comment_required?: boolean;
           created_at?: string;
         };
       };

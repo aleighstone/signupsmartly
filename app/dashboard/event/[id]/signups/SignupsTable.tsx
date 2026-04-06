@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AddSignupModal } from './AddSignupModal';
+import { DEFAULT_COMMENT_LABEL, normalizeCommentLabel } from '@/lib/slot-comment';
 
 type TableRow = {
   slotId: string;
@@ -14,6 +15,7 @@ type TableRow = {
     name: string;
     email: string | null;
     comment: string | null;
+    comment_label: string;
     createdAt: string;
     source: 'volunteer' | 'organizer';
   };
@@ -21,14 +23,22 @@ type TableRow = {
 
 interface SignupsTableProps {
   rows: TableRow[];
-  slots: { id: string; role_name: string }[];
+  slots: {
+    id: string;
+    role_name: string;
+    comment_label: string;
+    comment_required: boolean;
+  }[];
   isSimple: boolean;
 }
 
 export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
   const router = useRouter();
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [addModalPreselected, setAddModalPreselected] = useState<{ id: string; role_name: string } | null>(null);
+  const [addModalPreselected, setAddModalPreselected] = useState<{
+    id: string;
+    role_name: string;
+  } | null>(null);
 
   const handleAddClick = (slotId: string, role: string) => {
     setAddModalPreselected({ id: slotId, role_name: role });
@@ -106,8 +116,27 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                     {row.time ?? ''}
                   </td>
                 )}
-                <td className={`align-top px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-muted'}`}>
-                  {row.isEmpty ? '' : (row.signup!.comment ?? '—')}
+                <td className={`align-top px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>
+                  {row.isEmpty ? (
+                    ''
+                  ) : (
+                    (() => {
+                      const label = normalizeCommentLabel(row.signup!.comment_label);
+                      const text = row.signup!.comment?.trim();
+                      const custom = label !== DEFAULT_COMMENT_LABEL;
+                      if (!text && !custom) return '—';
+                      if (!text) return <span className="text-muted">—</span>;
+                      if (!custom) return text;
+                      return (
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium uppercase tracking-wide text-muted font-body">
+                            {label}
+                          </p>
+                          <p className="text-sm text-charcoal font-body whitespace-pre-wrap">{text}</p>
+                        </div>
+                      );
+                    })()
+                  )}
                 </td>
                 <td className={`align-top px-4 py-3 text-sm ${row.isEmpty ? 'text-muted' : 'text-muted'}`}>
                   {row.isEmpty ? '' : row.signup!.createdAt}

@@ -51,8 +51,10 @@ export function EventPageClient({ event, primaryColor }: EventPageClientProps) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Signup failed');
       router.push(`/signup/confirm?id=${json.signupId}`);
-    } catch {
-      setError('Something went wrong, please try again.');
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : 'Something went wrong, please try again.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -74,6 +76,7 @@ export function EventPageClient({ event, primaryColor }: EventPageClientProps) {
       <SignupModal
         isOpen={!!modalSlot}
         onClose={handleCloseModal}
+        slotId={modalSlot?.id}
         slotRoleName={modalSlot?.role_name ?? ''}
         slotWhen={
           modalSlot && event.signup_type === 'scheduled'
@@ -85,6 +88,8 @@ export function EventPageClient({ event, primaryColor }: EventPageClientProps) {
             : null
         }
         slotDetails={modalSlot?.instructions ?? modalSlot?.role_description ?? null}
+        commentLabel={modalSlot?.comment_label}
+        commentRequired={Boolean(modalSlot?.comment_required)}
         showReminders={event.signup_type === 'scheduled' || !!event.start_date}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}

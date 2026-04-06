@@ -6,6 +6,7 @@ import { usePostHog } from '@posthog/react';
 import { format } from 'date-fns';
 import type { EventWithSlots, Slot } from '@/types/database';
 import { formatTimeRange } from '@/lib/calendar';
+import { formatCommentForExport } from '@/lib/slot-comment';
 
 interface SignupsActionsProps {
   event: EventWithSlots;
@@ -15,6 +16,7 @@ interface SignupsActionsProps {
     email: string;
     time: string | null;
     comment: string | null;
+    comment_label: string;
     createdAt: string;
     source: 'volunteer' | 'organizer';
   }[];
@@ -89,7 +91,11 @@ function buildExportListText(event: EventWithSlots, isSimple: boolean): string {
 
     for (let i = 1; i <= slot.capacity; i++) {
       const signup = slot.signups[i - 1];
-      lines.push(`${i}. ${signup?.name ?? ''}`);
+      const namePart = `${i}. ${signup?.name ?? ''}`;
+      const note = signup
+        ? formatCommentForExport(slot.comment_label, signup.comment)
+        : '';
+      lines.push(note ? `${namePart} — ${note}` : namePart);
     }
 
     lines.push('');
@@ -137,11 +143,12 @@ export function SignupsActions({
     ? ['Item', 'Name', 'Email', 'Comment', 'Signup Timestamp', 'Source']
     : ['Spot', 'Name', 'Email', 'Time', 'Comment', 'Signup Timestamp', 'Source'];
 
-  const csvRows = rows.map((r) =>
-    isSimple
-      ? [r.role, r.name, r.email, r.comment || '', r.createdAt, r.source]
-      : [r.role, r.name, r.email, r.time || '', r.comment || '', r.createdAt, r.source]
-  );
+  const csvRows = rows.map((r) => {
+    const commentCell = formatCommentForExport(r.comment_label, r.comment);
+    return isSimple
+      ? [r.role, r.name, r.email, commentCell, r.createdAt, r.source]
+      : [r.role, r.name, r.email, r.time || '', commentCell, r.createdAt, r.source];
+  });
 
   const csvContent = [csvHeaders, ...csvRows]
     .map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))

@@ -9,6 +9,7 @@ import { formatEventDateRange, formatTimeRange, formatSignupTimestamp } from '@/
 import { SignupsActions } from './SignupsActions';
 import { SignupsTable } from './SignupsTable';
 import { TrackSignupsPageView } from '@/app/providers/PostHogTracker';
+import { DEFAULT_COMMENT_LABEL } from '@/lib/slot-comment';
 
 type NotificationPreference = 'instant' | 'daily' | 'weekly' | 'never';
 
@@ -26,6 +27,7 @@ type TableRow = {
     name: string;
     email: string | null;
     comment: string | null;
+    comment_label: string;
     createdAt: string;
     source: 'volunteer' | 'organizer';
   };
@@ -37,6 +39,7 @@ type CsvRow = {
   email: string;
   time: string | null;
   comment: string | null;
+  comment_label: string;
   createdAt: string;
   source: 'volunteer' | 'organizer';
 };
@@ -85,6 +88,7 @@ export default async function SignupsPage({ params }: PageProps) {
           name: signup.name,
           email: signup.email,
           comment: signup.comment,
+          comment_label: slot.comment_label ?? DEFAULT_COMMENT_LABEL,
           createdAt: formatSignupTimestamp(signup.created_at),
           source: signupSource(signup),
         },
@@ -95,6 +99,7 @@ export default async function SignupsPage({ params }: PageProps) {
         email: signup.email ?? '',
         time: slotTime,
         comment: signup.comment,
+        comment_label: slot.comment_label ?? DEFAULT_COMMENT_LABEL,
         createdAt: formatSignupTimestamp(signup.created_at),
         source: signupSource(signup),
       });
@@ -160,7 +165,12 @@ export default async function SignupsPage({ params }: PageProps) {
 
       <SignupsTable
         rows={tableRows}
-        slots={eventData.slots.map((s) => ({ id: s.id, role_name: s.role_name }))}
+        slots={eventData.slots.map((s) => ({
+          id: s.id,
+          role_name: s.role_name,
+          comment_label: s.comment_label ?? DEFAULT_COMMENT_LABEL,
+          comment_required: s.comment_required ?? false,
+        }))}
         isSimple={isSimple}
       />
 

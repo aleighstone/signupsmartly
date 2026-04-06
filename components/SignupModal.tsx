@@ -6,9 +6,13 @@ import { SignupForm, type SignupFormData } from './SignupForm';
 interface SignupModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Stable id so the form resets when switching slots */
+  slotId?: string;
   slotRoleName: string;
   slotWhen?: string | null;
   slotDetails?: string | null;
+  commentLabel?: string;
+  commentRequired?: boolean;
   showReminders: boolean;
   onSubmit: (data: SignupFormData) => Promise<void>;
   isSubmitting?: boolean;
@@ -19,9 +23,12 @@ interface SignupModalProps {
 export function SignupModal({
   isOpen,
   onClose,
+  slotId,
   slotRoleName,
   slotWhen,
   slotDetails,
+  commentLabel,
+  commentRequired,
   showReminders,
   onSubmit,
   isSubmitting = false,
@@ -58,10 +65,13 @@ export function SignupModal({
       />
       <div className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md">
         <SignupForm
+          key={slotId ?? slotRoleName}
           modalTitleId="signup-modal-title"
           slotRoleName={slotRoleName}
           slotWhen={slotWhen}
           slotDetails={slotDetails}
+          commentLabel={commentLabel}
+          commentRequired={commentRequired}
           showReminders={showReminders}
           onSubmit={onSubmit}
           onCancel={onClose}

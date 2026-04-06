@@ -71,11 +71,20 @@ export async function POST(request: Request) {
       );
     }
 
+    const commentRequired = Boolean(slot.comment_required);
+    const trimmedComment = (comment ?? '').trim();
+    if (commentRequired && !trimmedComment) {
+      return NextResponse.json(
+        { error: 'This spot requires a response in the notes field.' },
+        { status: 400 }
+      );
+    }
+
     const signup = await createOrganizerSignup({
       slotId,
       name,
       email: email ?? null,
-      comment: comment ?? null,
+      comment: trimmedComment || null,
     });
 
     return NextResponse.json({ signupId: signup.id });

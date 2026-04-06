@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { slotTimestampsToFormFields } from '@/lib/calendar';
 import { sortScheduledSlotsForSave } from '@/lib/slot-utils';
+import { DEFAULT_COMMENT_LABEL } from '@/lib/slot-comment';
 import type { EventWithSlots } from '@/types/database';
 
 interface EditEventFormProps {
@@ -26,6 +27,8 @@ const scheduledSlotSchema = z.object({
   end_time: z.string().optional(),
   capacity: z.number().min(1),
   instructions: z.string().optional(),
+  comment_label: z.string().max(60, 'Max 60 characters').optional(),
+  comment_required: z.boolean().optional(),
 });
 
 const simpleSlotSchema = z.object({
@@ -33,6 +36,8 @@ const simpleSlotSchema = z.object({
   role_name: z.string().min(1),
   capacity: z.number().min(1),
   role_description: z.string().optional(),
+  comment_label: z.string().max(60, 'Max 60 characters').optional(),
+  comment_required: z.boolean().optional(),
 });
 
 const scheduledFormSchema = z.object({
@@ -104,6 +109,11 @@ export function EditEventForm({ event }: EditEventFormProps) {
           end_time,
           capacity: s.capacity,
           instructions: s.instructions || '',
+          comment_label:
+            !s.comment_label || s.comment_label === DEFAULT_COMMENT_LABEL
+              ? ''
+              : s.comment_label,
+          comment_required: s.comment_required ?? false,
         };
       }),
     },
@@ -121,6 +131,11 @@ export function EditEventForm({ event }: EditEventFormProps) {
         role_name: s.role_name,
         capacity: s.capacity,
         role_description: s.role_description || '',
+        comment_label:
+          !s.comment_label || s.comment_label === DEFAULT_COMMENT_LABEL
+            ? ''
+            : s.comment_label,
+        comment_required: s.comment_required ?? false,
       })),
     },
   });
@@ -149,7 +164,13 @@ export function EditEventForm({ event }: EditEventFormProps) {
     if (simple) {
       simpleForm.setValue('slots', [
         ...simpleSlots,
-        { role_name: '', capacity: 1, role_description: '' },
+        {
+          role_name: '',
+          capacity: 1,
+          role_description: '',
+          comment_label: '',
+          comment_required: false,
+        },
       ]);
     } else {
       const last = scheduledSlots[scheduledSlots.length - 1];
@@ -163,6 +184,8 @@ export function EditEventForm({ event }: EditEventFormProps) {
           end_time: '',
           capacity: 1,
           instructions: '',
+          comment_label: '',
+          comment_required: false,
         },
       ]);
     }
@@ -219,6 +242,8 @@ export function EditEventForm({ event }: EditEventFormProps) {
           role_description: s.role_description?.trim() || null,
           start_time: null as string | null,
           end_time: null as string | null,
+          comment_label: s.comment_label?.trim() || undefined,
+          comment_required: s.comment_required ?? false,
         }));
       return {
         title: data.title,
@@ -254,6 +279,8 @@ export function EditEventForm({ event }: EditEventFormProps) {
           start_time:
             date && startTimeStr ? toLiteralIso(date, startTimeStr) : null,
           end_time: date && endTimeStr ? toLiteralIso(date, endTimeStr) : null,
+          comment_label: s.comment_label?.trim() || undefined,
+          comment_required: s.comment_required ?? false,
         };
       });
 
@@ -533,7 +560,14 @@ function SlotsSectionSimple({
   getSignupCount,
   hasCapacityError,
 }: {
-  slots: { id?: string; role_name: string; capacity: number; role_description?: string }[];
+  slots: {
+    id?: string;
+    role_name: string;
+    capacity: number;
+    role_description?: string;
+    comment_label?: string;
+    comment_required?: boolean;
+  }[];
   form: { register: (n: string, opts?: { valueAsNumber?: boolean }) => object; setValue?: (n: string, v: unknown) => void; formState: { errors: Record<string, unknown> } };
   slotLabel: string;
   slotsLabel: string;
@@ -605,6 +639,40 @@ function SlotsSectionSimple({
                   placeholder="Any notes for volunteers"
                 />
               </div>
+              <div className="space-y-3 border-t border-charcoal/10 pt-4">
+                <p className="text-xs font-medium text-muted font-body">
+                  Volunteer note field
+                </p>
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                    Custom label
+                    <span className="text-muted font-normal"> (optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={60}
+                    {...form.register(`slots.${index}.comment_label`)}
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 placeholder:text-muted/70"
+                    placeholder="Comment"
+                  />
+                  {(form.formState.errors.slots as Array<{ comment_label?: { message?: string } }> | undefined)?.[index]?.comment_label && (
+                    <p className="mt-1 text-sm text-coral font-body">
+                      {(form.formState.errors.slots as Array<{ comment_label?: { message?: string } }>)[index].comment_label?.message}
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-muted font-body">
+                    Shown above the note box to volunteers. Leave blank to use &quot;Comment&quot; (max 60 characters).
+                  </p>
+                </div>
+                <label className="flex cursor-pointer items-start gap-3 text-sm text-charcoal font-body">
+                  <input
+                    type="checkbox"
+                    {...form.register(`slots.${index}.comment_required`)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-sage/40"
+                  />
+                  <span>Require a response in this field when signing up</span>
+                </label>
+              </div>
             </div>
           );
         })}
@@ -626,7 +694,17 @@ function SlotsSectionScheduled({
   getSignupCount,
   hasCapacityError,
 }: {
-  slots: { id?: string; spot_date?: string; role_name: string; start_time?: string; end_time?: string; capacity: number; instructions?: string }[];
+  slots: {
+    id?: string;
+    spot_date?: string;
+    role_name: string;
+    start_time?: string;
+    end_time?: string;
+    capacity: number;
+    instructions?: string;
+    comment_label?: string;
+    comment_required?: boolean;
+  }[];
   form: { register: (n: string, opts?: { valueAsNumber?: boolean }) => object; formState: { errors: Record<string, unknown> } };
   slotLabel: string;
   slotsLabel: string;
@@ -729,6 +807,40 @@ function SlotsSectionScheduled({
                 className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 placeholder:text-muted/70"
                 placeholder="Any notes for volunteers"
               />
+            </div>
+            <div className="space-y-3 border-t border-charcoal/10 pt-4">
+              <p className="text-xs font-medium text-muted font-body">
+                Volunteer note field
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                  Custom label
+                  <span className="text-muted font-normal"> (optional)</span>
+                </label>
+                <input
+                  type="text"
+                  maxLength={60}
+                  {...form.register(`slots.${index}.comment_label`)}
+                  className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 placeholder:text-muted/70"
+                  placeholder="Comment"
+                />
+                {(form.formState.errors.slots as Array<{ comment_label?: { message?: string } }> | undefined)?.[index]?.comment_label && (
+                  <p className="mt-1 text-sm text-coral font-body">
+                    {(form.formState.errors.slots as Array<{ comment_label?: { message?: string } }>)[index].comment_label?.message}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-muted font-body">
+                  Shown above the note box to volunteers. Leave blank to use &quot;Comment&quot; (max 60 characters).
+                </p>
+              </div>
+              <label className="flex cursor-pointer items-start gap-3 text-sm text-charcoal font-body">
+                <input
+                  type="checkbox"
+                  {...form.register(`slots.${index}.comment_required`)}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-sage/40"
+                />
+                <span>Require a response in this field when signing up</span>
+              </label>
             </div>
           </div>
         ))}

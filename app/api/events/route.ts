@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase-server';
 import { reportProductionError } from '@/lib/error-reporter';
+import { normalizeCommentLabel } from '@/lib/slot-comment';
 
 const slotSchema = z.object({
   role_name: z.string().min(1),
@@ -10,6 +11,8 @@ const slotSchema = z.object({
   end_time: z.string().nullable().optional(),
   capacity: z.number().min(1),
   instructions: z.string().nullable().optional(),
+  comment_label: z.string().max(60).optional(),
+  comment_required: z.boolean().optional(),
 });
 
 const createEventSchema = z.object({
@@ -71,6 +74,8 @@ export async function POST(request: Request) {
       end_time: s.end_time || null,
       capacity: s.capacity,
       instructions: s.instructions ?? null,
+      comment_label: normalizeCommentLabel(s.comment_label),
+      comment_required: s.comment_required ?? false,
     }));
 
     const { error: slotsError } = await supabase

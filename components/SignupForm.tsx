@@ -1,10 +1,12 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { DEFAULT_COMMENT_LABEL } from '@/lib/slot-comment';
 
-const signupSchema = z.object({
+const baseSignupSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   email: z.string().email('Valid email required'),
   comment: z.string().max(500).optional(),
@@ -12,13 +14,29 @@ const signupSchema = z.object({
   reminder_offset: z.enum(['1_day', 'morning_of']),
 });
 
-export type SignupFormData = z.infer<typeof signupSchema>;
+function buildSignupSchema(commentRequired: boolean) {
+  return baseSignupSchema.superRefine((data, ctx) => {
+    if (commentRequired && !(data.comment ?? '').trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'This field is required for this spot.',
+        path: ['comment'],
+      });
+    }
+  });
+}
+
+export type SignupFormData = z.infer<typeof baseSignupSchema>;
 
 interface SignupFormProps {
   slotRoleName: string;
   /** Date + time for scheduled slots (shown under title). */
   slotWhen?: string | null;
   slotDetails?: string | null;
+  /** Label for the comment/notes field (from organizer). */
+  commentLabel?: string;
+  /** When true, comment must be non-empty after trim. */
+  commentRequired?: boolean;
   showReminders: boolean;
   modalTitleId?: string;
   onSubmit: (data: SignupFormData) => Promise<void>;
@@ -32,6 +50,8 @@ export function SignupForm({
   slotRoleName,
   slotWhen,
   slotDetails,
+  commentLabel = DEFAULT_COMMENT_LABEL,
+  commentRequired = false,
   showReminders,
   modalTitleId,
   onSubmit,
@@ -40,13 +60,18 @@ export function SignupForm({
   error = null,
   primaryColor,
 }: SignupFormProps) {
+  const schema = useMemo(
+    () => buildSignupSchema(commentRequired),
+    [commentRequired]
+  );
+
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
   } = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       name: '',
       email: '',
@@ -126,16 +151,29 @@ export function SignupForm({
           htmlFor="comment"
           className="block text-sm font-medium text-charcoal mb-1 font-body"
         >
-          Comment <span className="text-muted">(optional)</span>
+          {commentLabel}
+          {commentRequired ? (
+            <span className="text-coral"> *</span>
+          ) : (
+            <span className="text-muted font-normal"> (optional)</span>
+          )}
         </label>
         <textarea
           id="comment"
           rows={2}
           {...register('comment')}
           className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body resize-none disabled:opacity-60"
-          placeholder="Any notes for the organizer?"
+          placeholder={
+            commentLabel === DEFAULT_COMMENT_LABEL
+              ? 'Any notes for the organizer?'
+              : `Enter ${commentLabel.toLowerCase()}`
+          }
           disabled={isSubmitting}
+          aria-required={commentRequired}
         />
+        {errors.comment && (
+          <p className="mt-1 text-sm text-coral font-body">{errors.comment.message}</p>
+        )}
       </div>
       {showReminders && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">

@@ -1,20 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { DEFAULT_COMMENT_LABEL, normalizeCommentLabel } from '@/lib/slot-comment';
 
 interface SlotOption {
   id: string;
   role_name: string;
+  comment_label: string;
+  comment_required: boolean;
 }
 
 interface AddSignupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  preselectedSlot: SlotOption | null;
+  preselectedSlot: Pick<SlotOption, 'id' | 'role_name'> | null;
   slots: SlotOption[];
   isSimple: boolean;
   onAdded: () => void;
 }
+
+const selectClassName =
+  'w-full appearance-none rounded-xl border border-charcoal/20 bg-surface bg-no-repeat bg-[length:14px_14px] pl-3 pr-11 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body disabled:opacity-60';
+
+const chevronBg = {
+  backgroundImage:
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")",
+  backgroundPosition: 'right 0.75rem center' as const,
+};
 
 export function AddSignupModal({
   isOpen,
@@ -24,24 +36,35 @@ export function AddSignupModal({
   isSimple,
   onAdded,
 }: AddSignupModalProps) {
-  const [slotId, setSlotId] = useState(preselectedSlot?.id ?? slots[0]?.id ?? '');
+  const [slotId, setSlotId] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const reset = () => {
-    setSlotId(preselectedSlot?.id ?? slots[0]?.id ?? '');
+  useEffect(() => {
+    if (!isOpen) return;
+    const initial = preselectedSlot?.id ?? slots[0]?.id ?? '';
+    setSlotId(initial);
     setName('');
     setEmail('');
     setComment('');
     setError('');
-  };
+  }, [isOpen, preselectedSlot?.id, slots]);
+
+  const selectedSlot = useMemo(
+    () => slots.find((s) => s.id === slotId),
+    [slots, slotId]
+  );
+
+  const commentFieldLabel = selectedSlot
+    ? normalizeCommentLabel(selectedSlot.comment_label)
+    : DEFAULT_COMMENT_LABEL;
+  const commentRequired = Boolean(selectedSlot?.comment_required);
 
   const handleClose = () => {
     if (!isSubmitting) {
-      reset();
       onClose();
     }
   };
@@ -50,6 +73,12 @@ export function AddSignupModal({
     e.preventDefault();
     if (!name.trim()) {
       setError('Name is required');
+      return;
+    }
+    if (commentRequired && !comment.trim()) {
+      setError(
+        `Please enter ${commentFieldLabel === DEFAULT_COMMENT_LABEL ? 'a comment' : commentFieldLabel.toLowerCase()}.`
+      );
       return;
     }
     setIsSubmitting(true);
@@ -67,7 +96,6 @@ export function AddSignupModal({
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to add signup');
-      reset();
       onClose();
       onAdded();
     } catch (err) {
@@ -107,7 +135,8 @@ export function AddSignupModal({
               id="slot"
               value={slotId}
               onChange={(e) => setSlotId(e.target.value)}
-              className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+              className={selectClassName}
+              style={chevronBg}
               disabled={isSubmitting || slots.length <= 1}
             >
               {slots.map((s) => (
@@ -127,7 +156,7 @@ export function AddSignupModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+              className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body disabled:opacity-60"
               placeholder="Name"
               disabled={isSubmitting}
               autoFocus
@@ -143,7 +172,7 @@ export function AddSignupModal({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+              className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body disabled:opacity-60"
               placeholder="email@example.com"
               disabled={isSubmitting}
             />
@@ -151,16 +180,26 @@ export function AddSignupModal({
 
           <div>
             <label htmlFor="add-comment" className="block text-sm font-medium text-charcoal mb-1 font-body">
-              Comment <span className="text-muted">(optional)</span>
+              {commentFieldLabel}
+              {commentRequired ? (
+                <span className="text-coral"> *</span>
+              ) : (
+                <span className="text-muted font-normal"> (optional)</span>
+              )}
             </label>
             <textarea
               id="add-comment"
               rows={2}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body resize-none"
-              placeholder="Any notes?"
+              className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-charcoal placeholder:text-muted focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body resize-none disabled:opacity-60"
+              placeholder={
+                commentFieldLabel === DEFAULT_COMMENT_LABEL
+                  ? 'Any notes?'
+                  : `Enter ${commentFieldLabel.toLowerCase()}`
+              }
               disabled={isSubmitting}
+              aria-required={commentRequired}
             />
           </div>
 

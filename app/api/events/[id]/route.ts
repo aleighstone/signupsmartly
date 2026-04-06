@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase-server';
 import { serviceSupabase } from '@/lib/supabase-service';
 import { reportProductionError } from '@/lib/error-reporter';
+import { normalizeCommentLabel } from '@/lib/slot-comment';
 import type { Event, Slot, Signup } from '@/types/database';
 
 const patchEventSchema = z.object({
@@ -20,6 +21,8 @@ const patchEventSchema = z.object({
       end_time: z.string().nullable().optional(),
       instructions: z.string().nullable().optional(),
       role_description: z.string().nullable().optional(),
+      comment_label: z.string().max(60).optional(),
+      comment_required: z.boolean().optional(),
     })
   ),
   deleted_slot_ids: z
@@ -182,6 +185,8 @@ export async function PATCH(
             end_time: slot.end_time ?? null,
             instructions: slot.instructions ?? null,
             role_description: slot.role_description ?? null,
+            comment_label: normalizeCommentLabel(slot.comment_label),
+            comment_required: slot.comment_required ?? false,
           })
           .eq('id', slot.id)
           .eq('event_id', id);
@@ -197,6 +202,8 @@ export async function PATCH(
           end_time: slot.end_time ?? null,
           instructions: slot.instructions ?? null,
           role_description: slot.role_description ?? null,
+          comment_label: normalizeCommentLabel(slot.comment_label),
+          comment_required: slot.comment_required ?? false,
         });
       }
     }
