@@ -193,7 +193,27 @@ export async function getEventsForUser(userId: string) {
     .order('created_at', { ascending: false });
 
   if (error) return [];
-  return (data || []) as Event[];
+  const events = (data || []) as Event[];
+  if (events.length === 0) return [];
+
+  const { data: hiddenTransfers } = await supabase
+    .from('pending_transfers')
+    .select('event_id, expires_at, claimed_at')
+    .is('claimed_at', null);
+
+  const hiddenIds = new Set<string>();
+  (hiddenTransfers ?? []).forEach((row) => {
+    const transfer = row as {
+      event_id: string;
+      expires_at: string;
+      claimed_at: string | null;
+    };
+    if (transfer.claimed_at) return;
+    if (new Date(transfer.expires_at).getTime() <= Date.now()) return;
+    hiddenIds.add(transfer.event_id);
+  });
+
+  return events.filter((e) => !hiddenIds.has(e.id));
 }
 
 export async function getEventWithSlotsForDashboard(eventId: string) {

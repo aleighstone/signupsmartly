@@ -341,6 +341,41 @@ export interface Database {
           digest_sent_at?: string | null;
         };
       };
+      pending_transfers: {
+        Row: {
+          id: string;
+          event_id: string;
+          source_event_id: string | null;
+          sender_id: string;
+          recipient_email: string;
+          token: string;
+          claimed_at: string | null;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          source_event_id?: string | null;
+          sender_id: string;
+          recipient_email: string;
+          token?: string;
+          claimed_at?: string | null;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          source_event_id?: string | null;
+          sender_id?: string;
+          recipient_email?: string;
+          token?: string;
+          claimed_at?: string | null;
+          expires_at?: string;
+          created_at?: string;
+        };
+      };
     };
   };
 }
@@ -354,6 +389,7 @@ export type Slot = Database['public']['Tables']['slots']['Row'];
 export type Signup = Database['public']['Tables']['signups']['Row'];
 export type NpsResponse = Database['public']['Tables']['nps_responses']['Row'];
 export type OrganizerNotificationDigest = Database['public']['Tables']['organizer_notification_digest']['Row'];
+export type PendingTransfer = Database['public']['Tables']['pending_transfers']['Row'];
 
 export interface SlotWithSignups extends Slot {
   signups: (Signup & { cancelled: boolean })[];

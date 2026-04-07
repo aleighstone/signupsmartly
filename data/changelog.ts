@@ -12,6 +12,12 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: 'April 7, 2026',
+    changes: [
+      { type: 'new', text: 'Copy Event — duplicate any of your signups as a draft, or share a copy directly with another organizer. New organizers can claim their signup and create an account in one step.' },
+    ],
+  },
+  {
     date: 'April 6, 2026',
     changes: [
       { type: 'new', text: 'Themes — customize your signup page with a color theme and font. Choose from 42 color themes (including school colors, team colors, and whimsical palettes) and 21 Google Fonts across sans-serif, serif, and script styles.' },

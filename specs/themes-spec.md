@@ -7,7 +7,7 @@ The theme applies to the public volunteer-facing signup page only — the
 organizer dashboard is unaffected.
 
 Themes are curated, not free-form. Organizers choose from a pre-defined set of
-51 color themes and 21 Google Fonts. All color/text contrast combinations are
+42 color themes and 21 Google Fonts. All color/text contrast combinations are
 pre-validated to meet WCAG AA (4.5:1 minimum ratio).
 
 Reference sheet: `/public/marketing-content/color-themes-reference.png`
@@ -21,12 +21,14 @@ Reference sheet: `/public/marketing-content/color-themes-reference.png`
 - **Font applies to headings only** — body text stays as Inter for readability
   regardless of theme. The heading font gives personality without sacrificing
   legibility.
-- **Default theme** — Sage (#4A7C59), Quicksand (current brand font). Existing
-  events without a theme render identically to today.
+- **Default theme** — `Default ★` uses Sage (#4A7C59) + Quicksand. Existing
+  events without a theme render in this default state.
 - **Stored as JSON** — a single `theme` JSONB column on the events table keeps
   this flexible without new columns for every future theme property.
 - **No extra infrastructure** — Google Fonts loads via a URL in the signup page
-  `<head>`. Colors apply via inline CSS variables. No CDN, no image storage.
+  `<head>`. In organizer forms, picker fonts lazy-load when "Customize
+  appearance" is expanded. Colors apply via CSS variables. No CDN, no image
+  storage.
 
 ---
 
@@ -85,7 +87,8 @@ star or checkmark icon to indicate it's the current brand default. Label it
 | Modify | `app/dashboard/event/[id]/edit/EditEventForm.tsx` | Theme picker in edit flow |
 | Modify | `app/api/events/route.ts` (POST) | Accept + store theme |
 | Modify | `app/api/events/[id]/route.ts` (PATCH) | Accept + store theme |
-| Modify | `app/event/[slug]/page.tsx` | Apply theme to signup page |
+| Modify | `app/event/[id]/page.tsx` | Apply theme to signup page |
+| Modify | `app/signup/confirm/page.tsx` | Apply theme on confirmation page |
 
 ---
 
@@ -93,116 +96,40 @@ star or checkmark icon to indicate it's the current brand default. Label it
 
 ```ts
 export type ColorTheme = {
-  key:      string;
-  name:     string;
+  key: string;
+  name: string;
   category: 'school' | 'sports' | 'general' | 'unicorn';
-  primary:  string;  // button background hex
-  btnText:  string;  // button text hex — pre-validated for 4.5:1 contrast
+  primary: string; // button background hex
+  btnText: string; // button text hex — pre-validated for 4.5:1 contrast
 };
 
 export type FontTheme = {
-  key:      string;
-  name:     string;
-  family:   string;  // exact Google Fonts family name
+  key: string;
+  name: string;
+  family: string; // exact Google Fonts family name
   category: 'sans-serif' | 'serif' | 'script';
-  weights:  string;  // for Google Fonts URL, e.g. "400;600;700"
+  weights: string; // for Google Fonts URL, e.g. "400;600;700"
 };
-
+// Exactly 42 curated colors and 21 curated fonts.
+// Source of truth: `colorThemes` and `fontThemes` exports in this file.
+// Example entries:
 export const colorThemes: ColorTheme[] = [
-
-  // ── School & University ──────────────────────────────────────
-  { key: 'michigan-maize',     name: 'Michigan Maize',     category: 'school',  primary: '#FFCB05', btnText: '#1C1917' },
-  { key: 'michigan-blue',      name: 'Michigan Blue',      category: 'school',  primary: '#00274C', btnText: '#FFFFFF' },
-  { key: 'alabama-crimson',    name: 'Alabama Crimson',    category: 'school',  primary: '#9E1B32', btnText: '#FFFFFF' },
-  { key: 'oregon-green',       name: 'Oregon Green',       category: 'school',  primary: '#154733', btnText: '#FFFFFF' },
-  { key: 'oregon-yellow',      name: 'Oregon Yellow',      category: 'school',  primary: '#FEE123', btnText: '#1C1917' },
-  { key: 'usc-cardinal',       name: 'USC Cardinal',       category: 'school',  primary: '#990000', btnText: '#FFFFFF' },
-  { key: 'stanford-cardinal',  name: 'Stanford Cardinal',  category: 'school',  primary: '#8C1515', btnText: '#FFFFFF' },
-  { key: 'notre-dame-navy',    name: 'Notre Dame Navy',    category: 'school',  primary: '#0C2340', btnText: '#FFFFFF' },
-  { key: 'texas-orange',       name: 'Texas Orange',       category: 'school',  primary: '#BF5700', btnText: '#FFFFFF' },
-  { key: 'georgia-red',        name: 'Georgia Red',        category: 'school',  primary: '#BA0C2F', btnText: '#FFFFFF' },
-  { key: 'ohio-state-scarlet', name: 'Ohio State Scarlet', category: 'school',  primary: '#BB0000', btnText: '#FFFFFF' },
-  { key: 'duke-blue',          name: 'Duke Blue',          category: 'school',  primary: '#003087', btnText: '#FFFFFF' },
-  { key: 'kentucky-blue',      name: 'Kentucky Blue',      category: 'school',  primary: '#0033A0', btnText: '#FFFFFF' },
-  { key: 'ucla-blue',          name: 'UCLA Blue',          category: 'school',  primary: '#2D68C4', btnText: '#FFFFFF' },
-  { key: 'florida-blue',       name: 'Florida Blue',       category: 'school',  primary: '#003087', btnText: '#FFFFFF' },
-  { key: 'penn-state-navy',    name: 'Penn State Navy',    category: 'school',  primary: '#001E44', btnText: '#FFFFFF' },
-  { key: 'clemson-orange',     name: 'Clemson Orange',     category: 'school',  primary: '#C04E18', btnText: '#FFFFFF' },
-  { key: 'auburn-orange',      name: 'Auburn Orange',      category: 'school',  primary: '#B85210', btnText: '#FFFFFF' },
-
-  // ── Sports Teams ────────────────────────────────────────────
-  { key: 'dodger-blue',        name: 'Dodger Blue',        category: 'sports',  primary: '#005A9C', btnText: '#FFFFFF' },
-  { key: 'yankee-navy',        name: 'Yankee Navy',        category: 'sports',  primary: '#132448', btnText: '#FFFFFF' },
-  { key: 'red-sox-red',        name: 'Red Sox Red',        category: 'sports',  primary: '#BD3039', btnText: '#FFFFFF' },
-  { key: 'lakers-purple',      name: 'Lakers Purple',      category: 'sports',  primary: '#552583', btnText: '#FFFFFF' },
-  { key: 'warriors-blue',      name: 'Warriors Blue',      category: 'sports',  primary: '#1D428A', btnText: '#FFFFFF' },
-  { key: '49ers-red',          name: '49ers Red',          category: 'sports',  primary: '#AA0000', btnText: '#FFFFFF' },
-  { key: 'packers-green',      name: 'Packers Green',      category: 'sports',  primary: '#203731', btnText: '#FFFFFF' },
-  { key: 'cowboys-navy',       name: 'Cowboys Navy',       category: 'sports',  primary: '#003594', btnText: '#FFFFFF' },
-  { key: 'chelsea-blue',       name: 'Chelsea Blue',       category: 'sports',  primary: '#034694', btnText: '#FFFFFF' },
-  { key: 'manchester-red',     name: 'Manchester Red',     category: 'sports',  primary: '#DA291C', btnText: '#FFFFFF' },
-
-  // ── General & Aesthetic ─────────────────────────────────────
-  { key: 'sage',               name: 'Sage',               category: 'general', primary: '#4A7C59', btnText: '#FFFFFF' },
-  { key: 'ocean',              name: 'Ocean',              category: 'general', primary: '#0077B6', btnText: '#FFFFFF' },
-  { key: 'coral',              name: 'Coral',              category: 'general', primary: '#A8392A', btnText: '#FFFFFF' },
-  { key: 'lavender',           name: 'Lavender',           category: 'general', primary: '#5B4FB5', btnText: '#FFFFFF' },
-  { key: 'rose',               name: 'Rose',               category: 'general', primary: '#C2185B', btnText: '#FFFFFF' },
-  { key: 'teal',               name: 'Teal',               category: 'general', primary: '#00756A', btnText: '#FFFFFF' },
-  { key: 'slate',              name: 'Slate',              category: 'general', primary: '#455A64', btnText: '#FFFFFF' },
-  { key: 'plum',               name: 'Plum',               category: 'general', primary: '#6A1B9A', btnText: '#FFFFFF' },
-  { key: 'amber',              name: 'Amber',              category: 'general', primary: '#926006', btnText: '#FFFFFF' },
-  { key: 'forest',             name: 'Forest',             category: 'general', primary: '#2D6A4F', btnText: '#FFFFFF' },
-  { key: 'sky',                name: 'Sky',                category: 'general', primary: '#0163A0', btnText: '#FFFFFF' },
-  { key: 'blush',              name: 'Blush',              category: 'general', primary: '#A85560', btnText: '#FFFFFF' },
-  { key: 'indigo',             name: 'Indigo',             category: 'general', primary: '#4338CA', btnText: '#FFFFFF' },
-  { key: 'dusty-rose',         name: 'Dusty Rose',         category: 'general', primary: '#9B555E', btnText: '#FFFFFF' },
-  { key: 'olive',              name: 'Olive',              category: 'general', primary: '#4F5E2A', btnText: '#FFFFFF' },
-
-  // ── Unicorn & Whimsical ─────────────────────────────────────
-  { key: 'fuchsia',            name: 'Fuchsia',            category: 'unicorn', primary: '#A21CAF', btnText: '#FFFFFF' },
-  { key: 'magenta',            name: 'Magenta',            category: 'unicorn', primary: '#C026D3', btnText: '#FFFFFF' },
-  { key: 'bubblegum',          name: 'Bubblegum',          category: 'unicorn', primary: '#DB2777', btnText: '#FFFFFF' },
-  { key: 'violet',             name: 'Violet',             category: 'unicorn', primary: '#7C3AED', btnText: '#FFFFFF' },
-  { key: 'periwinkle',         name: 'Periwinkle',         category: 'unicorn', primary: '#4352B3', btnText: '#FFFFFF' },
-  { key: 'iridescent-teal',    name: 'Iridescent Teal',   category: 'unicorn', primary: '#0E7490', btnText: '#FFFFFF' },
-  { key: 'electric-blue',      name: 'Electric Blue',      category: 'unicorn', primary: '#1746A2', btnText: '#FFFFFF' },
-  { key: 'wisteria',           name: 'Wisteria',           category: 'unicorn', primary: '#6B46C1', btnText: '#FFFFFF' },
+  { key: 'default', name: 'Default ★', category: 'general', primary: '#4A7C59', btnText: '#FFFFFF' },
+  { key: 'michigan-blue', name: 'Michigan Blue', category: 'school', primary: '#00274C', btnText: '#FFFFFF' },
+  { key: 'dodger-blue', name: 'Dodger Blue', category: 'sports', primary: '#005A9C', btnText: '#FFFFFF' },
+  { key: 'fuchsia', name: 'Fuchsia', category: 'unicorn', primary: '#A21CAF', btnText: '#FFFFFF' },
+  // ...see full list in `data/themes.ts`
 ];
 
 export const fontThemes: FontTheme[] = [
-
-  // ── Sans-serif ───────────────────────────────────────────────
-  { key: 'quicksand',          name: 'Quicksand',          family: 'Quicksand',          category: 'sans-serif', weights: '400;600;700' },
-  { key: 'nunito',             name: 'Nunito',             family: 'Nunito',             category: 'sans-serif', weights: '400;600;700' },
-  { key: 'poppins',            name: 'Poppins',            family: 'Poppins',            category: 'sans-serif', weights: '400;600;700' },
-  { key: 'raleway',            name: 'Raleway',            family: 'Raleway',            category: 'sans-serif', weights: '400;600;700' },
-  { key: 'lato',               name: 'Lato',               family: 'Lato',               category: 'sans-serif', weights: '400;700' },
-  { key: 'montserrat',         name: 'Montserrat',         family: 'Montserrat',         category: 'sans-serif', weights: '400;600;700' },
-  { key: 'dm-sans',            name: 'DM Sans',            family: 'DM+Sans',            category: 'sans-serif', weights: '400;600;700' },
-  { key: 'outfit',             name: 'Outfit',             family: 'Outfit',             category: 'sans-serif', weights: '400;600;700' },
-
-  // ── Serif ────────────────────────────────────────────────────
-  { key: 'playfair-display',   name: 'Playfair Display',   family: 'Playfair+Display',   category: 'serif',      weights: '400;600;700' },
-  { key: 'merriweather',       name: 'Merriweather',       family: 'Merriweather',       category: 'serif',      weights: '400;700' },
-  { key: 'lora',               name: 'Lora',               family: 'Lora',               category: 'serif',      weights: '400;600;700' },
-  { key: 'eb-garamond',        name: 'EB Garamond',        family: 'EB+Garamond',        category: 'serif',      weights: '400;600;700' },
-  { key: 'libre-baskerville',  name: 'Libre Baskerville',  family: 'Libre+Baskerville',  category: 'serif',      weights: '400;700' },
-  { key: 'cormorant-garamond', name: 'Cormorant Garamond', family: 'Cormorant+Garamond', category: 'serif',      weights: '400;600;700' },
-  { key: 'crimson-pro',        name: 'Crimson Pro',        family: 'Crimson+Pro',        category: 'serif',      weights: '400;600;700' },
-
-  // ── Script / Handwritten ─────────────────────────────────────
-  { key: 'pacifico',           name: 'Pacifico',           family: 'Pacifico',           category: 'script',     weights: '400' },
-  { key: 'dancing-script',     name: 'Dancing Script',     family: 'Dancing+Script',     category: 'script',     weights: '400;700' },
-  { key: 'satisfy',            name: 'Satisfy',            family: 'Satisfy',            category: 'script',     weights: '400' },
-  { key: 'caveat',             name: 'Caveat',             family: 'Caveat',             category: 'script',     weights: '400;700' },
-  { key: 'kalam',              name: 'Kalam',              family: 'Kalam',              category: 'script',     weights: '400;700' },
-  { key: 'permanent-marker',   name: 'Permanent Marker',   family: 'Permanent+Marker',   category: 'script',     weights: '400' },
-  { key: 'handlee',            name: 'Handlee',            family: 'Handlee',            category: 'script',     weights: '400' },
+  { key: 'quicksand', name: 'Quicksand', family: 'Quicksand', category: 'sans-serif', weights: '400;600;700' },
+  { key: 'playfair-display', name: 'Playfair Display', family: 'Playfair+Display', category: 'serif', weights: '400;600;700' },
+  { key: 'dancing-script', name: 'Dancing Script', family: 'Dancing+Script', category: 'script', weights: '400;700' },
+  // ...see full list in `data/themes.ts`
 ];
 
-export const DEFAULT_COLOR_KEY = 'sage';
-export const DEFAULT_FONT_KEY  = 'quicksand';
+export const DEFAULT_COLOR_KEY = 'default';
+export const DEFAULT_FONT_KEY = 'quicksand';
 ```
 
 ---
@@ -280,9 +207,11 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (key: strin
 ### `FontPicker` component
 
 - Groups by category: Sans-serif, Serif, Script
-- Each option renders in its own font (loaded lazily via a preconnect + small
-  CSS import when the picker is opened)
-- Selected option has a sage underline
+- Each option renders in its own font in the picker UI
+- Google Fonts for picker preview load lazily (single combined stylesheet for
+  all picker fonts) when "Customize appearance" is opened
+- Section header chevrons match the app's select chevron style
+- Selected option uses highlighted border/background treatment
 - Small disclaimer below script fonts: "Script fonts apply to headings only"
 
 ```tsx
@@ -344,9 +273,9 @@ Pass `theme` through to the Supabase upsert unchanged.
 
 ---
 
-## 4. Applying the theme to the signup page
+## 4. Applying the theme to volunteer-facing pages
 
-In `app/event/[slug]/page.tsx` (server component), read the event's `theme`
+In `app/event/[id]/page.tsx` (server component), read the event's `theme`
 field and inject CSS variables + Google Fonts into the page:
 
 ### Font loading
@@ -392,7 +321,7 @@ const themeStyle = `
 <style dangerouslySetInnerHTML={{ __html: themeStyle }} />
 ```
 
-### Using the variables in the signup page
+### Using the variables in volunteer-facing UI
 
 Replace hardcoded sage button classes with theme-aware inline styles or a
 utility class that reads the CSS variables:
@@ -420,14 +349,22 @@ utility class that reads the CSS variables:
 ```
 
 Apply `var(--theme-primary)` to:
-- The "Sign Up" / "Confirm Signup" button background
-- The coverage bar fill
-- The "Still Needed" section heading accent
-- Any other primary-color accents on the page
+- Public event page "Sign up" button background
+- Public event page "See who" / "View signups" links
+- Public event page section icon accents for "Still Needed" / "Filled Roles"
+- Public event page coverage bar fill
+- Signup confirmation page "Add to Calendar" button background
+
+Apply `var(--theme-btn-text)` to:
+- The themed button text on volunteer-facing primary actions
 
 Apply `var(--theme-font)` to:
-- The event title (`<h1>`)
-- Section headings ("Still Needed", "Filled Roles")
+- Public event page title and section headings
+- Signup confirmation heading and event title field
+
+Keep neutral (not theme-colored):
+- Coverage line text (`X of Y filled`) and "still needed" text remain charcoal
+- Most body copy remains design-system neutrals for readability
 
 ---
 
@@ -441,10 +378,11 @@ visiting their signup page.
 
 ## Performance note
 
-Google Fonts are loaded only on the public signup page — not on any
-authenticated organizer pages. The `display=swap` parameter ensures text
-renders immediately in the fallback font while the custom font loads, avoiding
-a flash of invisible text.
+Volunteer-facing pages load the selected heading font with `display=swap`,
+ensuring text renders immediately in fallback fonts while webfonts load.
+
+Organizer create/edit forms do not preload all fonts by default; picker fonts
+are fetched only when "Customize appearance" is expanded.
 
 ---
 
@@ -453,6 +391,6 @@ a flash of invisible text.
 ```ts
 {
   type: 'new',
-  text: 'Themes — customize your signup page with a color theme and font. Choose from 51 color themes (including school colors, team colors, and whimsical palettes) and 21 Google Fonts across sans-serif, serif, and script styles.',
+  text: 'Themes — customize your signup page with a color theme and font. Choose from 42 color themes (including school colors, team colors, and whimsical palettes) and 21 Google Fonts across sans-serif, serif, and script styles.',
 },
 ```

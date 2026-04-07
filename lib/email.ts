@@ -2,6 +2,8 @@ import { Resend } from 'resend';
 import { format } from 'date-fns';
 import type { Event, Slot, Signup } from '@/types/database';
 import { generateAddToCalendarUrl } from '@/lib/calendar';
+import { renderClaimExistingUserEmail } from '@/emails/claim-existing-user';
+import { renderClaimNewUserEmail } from '@/emails/claim-new-user';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
 
@@ -11,6 +13,8 @@ const FROM_EMAIL =
 
 const ADMIN_EMAIL =
   process.env.ADMIN_EMAIL || 'allisonleighstone@gmail.com';
+
+const EMAIL_FROM = FROM_EMAIL;
 
 function buildSignupEmailDetails(params: {
   signup: Signup;
@@ -544,6 +548,62 @@ export async function sendFeedbackEmail(params: {
 
   if (error) {
     throw new Error(`Failed to send feedback email: ${error.message}`);
+  }
+}
+
+export async function sendClaimExistingUserEmail(params: {
+  to: string;
+  senderName: string;
+  senderEmail: string;
+  eventTitle: string;
+  claimUrl: string;
+}) {
+  const { to, senderName, senderEmail, eventTitle, claimUrl } = params;
+  const html = renderClaimExistingUserEmail({
+    senderName,
+    senderEmail,
+    eventTitle,
+    claimUrl,
+    appUrl: APP_URL,
+  });
+
+  const { error } = await resend.emails.send({
+    from: EMAIL_FROM,
+    to,
+    subject: `${senderName} shared a signup with you on SignupSmartly`,
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send existing-user claim email: ${error.message}`);
+  }
+}
+
+export async function sendClaimNewUserEmail(params: {
+  to: string;
+  senderName: string;
+  senderEmail: string;
+  eventTitle: string;
+  claimUrl: string;
+}) {
+  const { to, senderName, senderEmail, eventTitle, claimUrl } = params;
+  const html = renderClaimNewUserEmail({
+    senderName,
+    senderEmail,
+    eventTitle,
+    claimUrl,
+    appUrl: APP_URL,
+  });
+
+  const { error } = await resend.emails.send({
+    from: EMAIL_FROM,
+    to,
+    subject: "You've been invited to SignupSmartly - your signup is ready",
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send new-user claim email: ${error.message}`);
   }
 }
 

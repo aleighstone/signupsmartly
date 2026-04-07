@@ -5,7 +5,7 @@ import { TrackDashboardView } from '@/app/providers/PostHogTracker';
 import { TrackMetaCompleteRegistration } from '@/app/providers/MetaPixelTracker';
 import { getEventsForUser, getEventWithSlotsForDashboard, getEventCoverage, hasEventWithVolunteerSignup, getOrgSlugForUser } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
-import { CoverageMeter } from '@/components/CoverageMeter';
+import { EventCard } from '@/components/EventCard';
 import { NpsBanner } from '@/components/NpsBanner';
 import { formatEventDateRange } from '@/lib/calendar';
 import { serviceSupabase } from '@/lib/supabase-service';
@@ -50,6 +50,29 @@ export default async function DashboardPage() {
     events = await getEventsForUser(userId);
   }
 
+  const pendingBySourceEventId = new Map<string, { id: string; recipientEmail: string }>();
+  if (userId) {
+    const { data: pendingTransfers } = await serviceSupabase
+      .from('pending_transfers')
+      .select('id, source_event_id, recipient_email, expires_at')
+      .eq('sender_id', userId)
+      .is('claimed_at', null);
+    (pendingTransfers ?? []).forEach((row) => {
+      const transfer = row as {
+        id: string;
+        source_event_id: string | null;
+        recipient_email: string;
+        expires_at: string;
+      };
+      if (!transfer.source_event_id) return;
+      if (new Date(transfer.expires_at).getTime() <= Date.now()) return;
+      pendingBySourceEventId.set(transfer.source_event_id, {
+        id: transfer.id,
+        recipientEmail: transfer.recipient_email,
+      });
+    });
+  }
+
   const orgSlug = userId ? await getOrgSlugForUser(userId) : null;
   const eventUrl = (eventId: string) =>
     orgSlug
@@ -67,6 +90,20 @@ export default async function DashboardPage() {
       ourUser.nps_dismissed_at ?? null,
       hasVolunteerSignup
     );
+
+  const eventCards = await Promise.all(
+    events.map(async (event) => {
+      const eventWithSlots = await getEventWithSlotsForDashboard(event.id);
+      const coverage = eventWithSlots
+        ? getEventCoverage(eventWithSlots)
+        : { filled: 0, total: 0, percentage: 0 };
+      return {
+        event,
+        coverage,
+        dateLabel: formatEventDateRange(event.start_date, event.end_date),
+      };
+    })
+  );
 
   return (
     <AppLayout>
@@ -97,61 +134,16 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <ul className="mt-6 space-y-4">
-          {events.map(async (event) => {
-            const eventWithSlots = await getEventWithSlotsForDashboard(event.id);
-            const coverage = eventWithSlots
-              ? getEventCoverage(eventWithSlots)
-              : { filled: 0, total: 0, percentage: 0 };
-
-            return (
-              <li
-                key={event.id}
-                className="rounded-xl border border-charcoal/10 bg-surface p-5 shadow-soft"
-              >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="font-semibold text-charcoal font-heading">
-                      {event.title}
-                    </h2>
-                    <p className="text-sm text-muted font-body">
-                      {formatEventDateRange(event.start_date, event.end_date)}
-                    </p>
-                    <div className="mt-3 w-72 shrink-0">
-                      <CoverageMeter
-                        filled={coverage.filled}
-                        total={coverage.total}
-                        percentage={coverage.percentage}
-                        size="sm"
-                        signupType={event.signup_type}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Link
-                      href={`/dashboard/event/${event.id}/signups`}
-                      className="btn-primary"
-                    >
-                      View My Signups
-                    </Link>
-                    <a
-                      href={eventUrl(event.id)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-secondary"
-                    >
-                      Signup Page
-                    </a>
-                    <Link
-                      href={`/dashboard/event/${event.id}/edit`}
-                      className="rounded-xl border-2 border-charcoal px-4 py-2 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors font-body"
-                    >
-                      Edit
-                    </Link>
-                  </div>
-                </div>
-              </li>
-            );
-          })}
+          {eventCards.map(({ event, coverage, dateLabel }) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              dateLabel={dateLabel}
+              coverage={coverage}
+              signupPageUrl={eventUrl(event.id)}
+              pendingTransfer={pendingBySourceEventId.get(event.id) ?? null}
+            />
+          ))}
         </ul>
       )}
 

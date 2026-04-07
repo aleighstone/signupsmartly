@@ -27,10 +27,12 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 ### Event Page (`/event/[id]`)
 
 - Event header (title, description, location, dates — "No date" when start_date is null for simple lists)
+- **Volunteer-facing themes:** event page uses selected theme (`events.theme`) for heading font + primary accents (buttons/links/icon accents/coverage bar)
 - Coverage meter: label "Coverage"; for scheduled "X of Y spots filled", for simple "X of Y items filled"
 - Slot list: "Still Needed" (open slots) and "Filled Spots" (scheduled) or "Filled Items" (simple)
-- **Scheduled slots:** role name, time (or "All day"), spots remaining, optional instructions
+- **Scheduled slots:** role name, date + time when available (or date only), spots remaining, optional instructions
 - **Simple list slots:** item name, items remaining, optional description; no time display; sorted alphabetically by item name
+- **Public signups visibility:** volunteers can view who signed up for multi-capacity slots when event setting allows it (`events.show_signups`); organizer can disable for anonymous signups
 - Sign up button opens modal
 - Link: "Organized with SignupSmartly"
 - Dynamic: no caching so signup counts update immediately
@@ -39,13 +41,15 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 ### Signup Modal
 
 - Shows: "Signing up for [spot/item name]"; if the spot has instructions or item has description, display that text below the name
-- Fields: name, email, optional comment
+- Fields: name, email, notes field
+- **Per-spot notes:** each slot/item can define a custom notes label (`slots.comment_label`) and whether notes are required (`slots.comment_required`)
 - **Reminder** (when event has a date): Checkbox "Send me a reminder email" (default on); dropdown: "1 day before" or "Morning of the event"
 - Submit creates signup and redirects to confirmation
 
 ### Signup Confirmation (`/signup/confirm?id=...`)
 
 - "You're signed up!"
+- Uses the event's volunteer-facing theme (heading font + primary button color)
 - **Do not show empty data** — only render sections when data exists
 - **Date:** Shown when event/slot has a date
 - **Time:** Shown only when slot has both start_time and end_time; do not show "All day" when there is no time
@@ -99,6 +103,7 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
   - Subtitle: "Create an account to organize volunteer events"
   - Primary button: "Create account"
   - Footer: "Already have an account? Sign in" (links to `/login`).
+- **Google OAuth:** "Continue with Google" is available and uses Supabase OAuth flow.
 
 ### Sign Up Success (`/signup/success`)
 
@@ -114,6 +119,7 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 ### Login (`/login`)
 
 - Email + password auth (Supabase) for existing organizers.
+- Google OAuth login ("Continue with Google") is available via Supabase OAuth.
 - On first successful login for a Supabase user without a corresponding app `users` row, create:
   - `users` row with id, email, and name (from metadata or email local-part).
   - Default organization and `organization_members` owner record if none exist.
@@ -186,17 +192,20 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 - **Signup type selector:** "I want to [dropdown] [help]" — dropdown options: "organize by schedule", "request items in a simple list", "use one of my templates"; help (?) opens modal explaining the two types
 - **Use template:** When "use one of my templates" is selected, show template picker; selecting a template pre-fills spots/items, description, location (title and dates left empty)
 - **Post-creation modal:** After creating, offer "Save as template?" — 3 steps: (1) prompt with "Yes, Save it" / "No, I'm good.", (2) enter template name, (3) confirmation
+- **Customize appearance** (collapsible): choose signup page theme from 42 curated colors + 21 curated Google Fonts
+- **Signup settings:** toggle "Show who signed up" (default on; can be turned off for anonymous signups)
 
 **Scheduled (organize by schedule):**
 
 - Event Details: Title*, Description, Location*
-- Scheduled spots (at least one): Date*, Start time (optional), End time (optional), Spot name*, Need*, Instructions (optional)
+- Scheduled spots (at least one): Date*, Start time (optional), End time (optional), Spot name*, Need*, Instructions (optional), Notes label (optional custom text), Notes required toggle
 - Add/remove spots
+- Spot rows auto-sort chronologically by date/time when saving
 
 **Simple list (request items):**
 
 - Signup Details: Title*, Description, Location (optional), Date (optional)
-- Items (at least one): Item name*, Description (optional), Need*
+- Items (at least one): Item name*, Description (optional), Need*, Notes label (optional custom text), Notes required toggle
 - Add/remove items
 
 ### Signups Page (`/dashboard/event/[id]/signups`)
@@ -204,23 +213,25 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 - Path renamed from `/roster` (redirect in place)
 - Back to Dashboard
 - Event title, date range, coverage meter (use "spots" for scheduled)
-- **Scheduled:** Table: Spot, Name, Email, Time, Comment, Signup Timestamp
-- **Simple list:** Table: Item, Name, Email, Comment, Signup Timestamp — no Time column
+- **Scheduled:** Table: Spot, Name, Email, Time, Notes, Signup Timestamp
+- **Simple list:** Table: Item, Name, Email, Notes, Signup Timestamp — no Time column
 - **Table behavior:** No truncation; text wraps in all columns
 - **Coverage (# still needed):** Make clickable; opens modal listing spots/items that still need filling
 - **Notification settings:** Inline dropdown "Notifications for this event:" — Use my default / Instantly / Daily digest / Weekly digest / Never; auto-saves on change
 - **Actions (button order):** Copy Signup URL, Edit Event, Export (dropdown)
 - **Export dropdown:** Single "Export" button with options: Export CSV, Export List, Print
-  - **Export CSV:** Columns adapt by signup type; downloads CSV file
-  - **Export List:** Plain-text format for copying into emails; opens modal with formatted text and Copy button; includes header (event title, date/range, location, description), per-slot: slot name, instructions, numbered list of signups (or blank for empty slots); slot order: scheduled by start_time ascending, simple by created_at; single-day events show date only in header; multi-day events show date+time next to each scheduled spot
+  - **Export CSV:** Columns adapt by signup type; downloads CSV file; notes values include custom label when set
+  - **Export List:** Plain-text format for copying into emails; opens modal with formatted text and Copy button; includes header (event title, date/range, location, description), per-slot: slot name, instructions, numbered list of signups (or blank for empty slots); slot order: scheduled by start_time ascending, simple by created_at; single-day events show date only in header; multi-day events show date+time next to each scheduled spot; notes include custom label when set
   - **Print:** Triggers `window.print()`; existing print styles hide nav and actions
 - *(Generate Volunteer Recap removed; may return later)*
 
 ### Edit Event (`/dashboard/event/[id]/edit`)
 
 - Edit event details and spots/items
-- **Scheduled spots:** Date, Start time, End time, Spot name, Capacity, Instructions (optional)
-- **Simple items:** Item name, Capacity, Instructions (optional)
+- **Scheduled spots:** Date, Start time, End time, Spot name, Capacity, Instructions (optional), Notes label, Notes required, Show notes publicly toggle
+- **Simple items:** Item name, Capacity, Instructions (optional), Notes label, Notes required, Show notes publicly toggle
+- **Customize appearance** (collapsible): choose theme color + heading font for volunteer-facing pages
+- **Signup settings:** toggle "Show who signed up"
 - Linked from Signups page via "Edit Event" button
 
 ---
@@ -265,8 +276,13 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
   - NPS: `nps_dismissed_at`, `nps_submitted_at`
   - `notification_preference` — 'instant' | 'daily' | 'weekly' | 'never' (default: 'daily')
 - **Events** — title, description, location, start_date (optional), end_date (optional), signup_type ('scheduled' | 'simple'), published
+  - `show_signups` — boolean; controls whether volunteers can view who signed up on public event page (default true)
+  - `theme` — json (`{ colorKey, fontKey }`) for volunteer-facing color + heading font
   - `notification_override` — 'instant' | 'daily' | 'weekly' | 'never' | null (use global)
 - **Slots** — role_name, role_description, capacity, start_time, end_time, instructions
+  - `comment_label` — custom volunteer notes label (default "Comment")
+  - `comment_required` — boolean; require notes on signup
+  - `comment_show_publicly` — boolean; include notes in public "See who signed up" modal
 - **Signups** — name, email, comment, cancel_token, cancelled, reminder_opt_in, reminder_offset ('1_day' | 'morning_of'), reminder_sent_at
 - **Templates** — name, description, location, signup_type, organization_id
 - **Template_slots** — template_id, role_name, role_description, capacity, start_time, end_time, instructions
@@ -316,7 +332,10 @@ Use these flows to QA the app end-to-end.
 | Create simple signup | Create Signup → "request items in a simple list" → fill details, add items → Create Signup | Event created; appears on dashboard |
 | Save as template (post-creation) | After creating an event, in modal: "Yes, Save it" → enter template name → confirm | Template saved; appears in template picker on next create |
 | Use template | Create Signup → "use one of my templates" → select template | Form pre-fills spots/items, description, location; title and dates empty |
-| View My Signups | Dashboard → View My Signups on an event | Signups page loads; table shows Spot/Item, Name, Email, Time (if scheduled), Comment, Signup Timestamp |
+| View My Signups | Dashboard → View My Signups on an event | Signups page loads; table shows Spot/Item, Name, Email, Time (if scheduled), Notes, Signup Timestamp |
+| Theme selection (create/edit) | Open Customize appearance → choose color + font → save | Public event + confirmation pages render selected theme |
+| Public signups visibility toggle | In create/edit, turn off "Show who signed up" → save → open public page | "See who"/"View signups" is hidden from volunteers |
+| Per-spot notes settings | Set custom notes label + required toggle on a slot/item → save | Signup modal uses custom label and enforces required when enabled |
 | Export CSV | Signups page → Export → Export CSV | CSV downloads with appropriate columns for signup type |
 | Export List | Signups page → Export → Export List | Modal shows plain-text list; Copy copies to clipboard |
 | Print | Signups page → Export → Print | Page prints; nav and action buttons hidden |
@@ -328,9 +347,11 @@ Use these flows to QA the app end-to-end.
 
 | Scenario | Steps | Expected |
 |----------|-------|----------|
-| Sign up (scheduled) | Open event link → pick a spot with time → Sign up → enter name, email, comment → Submit | Confirmation page shows Spot, date, time, event, location |
+| Sign up (scheduled) | Open event link → pick a spot with time → Sign up → enter name, email, notes → Submit | Confirmation page shows Spot, date, time, event, location |
 | Sign up (simple list) | Open event link → pick an item → Sign up → enter name, email → Submit | Confirmation page shows Item, event, location; no time row |
 | Signup modal instructions | Open signup modal for a spot with instructions | Instructions shown below spot name |
+| Required notes | Sign up for a slot where notes are required and submit blank | Inline validation blocks submit until notes are entered |
+| Public "See who" modal | Event with show_signups on and multi-capacity filled slot → tap See who | Names display; notes display only when slot allows public notes |
 | Confirmation: date/time logic | Sign up for slot with no date or no time | Date shown only when present; time shown only when both start/end exist; no "All day" when no times |
 | Cancel via email | Open cancel link from confirmation email | Cancel page; confirm cancel; signup removed from spot/item |
 
@@ -346,6 +367,7 @@ Use these flows to QA the app end-to-end.
 | Scenario | Steps | Expected |
 |----------|-------|----------|
 | Coverage meter | View event page or dashboard | "X of Y spots filled" (scheduled) or "X of Y items filled" (simple) |
+| Volunteer page theme usage | Open themed event page | Heading font + primary accents follow selected theme; neutral text remains charcoal |
 | Add to Calendar | Confirmation page → Add to Calendar | Opens Google Calendar with event/slot details; no crash when date is null |
 | Empty / null handling | Event with optional date, slot with optional times | No "All day" when no times; "No date" when no start_date; Add to Calendar handles null date |
 
