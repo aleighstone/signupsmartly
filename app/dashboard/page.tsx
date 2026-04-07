@@ -50,29 +50,6 @@ export default async function DashboardPage() {
     events = await getEventsForUser(userId);
   }
 
-  const pendingBySourceEventId = new Map<string, { id: string; recipientEmail: string }>();
-  if (userId) {
-    const { data: pendingTransfers } = await serviceSupabase
-      .from('pending_transfers')
-      .select('id, source_event_id, recipient_email, expires_at')
-      .eq('sender_id', userId)
-      .is('claimed_at', null);
-    (pendingTransfers ?? []).forEach((row) => {
-      const transfer = row as {
-        id: string;
-        source_event_id: string | null;
-        recipient_email: string;
-        expires_at: string;
-      };
-      if (!transfer.source_event_id) return;
-      if (new Date(transfer.expires_at).getTime() <= Date.now()) return;
-      pendingBySourceEventId.set(transfer.source_event_id, {
-        id: transfer.id,
-        recipientEmail: transfer.recipient_email,
-      });
-    });
-  }
-
   const orgSlug = userId ? await getOrgSlugForUser(userId) : null;
   const eventUrl = (eventId: string) =>
     orgSlug
@@ -141,7 +118,6 @@ export default async function DashboardPage() {
               dateLabel={dateLabel}
               coverage={coverage}
               signupPageUrl={eventUrl(event.id)}
-              pendingTransfer={pendingBySourceEventId.get(event.id) ?? null}
             />
           ))}
         </ul>
