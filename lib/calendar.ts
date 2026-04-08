@@ -1,5 +1,37 @@
-import { format } from 'date-fns';
 import type { Event, Slot } from '@/types/database';
+
+// ---------------------------------------------------------------------------
+// Calendar date helpers — NO timezone conversion for YYYY-MM-DD display
+// ---------------------------------------------------------------------------
+// Rule: organizer-entered dates display exactly as stored. We never pass a
+// YYYY-MM-DD string to `new Date()` because that creates a UTC midnight
+// timestamp that shifts to the prior day in US timezones. Instead we parse
+// the string as plain numbers and build the display string directly.
+
+const MONTHS_LONG = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
+];
+const MONTHS_SHORT = [
+  'Jan','Feb','Mar','Apr','May','Jun',
+  'Jul','Aug','Sep','Oct','Nov','Dec',
+];
+const WEEKDAYS = [
+  'Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday',
+];
+
+/** Parse a YYYY-MM-DD string into numeric parts. Returns null if not that format. */
+function parseYMD(ymd: string): { y: number; m: number; d: number } | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd.trim());
+  if (!match) return null;
+  return { y: Number(match[1]), m: Number(match[2]), d: Number(match[3]) };
+}
+
+/** Weekday name for a calendar date. Uses new Date(y, m-1, d) — local midnight,
+ *  only for day-of-week arithmetic, never for display. */
+function weekdayName(y: number, m: number, d: number): string {
+  return WEEKDAYS[new Date(y, m - 1, d).getDay()];
+}
 
 export function generateAddToCalendarUrl(params: {
   event: Event;
@@ -41,28 +73,21 @@ export function formatEventDateRange(
 ): string {
   // For events (especially simple lists) without a date, show nothing
   if (!startDate) return '';
-  const parseCalendarDate = (value: string): Date => {
-    // Date-only values (YYYY-MM-DD) should render exactly as stored with no
-    // timezone shift. Parse them as UTC midnight to keep calendar day stable.
-    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
-    if (dateOnly) {
-      const y = Number(dateOnly[1]);
-      const m = Number(dateOnly[2]);
-      const d = Number(dateOnly[3]);
-      return new Date(Date.UTC(y, m - 1, d));
-    }
-    return new Date(value);
-  };
-  const start = parseCalendarDate(startDate);
-  if (!endDate) {
-    return format(start, 'EEEE, MMMM d, yyyy');
-  }
-  const end = parseCalendarDate(endDate);
-  const sameDay = start.toDateString() === end.toDateString();
-  if (sameDay) {
-    return format(start, 'EEEE, MMMM d, yyyy');
-  }
-  return `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`;
+
+  const start = parseYMD(startDate);
+  if (!start) return '';
+
+  const singleDate = `${weekdayName(start.y, start.m, start.d)}, ${MONTHS_LONG[start.m - 1]} ${start.d}, ${start.y}`;
+
+  if (!endDate) return singleDate;
+
+  const end = parseYMD(endDate);
+  if (!end) return singleDate;
+
+  // Same calendar day — show once
+  if (start.y === end.y && start.m === end.m && start.d === end.d) return singleDate;
+
+  return `${MONTHS_SHORT[start.m - 1]} ${start.d} – ${MONTHS_SHORT[end.m - 1]} ${end.d}, ${end.y}`;
 }
 
 /**
