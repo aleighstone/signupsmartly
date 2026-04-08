@@ -20,9 +20,15 @@ const WEEKDAYS = [
   'Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday',
 ];
 
-/** Parse a YYYY-MM-DD string into numeric parts. Returns null if not that format. */
+/**
+ * Parse a date string into numeric parts. Handles both:
+ *   "YYYY-MM-DD"                   (plain date)
+ *   "YYYY-MM-DDTHH:MM:SS+00:00"   (timestamptz as returned by Supabase)
+ * In both cases the UTC calendar date encoded in the first 10 characters
+ * is the organizer-intended date — no timezone conversion needed.
+ */
 function parseYMD(ymd: string): { y: number; m: number; d: number } | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd.trim());
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd.trim());
   if (!match) return null;
   return { y: Number(match[1]), m: Number(match[2]), d: Number(match[3]) };
 }
