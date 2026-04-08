@@ -10,6 +10,15 @@
 - Always respect the **design system**: colors (charcoal, muted, sage, coral, surface, sand), typography (font-heading, font-body), spacing (consistent padding, gaps), borders (charcoal/10, charcoal/20), shadows (shadow-soft, shadow-soft-md).
 - Ensure **A+ UI and UX**: consistent sizing, alignment, focus states, and clear visual hierarchy. Form fields, buttons, and interactive elements should feel cohesive and polished.
 
+## Date and time display (mandatory)
+
+**Never violate this.** Organizer-entered dates and times must display **exactly as stored**. No timezone conversion.
+
+The app stores two shapes of values:
+
+1. **Calendar dates** — `YYYY-MM-DD` strings (e.g. `"2026-05-01"`). These express **organizer intent**, not UTC instants. When displaying, parse **year, month, and day as integers** from the string and build the label from those parts. **Do not** use `new Date("2026-05-01")` for display: that parses as UTC midnight and can show as the **previous calendar day** in US timezones.
+2. **Slot timestamps** — ISO strings in UTC (e.g. `"2026-05-01T14:30:00Z"`). For display, use `Intl.DateTimeFormat` with **`timeZone: 'UTC'`** so volunteers see the stored clock time as-is, with no local-timezone shift.
+
 ## Project context
 
 - **SignupSmartly is an independent project.** It has nothing to do with `digitaleigh-dev`.
@@ -37,7 +46,7 @@
 
 - User expects deploy/build commands to be provided after making code changes, often explicitly asking for them.
 - User prefers polished, professional front-end UI with careful spacing/alignment and consistency with the design system.
-- User does not want timezone translation logic in signup scheduling flows; times should display exactly as entered/stored.
+- User does not want timezone translation in signup scheduling; see **Date and time display (mandatory)** above.
 
 ## Learned Workspace Facts
 
