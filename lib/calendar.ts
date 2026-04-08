@@ -41,11 +41,23 @@ export function formatEventDateRange(
 ): string {
   // For events (especially simple lists) without a date, show nothing
   if (!startDate) return '';
-  const start = new Date(startDate);
+  const parseCalendarDate = (value: string): Date => {
+    // Date-only values (YYYY-MM-DD) should render exactly as stored with no
+    // timezone shift. Parse them as UTC midnight to keep calendar day stable.
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+    if (dateOnly) {
+      const y = Number(dateOnly[1]);
+      const m = Number(dateOnly[2]);
+      const d = Number(dateOnly[3]);
+      return new Date(Date.UTC(y, m - 1, d));
+    }
+    return new Date(value);
+  };
+  const start = parseCalendarDate(startDate);
   if (!endDate) {
     return format(start, 'EEEE, MMMM d, yyyy');
   }
-  const end = new Date(endDate);
+  const end = parseCalendarDate(endDate);
   const sameDay = start.toDateString() === end.toDateString();
   if (sameDay) {
     return format(start, 'EEEE, MMMM d, yyyy');

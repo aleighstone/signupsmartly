@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { Event } from '@/types/database';
 import { createSignup, getSlot, getOrganizationOwner } from '@/lib/db';
@@ -188,6 +189,9 @@ export async function POST(request: Request) {
     } catch (notificationErr) {
       console.error('Organizer notification error (non-blocking):', notificationErr);
     }
+
+    revalidatePath('/dashboard');
+    revalidatePath(`/dashboard/event/${event.id}/signups`);
 
     return NextResponse.json({ signupId: signup.id });
   } catch (err) {

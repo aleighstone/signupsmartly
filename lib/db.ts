@@ -151,14 +151,21 @@ export async function getSignupByCancelToken(token: string) {
   const { data, error } = await supabase
     .from('signups')
     .select(`
-      *,
-      slots (
-        *,
-        event:events (*)
+      id,
+      cancelled,
+      reminder_opt_in,
+      reminder_offset,
+      slots!inner (
+        role_name,
+        event:events!slots_event_id_fkey (
+          title,
+          signup_type,
+          start_date
+        )
       )
     `)
     .eq('cancel_token', token)
-    .single();
+    .maybeSingle();
 
   if (error || !data) return null;
   return data;

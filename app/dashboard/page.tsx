@@ -10,6 +10,8 @@ import { NpsBanner } from '@/components/NpsBanner';
 import { formatEventDateRange } from '@/lib/calendar';
 import { serviceSupabase } from '@/lib/supabase-service';
 
+export const dynamic = 'force-dynamic';
+
 function shouldShowNps(
   npsSubmittedAt: string | null,
   npsDismissedAt: string | null,

@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { getEventWithSlots, getEventCoverage } from '@/lib/db';
 import { getOrgBySlug } from '@/lib/org-branding';
-import { buildVolunteerFacingThemeHead } from '@/data/themes';
 
 export const dynamic = 'force-dynamic';
 import { EventHeader } from '@/components/EventHeader';
@@ -31,14 +30,7 @@ export default async function EventPage({ params }: PageProps) {
     0
   );
 
-  const { fontsUrl, themeStyleCss } = buildVolunteerFacingThemeHead(eventData.theme);
-
   return (
-    <>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href={fontsUrl} rel="stylesheet" />
-      <style dangerouslySetInnerHTML={{ __html: themeStyleCss }} />
     <main className="min-h-screen bg-sand">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
         {org && (
@@ -121,6 +113,5 @@ export default async function EventPage({ params }: PageProps) {
         </footer>
       </div>
     </main>
-    </>
   );
 }
