@@ -5,7 +5,10 @@ import { useRouter } from 'next/navigation';
 import { SlotList } from '@/components/SlotList';
 import { SignupModal } from '@/components/SignupModal';
 import { SignupsModal } from '@/components/SignupsModal';
-import { formatScheduledSlotWhen } from '@/lib/calendar';
+import {
+  formatScheduledSlotWhen,
+  scheduledSlotsShareSingleCalendarDay,
+} from '@/lib/calendar';
 import type { EventWithSlots, SlotWithSignups } from '@/types/database';
 import type { SignupFormData } from '@/components/SignupForm';
 import { DEFAULT_COMMENT_LABEL } from '@/lib/slot-comment';
@@ -26,6 +29,14 @@ export function EventPageClient({ event }: EventPageClientProps) {
   const submitInFlightRef = useRef(false);
 
   const showSignups = event.show_signups ?? true;
+
+  const eventDateFallback =
+    event.signup_type === 'scheduled'
+      ? { startDate: event.start_date, endDate: event.end_date }
+      : null;
+  const omitRedundantSlotDate =
+    event.signup_type === 'scheduled' &&
+    scheduledSlotsShareSingleCalendarDay(event.slots, eventDateFallback);
 
   const handleSignUp = (slot: SlotWithSignups) => {
     submitInFlightRef.current = false;
@@ -79,7 +90,8 @@ export function EventPageClient({ event }: EventPageClientProps) {
       ? formatScheduledSlotWhen(
           signupsModalSlot.start_time,
           signupsModalSlot.end_time,
-          { startDate: event.start_date, endDate: event.end_date }
+          eventDateFallback,
+          { omitRedundantDate: omitRedundantSlotDate }
         )
       : null;
 
@@ -91,11 +103,7 @@ export function EventPageClient({ event }: EventPageClientProps) {
         showSignups={showSignups}
         onOpenSignups={setSignupsModalSlot}
         signupType={event.signup_type}
-        eventDateFallback={
-          event.signup_type === 'scheduled'
-            ? { startDate: event.start_date, endDate: event.end_date }
-            : null
-        }
+        eventDateFallback={eventDateFallback}
         volunteerPageThemed
       />
       <SignupsModal
@@ -123,7 +131,8 @@ export function EventPageClient({ event }: EventPageClientProps) {
             ? formatScheduledSlotWhen(
                 modalSlot.start_time,
                 modalSlot.end_time,
-                { startDate: event.start_date, endDate: event.end_date }
+                eventDateFallback,
+                { omitRedundantDate: omitRedundantSlotDate }
               )
             : null
         }

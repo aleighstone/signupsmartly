@@ -2,7 +2,10 @@
 
 import { usePostHog } from '@posthog/react';
 import type { ScheduledSlotEventDateFallback } from '@/lib/calendar';
-import { formatScheduledSlotWhen } from '@/lib/calendar';
+import {
+  formatScheduledSlotWhen,
+  scheduledSlotsShareSingleCalendarDay,
+} from '@/lib/calendar';
 import type { SlotWithSignups } from '@/types/database';
 import {
   getSlotRemainingCapacity,
@@ -34,6 +37,7 @@ function SlotCard({
   showSignups,
   isSimple,
   eventDateFallback,
+  omitRedundantSlotDate,
   primaryColor,
   volunteerPageThemed,
 }: {
@@ -47,13 +51,15 @@ function SlotCard({
   showSignups: boolean;
   isSimple: boolean;
   eventDateFallback?: ScheduledSlotEventDateFallback | null;
+  omitRedundantSlotDate?: boolean;
   primaryColor?: string;
   volunteerPageThemed?: boolean;
 }) {
   const whenScheduled = formatScheduledSlotWhen(
     slot.start_time,
     slot.end_time,
-    isSimple ? null : eventDateFallback
+    isSimple ? null : eventDateFallback,
+    { omitRedundantDate: omitRedundantSlotDate }
   );
   const unitLabel = isSimple ? 'item' : 'spot';
   const spotsText =
@@ -76,39 +82,63 @@ function SlotCard({
     <div className="flex flex-col gap-3 rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
         {isSimple ? (
-          <h3 className="font-medium text-charcoal font-body">{slot.role_name}</h3>
+          <>
+            <h3 className="font-medium text-charcoal font-body">{slot.role_name}</h3>
+            <p className="mt-1 text-sm text-charcoal font-body">
+              {spotsText}
+              {showSeeWho ? (
+                <>
+                  {' · '}
+                  <span>
+                    {filled} of {capacity} filled
+                  </span>
+                  {' · '}
+                  <button
+                    type="button"
+                    onClick={() => onOpenSignups(slot)}
+                    className={`font-medium underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 rounded ${
+                      volunteerPageThemed ? '' : 'text-sage hover:text-sage-hover'
+                    }`}
+                    style={linkColorStyle}
+                  >
+                    See who →
+                  </button>
+                </>
+              ) : null}
+            </p>
+          </>
         ) : (
           <>
             <h3 className="text-base font-semibold text-charcoal font-heading">
-              {whenScheduled}
-            </h3>
-            <h4 className="mt-1 text-sm font-medium text-charcoal font-body">
               {slot.role_name}
-            </h4>
+            </h3>
+            <p className="mt-1 text-sm text-charcoal font-body">
+              {spotsText}
+              {showSeeWho ? (
+                <>
+                  {' · '}
+                  <span>
+                    {filled} of {capacity} filled
+                  </span>
+                  {' · '}
+                  <button
+                    type="button"
+                    onClick={() => onOpenSignups(slot)}
+                    className={`font-medium underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 rounded ${
+                      volunteerPageThemed ? '' : 'text-sage hover:text-sage-hover'
+                    }`}
+                    style={linkColorStyle}
+                  >
+                    See who →
+                  </button>
+                </>
+              ) : null}
+            </p>
+            <p className="mt-1 text-sm font-medium text-charcoal font-body">
+              {whenScheduled}
+            </p>
           </>
         )}
-        <p className="mt-1 text-sm text-charcoal font-body">
-          {spotsText}
-          {showSeeWho ? (
-            <>
-              {' · '}
-              <span>
-                {filled} of {capacity} filled
-              </span>
-              {' · '}
-              <button
-                type="button"
-                onClick={() => onOpenSignups(slot)}
-                className={`font-medium underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 rounded ${
-                  volunteerPageThemed ? '' : 'text-sage hover:text-sage-hover'
-                }`}
-                style={linkColorStyle}
-              >
-                See who →
-              </button>
-            </>
-          ) : null}
-        </p>
         {(slot.role_description || slot.instructions) && (
           <p className="mt-1 text-sm text-muted line-clamp-2 font-body">
             {slot.role_description || slot.instructions}
@@ -144,6 +174,9 @@ export function SlotList({
 }: SlotListProps) {
   const posthog = usePostHog();
   const isSimple = signupType === 'simple';
+  const omitRedundantSlotDate =
+    !isSimple &&
+    scheduledSlotsShareSingleCalendarDay(slots, eventDateFallback ?? null);
   const orderedSlots = sortSlotsForVolunteerDisplay(slots, signupType);
   const openSlots = orderedSlots.filter((s) => getSlotRemainingCapacity(s) > 0);
   const filledSlots = orderedSlots.filter((s) => getSlotRemainingCapacity(s) === 0);
@@ -204,6 +237,7 @@ export function SlotList({
                     }}
                     isSimple={isSimple}
                     eventDateFallback={eventDateFallback}
+                    omitRedundantSlotDate={omitRedundantSlotDate}
                     primaryColor={primaryColor}
                     volunteerPageThemed={volunteerPageThemed}
                   />
@@ -230,7 +264,8 @@ export function SlotList({
               const whenScheduled = formatScheduledSlotWhen(
                 slot.start_time,
                 slot.end_time,
-                isSimple ? null : eventDateFallback
+                isSimple ? null : eventDateFallback,
+                { omitRedundantDate: omitRedundantSlotDate }
               );
               const names = slot.signups.map((s) => s.name).join(', ');
               const multiCapLink =
@@ -243,32 +278,52 @@ export function SlotList({
                   className="rounded-xl border border-charcoal/10 bg-surface/60 px-4 py-3 shadow-soft"
                 >
                   {isSimple ? (
-                    <p className="font-medium text-charcoal font-body">
-                      {slot.role_name}
-                    </p>
+                    <>
+                      <p className="font-medium text-charcoal font-body">
+                        {slot.role_name}
+                      </p>
+                      {multiCapLink ? (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenSignups(slot)}
+                          className={`mt-1 text-left text-sm font-medium underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 rounded font-body ${
+                            volunteerPageThemed ? '' : 'text-sage hover:text-sage-hover'
+                          }`}
+                          style={
+                            volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined
+                          }
+                        >
+                          {slot.signups.length} {countLabel} · View signups →
+                        </button>
+                      ) : (
+                        <p className="mt-1 text-sm text-muted font-body">{names}</p>
+                      )}
+                    </>
                   ) : (
                     <>
                       <h3 className="text-base font-semibold text-charcoal font-heading">
-                        {whenScheduled}
-                      </h3>
-                      <h4 className="mt-1 text-sm font-medium text-charcoal font-body">
                         {slot.role_name}
-                      </h4>
+                      </h3>
+                      {multiCapLink ? (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenSignups(slot)}
+                          className={`mt-1 text-left text-sm font-medium underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 rounded font-body ${
+                            volunteerPageThemed ? '' : 'text-sage hover:text-sage-hover'
+                          }`}
+                          style={
+                            volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined
+                          }
+                        >
+                          {slot.signups.length} {countLabel} · View signups →
+                        </button>
+                      ) : (
+                        <p className="mt-1 text-sm text-muted font-body">{names}</p>
+                      )}
+                      <p className="mt-1 text-sm font-medium text-charcoal font-body">
+                        {whenScheduled}
+                      </p>
                     </>
-                  )}
-                  {multiCapLink ? (
-                    <button
-                      type="button"
-                      onClick={() => handleOpenSignups(slot)}
-                      className={`mt-1 text-left text-sm font-medium underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 rounded font-body ${
-                        volunteerPageThemed ? '' : 'text-sage hover:text-sage-hover'
-                      }`}
-                      style={volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined}
-                    >
-                      {slot.signups.length} {countLabel} · View signups →
-                    </button>
-                  ) : (
-                    <p className="mt-1 text-sm text-muted font-body">{names}</p>
                   )}
                 </li>
               );
