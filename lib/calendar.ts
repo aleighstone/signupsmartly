@@ -148,75 +148,6 @@ export type ScheduledSlotEventDateFallback = {
   endDate: string | null;
 };
 
-function ymdKeyUtcFromIso(iso: string): string | null {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-}
-
-function ymdKeyFromCalendarFields(y: number, m: number, day: number): string {
-  return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-}
-
-type SlotDayConstraint =
-  | { kind: 'day'; key: string }
-  | { kind: 'none' }
-  | { kind: 'blocked' };
-
-function slotDayConstraint(
-  startTime: string | null,
-  endTime: string | null,
-  eventFallback: ScheduledSlotEventDateFallback | null
-): SlotDayConstraint {
-  if (startTime) {
-    const k1 = ymdKeyUtcFromIso(startTime);
-    if (!k1) return { kind: 'blocked' };
-    if (!endTime) return { kind: 'day', key: k1 };
-    const k2 = ymdKeyUtcFromIso(endTime);
-    if (!k2) return { kind: 'blocked' };
-    if (k1 !== k2) return { kind: 'blocked' };
-    return { kind: 'day', key: k1 };
-  }
-  if (!eventFallback?.startDate) return { kind: 'none' };
-  const start = parseYMD(eventFallback.startDate);
-  if (!start) return { kind: 'blocked' };
-  const key = ymdKeyFromCalendarFields(start.y, start.m, start.d);
-  if (!eventFallback.endDate) return { kind: 'day', key };
-  const end = parseYMD(eventFallback.endDate);
-  if (!end) return { kind: 'day', key };
-  if (start.y === end.y && start.m === end.m && start.d === end.d) {
-    return { kind: 'day', key };
-  }
-  return { kind: 'blocked' };
-}
-
-/**
- * True when every slot is on the same calendar day (UTC for timed slots;
- * event fallback for undated slots). Used to show the date once in the header only.
- */
-export function scheduledSlotsShareSingleCalendarDay(
-  slots: { start_time: string | null; end_time: string | null }[],
-  eventFallback: ScheduledSlotEventDateFallback | null
-): boolean {
-  if (slots.length === 0) return false;
-  let agreedKey: string | null = null;
-  let seenConcreteDay = false;
-  for (const slot of slots) {
-    const r = slotDayConstraint(slot.start_time, slot.end_time, eventFallback);
-    if (r.kind === 'blocked') return false;
-    if (r.kind === 'none') continue;
-    seenConcreteDay = true;
-    if (agreedKey === null) agreedKey = r.key;
-    else if (agreedKey !== r.key) return false;
-  }
-  return seenConcreteDay && agreedKey !== null;
-}
-
-export type FormatScheduledSlotWhenOptions = {
-  /** When all slots share one day, omit the date (event header shows it). */
-  omitRedundantDate?: boolean;
-};
-
 /**
  * Full volunteer-facing line: date + time range for scheduled slots.
  * If the slot spans two UTC calendar days, both dates are shown.
@@ -226,10 +157,8 @@ export type FormatScheduledSlotWhenOptions = {
 export function formatScheduledSlotWhen(
   startTime: string | null,
   endTime: string | null,
-  eventFallback?: ScheduledSlotEventDateFallback | null,
-  options?: FormatScheduledSlotWhenOptions
+  eventFallback?: ScheduledSlotEventDateFallback | null
 ): string {
-  const omitRedundantDate = options?.omitRedundantDate ?? false;
   const timePart = formatTimeRange(startTime, endTime);
   if (!startTime) {
     if (eventFallback?.startDate) {
@@ -238,7 +167,6 @@ export function formatScheduledSlotWhen(
         eventFallback.endDate
       );
       if (dateLine) {
-        if (omitRedundantDate) return timePart;
         return `${dateLine} · ${timePart}`;
       }
     }
@@ -249,7 +177,6 @@ export function formatScheduledSlotWhen(
   if (endDate && endDate !== startDate) {
     return `${startDate} – ${endDate} · ${timePart}`;
   }
-  if (omitRedundantDate) return timePart;
   return `${startDate} · ${timePart}`;
 }
 

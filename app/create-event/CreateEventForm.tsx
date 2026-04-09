@@ -737,6 +737,36 @@ export function CreateEventForm({
                         </button>
                       )}
                     </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                          Spot name <span className="text-coral">*</span>
+                        </label>
+                        <input
+                          {...scheduledForm.register(`slots.${index}.role_name`)}
+                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
+                          placeholder="Announcer"
+                        />
+                        {scheduledForm.formState.errors.slots?.[index]?.role_name && (
+                          <p className="mt-1 text-sm text-coral font-body">
+                            {scheduledForm.formState.errors.slots?.[index]?.role_name?.message}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                          Need <span className="text-coral">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          {...scheduledForm.register(`slots.${index}.capacity`, {
+                            valueAsNumber: true,
+                          })}
+                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                        />
+                      </div>
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                         Date <span className="text-coral">*</span>
@@ -770,36 +800,6 @@ export function CreateEventForm({
                         <input
                           type="time"
                           {...scheduledForm.register(`slots.${index}.end_time`)}
-                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                          Spot name <span className="text-coral">*</span>
-                        </label>
-                        <input
-                        {...scheduledForm.register(`slots.${index}.role_name`)}
-                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
-                        placeholder="Announcer"
-                        />
-                        {scheduledForm.formState.errors.slots?.[index]?.role_name && (
-                          <p className="mt-1 text-sm text-coral font-body">
-                            {scheduledForm.formState.errors.slots?.[index]?.role_name?.message}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                          Need <span className="text-coral">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          min={1}
-                          {...scheduledForm.register(`slots.${index}.capacity`, {
-                            valueAsNumber: true,
-                          })}
                           className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                         />
                       </div>
@@ -1014,16 +1014,6 @@ export function CreateEventForm({
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                        Description <span className="text-muted font-normal">(optional)</span>
-                      </label>
-                      <textarea
-                        {...simpleForm.register(`slots.${index}.role_description`)}
-                        rows={2}
-                        className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                         Need <span className="text-coral">*</span>
                       </label>
                       <input
@@ -1033,6 +1023,16 @@ export function CreateEventForm({
                           valueAsNumber: true,
                         })}
                         className="w-full max-w-[100px] rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                        Description <span className="text-muted font-normal">(optional)</span>
+                      </label>
+                      <textarea
+                        {...simpleForm.register(`slots.${index}.role_description`)}
+                        rows={2}
+                        className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
                       />
                     </div>
                     <div className="border-t border-charcoal/10 pt-4 space-y-4">
