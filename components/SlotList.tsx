@@ -2,7 +2,10 @@
 
 import { usePostHog } from '@posthog/react';
 import type { ScheduledSlotEventDateFallback } from '@/lib/calendar';
-import { formatScheduledSlotWhen } from '@/lib/calendar';
+import {
+  formatScheduledSlotWhen,
+  scheduledSlotsShareSingleCalendarDay,
+} from '@/lib/calendar';
 import type { SlotWithSignups } from '@/types/database';
 import {
   getSlotRemainingCapacity,
@@ -34,6 +37,7 @@ function SlotCard({
   showSignups,
   isSimple,
   eventDateFallback,
+  omitRedundantSlotDate,
   primaryColor,
   volunteerPageThemed,
 }: {
@@ -47,13 +51,15 @@ function SlotCard({
   showSignups: boolean;
   isSimple: boolean;
   eventDateFallback?: ScheduledSlotEventDateFallback | null;
+  omitRedundantSlotDate?: boolean;
   primaryColor?: string;
   volunteerPageThemed?: boolean;
 }) {
   const whenScheduled = formatScheduledSlotWhen(
     slot.start_time,
     slot.end_time,
-    isSimple ? null : eventDateFallback
+    isSimple ? null : eventDateFallback,
+    { omitRedundantDate: omitRedundantSlotDate }
   );
   const unitLabel = isSimple ? 'item' : 'spot';
   const spotsText =
@@ -144,6 +150,9 @@ export function SlotList({
 }: SlotListProps) {
   const posthog = usePostHog();
   const isSimple = signupType === 'simple';
+  const omitRedundantSlotDate =
+    !isSimple &&
+    scheduledSlotsShareSingleCalendarDay(slots, eventDateFallback ?? null);
   const orderedSlots = sortSlotsForVolunteerDisplay(slots, signupType);
   const openSlots = orderedSlots.filter((s) => getSlotRemainingCapacity(s) > 0);
   const filledSlots = orderedSlots.filter((s) => getSlotRemainingCapacity(s) === 0);
@@ -204,6 +213,7 @@ export function SlotList({
                     }}
                     isSimple={isSimple}
                     eventDateFallback={eventDateFallback}
+                    omitRedundantSlotDate={omitRedundantSlotDate}
                     primaryColor={primaryColor}
                     volunteerPageThemed={volunteerPageThemed}
                   />
@@ -230,7 +240,8 @@ export function SlotList({
               const whenScheduled = formatScheduledSlotWhen(
                 slot.start_time,
                 slot.end_time,
-                isSimple ? null : eventDateFallback
+                isSimple ? null : eventDateFallback,
+                { omitRedundantDate: omitRedundantSlotDate }
               );
               const names = slot.signups.map((s) => s.name).join(', ');
               const multiCapLink =
