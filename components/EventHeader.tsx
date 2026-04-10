@@ -32,7 +32,7 @@ export function EventHeader({ event, titleStyle }: EventHeaderProps) {
         )}
       </dl>
       {event.description && (
-        <p className="text-muted text-sm leading-relaxed max-w-2xl font-body">
+               <p className="text-muted text-sm leading-relaxed font-body">
           {event.description}
         </p>
       )}
