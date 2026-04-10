@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markdown Descriptions — Visual Spec</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* Design tokens */
+    :root {
+      --sand: #FAF9F6;
+      --charcoal: #27272A;
+      --muted: #71717A;
+      --sage: #6CBF6C;
+      --sage-hover: #52A352;
+      --coral: #F87171;
+      --surface: #FFFFFF;
+      --shadow-soft: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+      --shadow-soft-md: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--sand);
+      font-family: 'Inter', sans-serif;
+      color: var(--charcoal);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 896px; /* max-w-4xl — new width */
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* Label */
+    .width-label {
+      text-align: center;
+      font-size: 11px;
+      font-family: 'Inter', sans-serif;
+      color: var(--muted);
+      margin-bottom: 24px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Org breadcrumb */
+    .org-link {
+      font-size: 14px;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 24px;
+      display: block;
+    }
+
+    /* Event header */
+    .event-title {
+      font-family: 'Quicksand', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--charcoal);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .event-meta {
+      font-size: 14px;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 4px;
+    }
+
+    /* Event description — markdown rendered */
+    .event-description {
+      margin-top: 12px;
+      max-width: 672px; /* max-w-2xl stays on description for line length */
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .event-description p { margin-bottom: 8px; }
+    .event-description p:last-child { margin-bottom: 0; }
+    .event-description strong { font-weight: 600; color: var(--charcoal); }
+    .event-description em { font-style: italic; }
+    .event-description a {
+      color: var(--sage-hover);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    /* Coverage meter */
+    .coverage-card {
+      margin-top: 32px;
+      background: var(--surface);
+      border: 1px solid rgba(39,39,42,0.1);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .coverage-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 8px;
+    }
+
+    .coverage-bar-bg {
+      background: rgba(39,39,42,0.08);
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .coverage-bar-fill {
+      background: var(--sage);
+      height: 100%;
+      border-radius: 999px;
+      width: 27%;
+    }
+
+    .coverage-stats {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Slot list */
+    .slot-section { margin-top: 32px; }
+
+    .slot-section-heading {
+      font-family: 'Quicksand', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--charcoal);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slot-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .slot-card {
+      background: var(--surface);
+      border: 1px solid rgba(39,39,42,0.1);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .slot-info { flex: 1; min-width: 0; }
+
+    .slot-name {
+      font-weight: 500;
+      font-size: 15px;
+      color: var(--charcoal);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .slot-remaining {
+      font-size: 13px;
+      color: var(--charcoal);
+      margin-top: 4px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Slot description — markdown rendered, no line-clamp */
+    .slot-description {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .slot-description p { margin-bottom: 4px; }
+    .slot-description p:last-child { margin-bottom: 0; }
+    .slot-description strong { font-weight: 600; color: var(--charcoal); }
+    .slot-description em { font-style: italic; }
+    .slot-description a {
+      color: var(--sage-hover);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .signup-btn {
+      flex-shrink: 0;
+      background: var(--sage);
+      color: white;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* Filled slot */
+    .slot-card.filled {
+      background: rgba(255,255,255,0.6);
+    }
+
+    .slot-card.filled .slot-name {
+      color: var(--muted);
+    }
+
+    .slot-volunteer {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Comparison labels */
+    .comparison-wrapper {
+      display: flex;
+      gap: 48px;
+      align-items: flex-start;
+    }
+
+    .comparison-col {
+      flex: 1;
+    }
+
+    .comparison-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 12px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .label-before {
+      background: rgba(248,113,113,0.12);
+      color: var(--coral);
+    }
+
+    .label-after {
+      background: rgba(108,191,108,0.15);
+      color: var(--sage-hover);
+    }
+
+    .divider {
+      width: 1px;
+      background: rgba(39,39,42,0.1);
+      align-self: stretch;
+      margin-top: 32px;
+    }
+
+    h2.section-title {
+      font-family: 'Quicksand', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin: 48px 0 20px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(39,39,42,0.08);
+    }
+
+    .note {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* Toolbar preview */
+    .editor-wrapper {
+      border: 1px solid rgba(39,39,42,0.2);
+      border-radius: 12px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .editor-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(39,39,42,0.1);
+      background: rgba(39,39,42,0.02);
+    }
+
+    .editor-tab {
+      padding: 6px 14px;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .editor-tab.active {
+      color: var(--charcoal);
+      font-weight: 600;
+      border-bottom-color: var(--sage);
+    }
+
+    .editor-toolbar {
+      display: flex;
+      gap: 4px;
+      padding: 6px 10px;
+      border-bottom: 1px solid rgba(39,39,42,0.08);
+    }
+
+    .toolbar-btn {
+      padding: 3px 9px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      color: var(--charcoal);
+      background: transparent;
+      border: 1px solid rgba(39,39,42,0.15);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .toolbar-btn:hover {
+      background: rgba(39,39,42,0.04);
+    }
+
+    .editor-textarea {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      color: var(--charcoal);
+      border: none;
+      outline: none;
+      resize: none;
+      min-height: 80px;
+      background: white;
+    }
+
+    .char-counter {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+      padding: 4px 10px 6px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .char-counter.warning { color: var(--coral); }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="width-label">Public event page — max-w-4xl (896px) — new width ✓</div>
+
+    <!-- ═══════════════════════════════════════════
+         SECTION 1: EDITOR UI (organizer view)
+    ════════════════════════════════════════════ -->
+    <h2 class="section-title">① Organizer experience — the editor</h2>
+
+    <div style="max-width:560px">
+      <p style="font-size:13px;color:var(--muted);font-family:'Inter',sans-serif;margin-bottom:12px;">
+        Event description field (no character limit):
+      </p>
+      <div class="editor-wrapper">
+        <div class="editor-tabs">
+          <div class="editor-tab active">Write</div>
+          <div class="editor-tab">Preview</div>
+        </div>
+        <div class="editor-toolbar">
+          <button class="toolbar-btn"><b>B</b></button>
+          <button class="toolbar-btn"><em>I</em></button>
+          <button class="toolbar-btn">Link</button>
+        </div>
+        <textarea class="editor-textarea" readonly>Join us for our annual silent auction! All proceeds benefit the PTA enrichment fund.
+
+**Drop-off hours:** Monday–Friday, 8am–3pm in the main office.
+
+Browse our [Amazon donation wishlist](https://amazon.com) for ideas — gift cards to local restaurants are especially appreciated.</textarea>
+      </div>
+
+      <p style="font-size:13px;color:var(--muted);font-family:'Inter',sans-serif;margin-bottom:12px;margin-top:24px;">
+        Slot description field (800 character limit):
+      </p>
+      <div class="editor-wrapper">
+        <div class="editor-tabs">
+          <div class="editor-tab active">Write</div>
+          <div class="editor-tab">Preview</div>
+        </div>
+        <div class="editor-toolbar">
+          <button class="toolbar-btn"><b>B</b></button>
+          <button class="toolbar-btn"><em>I</em></button>
+          <button class="toolbar-btn">Link</button>
+        </div>
+        <textarea class="editor-textarea" style="min-height:56px;" readonly>**Value $25–$50.** Gift cards to restaurants, coffee shops, or local businesses work great. See our [suggestion list](https://amazon.com) for ideas.</textarea>
+        <div class="char-counter">112 / 800</div>
+      </div>
+
+      <div class="editor-wrapper" style="margin-top:12px;">
+        <div class="editor-tabs">
+          <div class="editor-tab active">Write</div>
+          <div class="editor-tab">Preview</div>
+        </div>
+        <div class="editor-toolbar">
+          <button class="toolbar-btn"><b>B</b></button>
+          <button class="toolbar-btn"><em>I</em></button>
+          <button class="toolbar-btn">Link</button>
+        </div>
+        <textarea class="editor-textarea" style="min-height:56px;" readonly>Any store-bought baked goods are welcome. Please check for **nut allergies** — all items must be nut-free.</textarea>
+        <div class="char-counter warning">761 / 800</div>
+      </div>
+      <p class="note">↑ Counter turns red within 50 characters of the limit.</p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         SECTION 2: BEFORE / AFTER comparison
+    ════════════════════════════════════════════ -->
+    <h2 class="section-title">② Volunteer experience — before vs. after</h2>
+
+    <div class="comparison-wrapper">
+      <!-- BEFORE -->
+      <div class="comparison-col">
+        <span class="comparison-label label-before">Before — plain text</span>
+
+        <div style="margin-top:0">
+          <div class="event-title" style="font-size:22px;">PTA Silent Auction Donations</div>
+          <div class="event-meta">Sunday, May 3, 2026</div>
+          <div class="event-meta">Lincoln Elementary School</div>
+          <div class="event-description">
+            <p>Join us for our annual silent auction! All proceeds benefit the PTA enrichment fund. Drop-off hours: Monday–Friday, 8am–3pm in the main office. Browse our Amazon donation wishlist for ideas — gift cards to local restaurants are especially appreciated.</p>
+          </div>
+        </div>
+
+        <div class="coverage-card" style="margin-top:20px;">
+          <div class="coverage-label">3 of 11 items filled</div>
+          <div class="coverage-bar-bg"><div class="coverage-bar-fill"></div></div>
+          <div class="coverage-stats">27% coverage · 8 still needed</div>
+        </div>
+
+        <div class="slot-section">
+          <div class="slot-section-heading">⚡ Still Needed</div>
+          <div class="slot-list">
+
+            <div class="slot-card">
+              <div class="slot-info">
+                <div class="slot-name">Gift card to local restaurant</div>
+                <div class="slot-remaining">3 items remaining</div>
+                <div class="slot-description">
+                  <!-- plain text, truncated to 2 lines -->
+                  <p style="-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;">Value $25–$50. Gift cards to restaurants, coffee shops, or local businesses work great. See our suggestion list for ideas — we have a running doc with recommendations from last year's event.</p>
+                </div>
+              </div>
+              <button class="signup-btn">Sign up</button>
+            </div>
+
+            <div class="slot-card">
+              <div class="slot-info">
+                <div class="slot-name">Baked goods (nut-free)</div>
+                <div class="slot-remaining">2 items remaining</div>
+                <div class="slot-description">
+                  <p style="-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;">Any store-bought baked goods are welcome. Please check for nut allergies — all items must be nut-free. Drop off at the front office by Friday morning.</p>
+                </div>
+              </div>
+              <button class="signup-btn">Sign up</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- AFTER -->
+      <div class="comparison-col">
+        <span class="comparison-label label-after">After — markdown rendered</span>
+
+        <div style="margin-top:0">
+          <div class="event-title" style="font-size:22px;">PTA Silent Auction Donations</div>
+          <div class="event-meta">Sunday, May 3, 2026</div>
+          <div class="event-meta">Lincoln Elementary School</div>
+          <div class="event-description">
+            <p>Join us for our annual silent auction! All proceeds benefit the PTA enrichment fund.</p>
+            <p><strong>Drop-off hours:</strong> Monday–Friday, 8am–3pm in the main office.</p>
+            <p>Browse our <a href="#" onclick="return false;">Amazon donation wishlist</a> for ideas — gift cards to local restaurants are especially appreciated.</p>
+          </div>
+        </div>
+
+        <div class="coverage-card" style="margin-top:20px;">
+          <div class="coverage-label">3 of 11 items filled</div>
+          <div class="coverage-bar-bg"><div class="coverage-bar-fill"></div></div>
+          <div class="coverage-stats">27% coverage · 8 still needed</div>
+        </div>
+
+        <div class="slot-section">
+          <div class="slot-section-heading">⚡ Still Needed</div>
+          <div class="slot-list">
+
+            <div class="slot-card">
+              <div class="slot-info">
+                <div class="slot-name">Gift card to local restaurant</div>
+                <div class="slot-remaining">3 items remaining</div>
+                <div class="slot-description">
+                  <!-- markdown rendered, no clamp, full display -->
+                  <p><strong>Value $25–$50.</strong> Gift cards to restaurants, coffee shops, or local businesses work great. See our <a href="#" onclick="return false;">suggestion list</a> for ideas.</p>
+                </div>
+              </div>
+              <button class="signup-btn">Sign up</button>
+            </div>
+
+            <div class="slot-card">
+              <div class="slot-info">
+                <div class="slot-name">Baked goods (nut-free)</div>
+                <div class="slot-remaining">2 items remaining</div>
+                <div class="slot-description">
+                  <p>Any store-bought baked goods are welcome. Please check for <strong>nut allergies</strong> — all items must be nut-free.</p>
+                </div>
+              </div>
+              <button class="signup-btn">Sign up</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer note -->
+    <p style="margin-top:48px;font-size:12px;color:var(--muted);font-family:'Inter',sans-serif;text-align:center;">
+      Visual spec — SignupSmartly markdown descriptions feature
+    </p>
+
+  </div>
+</body>
+</html>

@@ -54,12 +54,13 @@ export async function duplicateEventAsDraft(params: {
     .from('slots')
     .select('*')
     .eq('event_id', sourceEvent.id)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: true });
   if (slotsError) throw slotsError;
 
   const slots = (sourceSlots ?? []) as Slot[];
   if (slots.length > 0) {
-    const slotPayload = slots.map((slot) => ({
+    const slotPayload = slots.map((slot, index) => ({
       event_id: copiedEventId,
       role_name: slot.role_name,
       role_description: slot.role_description,
@@ -69,7 +70,8 @@ export async function duplicateEventAsDraft(params: {
       instructions: slot.instructions,
       comment_label: slot.comment_label,
       comment_required: slot.comment_required,
-      comment_show_publicly: slot.comment_show_publicly,
+      comment_show_publicly: sourceEvent.show_signups ?? true,
+      sort_order: index,
     }));
 
     const { error: insertSlotsError } = await serviceSupabase

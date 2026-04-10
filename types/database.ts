@@ -156,6 +156,7 @@ export interface Database {
           comment_label: string;
           comment_required: boolean;
           comment_show_publicly: boolean;
+          sort_order: number | null;
           created_at: string;
         };
         Insert: {
@@ -170,6 +171,7 @@ export interface Database {
           comment_label?: string;
           comment_required?: boolean;
           comment_show_publicly?: boolean;
+          sort_order?: number | null;
           created_at?: string;
         };
         Update: {
@@ -184,6 +186,7 @@ export interface Database {
           comment_label?: string;
           comment_required?: boolean;
           comment_show_publicly?: boolean;
+          sort_order?: number | null;
           created_at?: string;
         };
       };

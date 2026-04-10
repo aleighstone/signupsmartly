@@ -34,8 +34,8 @@ export async function getEventWithSlots(
   const showSignupsPublic =
     publishedOnly && (eventRow.show_signups ?? true);
 
-  // Public: never select email/cancel_token. Comments only when we may return them
-  // (show_signups); still redact per-slot in the mapper unless comment_show_publicly.
+  // Public: never select email/cancel_token. Comments included when show_signups is on
+  // (same toggle controls names + public comments).
   const signupsSelect = publishedOnly
     ? showSignupsPublic
       ? 'signups (id, name, comment, cancelled)'
@@ -48,10 +48,8 @@ export async function getEventWithSlots(
       ${signupsSelect}
     `)
     .eq('event_id', eventId)
-    .order(eventRow.signup_type === 'simple' ? 'role_name' : 'start_time', {
-      ascending: true,
-      nullsFirst: true,
-    });
+    .order('sort_order', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: true });
 
   if (slotsError) return null;
 
@@ -62,10 +60,7 @@ export async function getEventWithSlots(
         return { ...s, signups: active };
       }
       const signups = active.map((sig) => {
-        const safeComment =
-          showSignupsPublic && s.comment_show_publicly
-            ? (sig.comment ?? null)
-            : null;
+        const safeComment = showSignupsPublic ? (sig.comment ?? null) : null;
         return {
           ...sig,
           email: null,

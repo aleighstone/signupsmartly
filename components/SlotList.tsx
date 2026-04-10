@@ -11,6 +11,7 @@ import {
   getSlotRemainingCapacity,
   sortSlotsForVolunteerDisplay,
 } from '@/lib/slot-utils';
+import { MarkdownBody } from '@/components/MarkdownBody';
 
 interface SlotListProps {
   slots: SlotWithSignups[];
@@ -116,9 +117,9 @@ function SlotCard({
           ) : null}
         </p>
         {(slot.role_description || slot.instructions) && (
-          <p className="mt-1 text-sm text-muted line-clamp-2 font-body">
-            {slot.role_description || slot.instructions}
-          </p>
+          <div className="mt-1 text-sm text-muted font-body prose prose-sm max-w-none prose-p:text-muted prose-li:text-muted prose-headings:text-charcoal prose-strong:text-charcoal">
+            <MarkdownBody markdown={slot.role_description || slot.instructions || ''} />
+          </div>
         )}
       </div>
       <button

@@ -118,7 +118,7 @@ export function EventPageClient({ event }: EventPageClientProps) {
             comment: s.comment,
           })) ?? []
         }
-        showComments={Boolean(signupsModalSlot?.comment_show_publicly)}
+        showComments={showSignups}
         commentLabel={signupsModalSlot?.comment_label ?? DEFAULT_COMMENT_LABEL}
       />
       <SignupModal
@@ -140,7 +140,7 @@ export function EventPageClient({ event }: EventPageClientProps) {
         commentLabel={modalSlot?.comment_label}
         commentRequired={Boolean(modalSlot?.comment_required)}
         showSignupsPublic={showSignups}
-        commentShowPublicly={Boolean(modalSlot?.comment_show_publicly)}
+        commentShowPublicly={showSignups}
         showReminders={event.signup_type === 'scheduled' || !!event.start_date}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}

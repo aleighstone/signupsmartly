@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { usePostHog } from '@posthog/react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { sortScheduledSlotsForSave } from '@/lib/slot-utils';
 import { CustomizeAppearanceSection } from '@/components/EventThemePickers';
+import { MarkdownEditor } from '@/components/MarkdownEditor';
+import { SlotCardActions } from '@/components/SlotCardActions';
 import { DEFAULT_COLOR_KEY, DEFAULT_FONT_KEY } from '@/data/themes';
 
 type SignupType = 'scheduled' | 'simple' | 'template';
@@ -34,19 +35,17 @@ const scheduledSlotSchema = z.object({
   start_time: z.string().optional(),
   end_time: z.string().optional(),
   capacity: z.number().min(1, 'At least 1'),
-  instructions: z.string().optional(),
+  instructions: z.string().max(800, 'Max 800 characters').optional(),
   comment_label: z.string().max(60, 'Max 60 characters').optional(),
   comment_required: z.boolean().optional(),
-  comment_show_publicly: z.boolean().optional(),
 });
 
 const simpleSlotSchema = z.object({
   role_name: z.string().min(1, 'Item name required'),
-  role_description: z.string().optional(),
+  role_description: z.string().max(800, 'Max 800 characters').optional(),
   capacity: z.number().min(1, 'At least 1'),
   comment_label: z.string().max(60, 'Max 60 characters').optional(),
   comment_required: z.boolean().optional(),
-  comment_show_publicly: z.boolean().optional(),
 });
 
 const scheduledFormSchema = z.object({
@@ -112,7 +111,7 @@ function SignupTypeHelpModal({
           <p>
             <strong>Choose simple list</strong> if you need people to sign up for items that
             aren&apos;t bound by date or time. There can still be an optional date associated
-            with a simple list, but this list will be sorted by item name, not date or time. e.g.
+            with a simple list; you control item order with the arrows on each row. e.g.
             request potluck items by type, request donations, request chaperones for a field trip.
           </p>
         </div>
@@ -294,7 +293,6 @@ export function CreateEventForm({
           instructions: '',
           comment_label: '',
           comment_required: false,
-          comment_show_publicly: false,
         },
       ],
     },
@@ -315,55 +313,58 @@ export function CreateEventForm({
           capacity: 1,
           comment_label: '',
           comment_required: false,
-          comment_show_publicly: false,
         },
       ],
     },
   });
 
-  const scheduledSlots = scheduledForm.watch('slots');
-  const simpleSlots = simpleForm.watch('slots');
+  const {
+    fields: scheduledFields,
+    append: appendScheduled,
+    remove: removeScheduledAt,
+    swap: swapScheduled,
+  } = useFieldArray({ control: scheduledForm.control, name: 'slots' });
+
+  const {
+    fields: simpleFields,
+    append: appendSimple,
+    remove: removeSimpleAt,
+    swap: swapSimple,
+  } = useFieldArray({ control: simpleForm.control, name: 'slots' });
 
   const addScheduledSlot = () => {
-    const prev = scheduledSlots[scheduledSlots.length - 1];
-    scheduledForm.setValue('slots', [
-      ...scheduledSlots,
-      {
-        spot_date: prev?.spot_date || '',
-        role_name: '',
-        start_time: '',
-        end_time: '',
-        capacity: 1,
-        instructions: '',
-        comment_label: '',
-        comment_required: false,
-        comment_show_publicly: false,
-      },
-    ]);
+    const slots = scheduledForm.getValues('slots');
+    const prev = slots[slots.length - 1];
+    appendScheduled({
+      spot_date: prev?.spot_date || '',
+      role_name: '',
+      start_time: '',
+      end_time: '',
+      capacity: 1,
+      instructions: '',
+      comment_label: '',
+      comment_required: false,
+    });
   };
 
   const addSimpleSlot = () => {
-    simpleForm.setValue('slots', [
-      ...simpleSlots,
-      {
-        role_name: '',
-        role_description: '',
-        capacity: 1,
-        comment_label: '',
-        comment_required: false,
-        comment_show_publicly: false,
-      },
-    ]);
+    appendSimple({
+      role_name: '',
+      role_description: '',
+      capacity: 1,
+      comment_label: '',
+      comment_required: false,
+    });
   };
 
   const removeScheduledSlot = (index: number) => {
-    if (scheduledSlots.length <= 1) return;
-    scheduledForm.setValue('slots', scheduledSlots.filter((_, i) => i !== index));
+    if (scheduledFields.length <= 1) return;
+    removeScheduledAt(index);
   };
 
   const removeSimpleSlot = (index: number) => {
-    if (simpleSlots.length <= 1) return;
-    simpleForm.setValue('slots', simpleSlots.filter((_, i) => i !== index));
+    if (simpleFields.length <= 1) return;
+    removeSimpleAt(index);
   };
 
   const goToDashboard = () => {
@@ -391,7 +392,6 @@ export function CreateEventForm({
           instructions: s.instructions || '',
           comment_label: '',
           comment_required: false,
-          comment_show_publicly: false,
         })),
       });
     } else {
@@ -407,7 +407,6 @@ export function CreateEventForm({
           capacity: s.capacity,
           comment_label: '',
           comment_required: false,
-          comment_show_publicly: false,
         })),
       });
     }
@@ -418,12 +417,10 @@ export function CreateEventForm({
   const onSubmitScheduled = async (data: ScheduledFormData) => {
     setIsSubmitting(true);
     try {
-      const sortedSlots = sortScheduledSlotsForSave(data.slots);
-      const dates = sortedSlots.map((s) => s.spot_date).filter(Boolean);
-      const startDate = dates.length ? dates[0] : null;
-      const endDate = dates.length
-        ? (dates.length === 1 ? dates[0] : dates.reduce((a, b) => (a > b ? a : b)))
-        : null;
+      const dates = data.slots.map((s) => s.spot_date).filter(Boolean) as string[];
+      const startDate = dates.length ? dates.reduce((a, b) => (a < b ? a : b)) : null;
+      const endDate = dates.length ? dates.reduce((a, b) => (a > b ? a : b)) : null;
+      const showSignups = data.show_signups ?? true;
       const res = await fetch('/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -437,9 +434,9 @@ export function CreateEventForm({
           start_date: startDate ? `${startDate}T00:00:00Z` : null,
           end_date: endDate ? `${endDate}T23:59:59Z` : null,
           published: true,
-          show_signups: data.show_signups ?? true,
+          show_signups: showSignups,
           theme: { colorKey, fontKey },
-          slots: sortedSlots.map((s) => {
+          slots: data.slots.map((s) => {
             const date = s.spot_date;
             const startTimeStr = s.start_time?.trim();
             const endTimeStr = s.end_time?.trim();
@@ -464,7 +461,6 @@ export function CreateEventForm({
               instructions: null,
               comment_label: s.comment_label?.trim() || undefined,
               comment_required: s.comment_required ?? false,
-              comment_show_publicly: s.comment_show_publicly ?? false,
             };
           }),
         }),
@@ -474,7 +470,7 @@ export function CreateEventForm({
       if (posthog) {
         posthog.capture('signup_created', {
           signup_type: 'scheduled',
-          slot_count: sortedSlots.length,
+          slot_count: data.slots.length,
         });
       }
       setLastCreated({
@@ -482,7 +478,7 @@ export function CreateEventForm({
         signupType: 'scheduled',
         description: data.description || null,
         location: data.location || null,
-        slots: sortedSlots.map((s) => ({
+        slots: data.slots.map((s) => ({
           role_name: s.role_name,
           capacity: s.capacity,
           start_time: s.start_time || undefined,
@@ -502,6 +498,7 @@ export function CreateEventForm({
     setIsSubmitting(true);
     try {
       const dateVal = data.start_date?.trim();
+      const showSignups = data.show_signups ?? true;
       const res = await fetch('/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -515,7 +512,7 @@ export function CreateEventForm({
           start_date: dateVal ? `${dateVal}T00:00:00Z` : null,
           end_date: dateVal ? `${dateVal}T23:59:59Z` : null,
           published: true,
-          show_signups: data.show_signups ?? true,
+          show_signups: showSignups,
           theme: { colorKey, fontKey },
           slots: data.slots.map((s) => ({
             role_name: s.role_name,
@@ -526,7 +523,6 @@ export function CreateEventForm({
             instructions: null,
             comment_label: s.comment_label?.trim() || undefined,
             comment_required: s.comment_required ?? false,
-            comment_show_publicly: s.comment_show_publicly ?? false,
           })),
         }),
       });
@@ -670,11 +666,17 @@ export function CreateEventForm({
                   <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                     Description
                   </label>
-                  <textarea
-                    {...scheduledForm.register('description')}
-                    rows={3}
-                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
-                    placeholder="optional"
+                  <Controller
+                    control={scheduledForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <MarkdownEditor
+                        value={field.value ?? ''}
+                        onChange={field.onChange}
+                        placeholder="optional"
+                        rows={3}
+                      />
+                    )}
                   />
                 </div>
                 <div>
@@ -701,11 +703,10 @@ export function CreateEventForm({
                     />
                     <span>
                       <span className="block text-sm font-medium text-charcoal font-body">
-                        Show who has signed up
+                        Display signup names and comments.
                       </span>
                       <span className="mt-0.5 block text-xs text-muted font-body">
-                        Volunteers can tap a slot to see who else has signed up. Turn off for
-                        anonymous signups.
+                        Turn off for anonymous signups.
                       </span>
                     </span>
                   </label>
@@ -718,24 +719,26 @@ export function CreateEventForm({
                 Scheduled spots
               </h2>
               <div className="space-y-6">
-                {scheduledSlots.map((_, index) => (
+                {scheduledFields.map((field, index) => (
                   <div
-                    key={index}
+                    key={field.id}
                     className="rounded-xl border border-charcoal/10 p-4 space-y-4 bg-sand/30"
                   >
-                    <div className="flex justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-medium text-muted font-body">
                         Spot {index + 1}
                       </span>
-                      {scheduledSlots.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeScheduledSlot(index)}
-                          className="text-sm text-coral hover:text-coral/80"
-                        >
-                          Remove
-                        </button>
-                      )}
+                      <SlotCardActions
+                        listLength={scheduledFields.length}
+                        index={index}
+                        onMoveUp={() => index > 0 && swapScheduled(index, index - 1)}
+                        onMoveDown={() =>
+                          index < scheduledFields.length - 1 &&
+                          swapScheduled(index, index + 1)
+                        }
+                        onRemove={() => removeScheduledSlot(index)}
+                        removeAriaLabel="Remove spot"
+                      />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
@@ -808,12 +811,24 @@ export function CreateEventForm({
                       <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                         Instructions <span className="text-muted font-normal">(optional)</span>
                       </label>
-                      <textarea
-                        {...scheduledForm.register(`slots.${index}.instructions`)}
-                        rows={2}
-                        className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
-                        placeholder="Any notes for volunteers"
+                      <Controller
+                        control={scheduledForm.control}
+                        name={`slots.${index}.instructions`}
+                        render={({ field }) => (
+                          <MarkdownEditor
+                            value={field.value ?? ''}
+                            onChange={field.onChange}
+                            placeholder="Any notes for volunteers"
+                            maxLength={800}
+                            rows={2}
+                          />
+                        )}
                       />
+                      {scheduledForm.formState.errors.slots?.[index]?.instructions && (
+                        <p className="mt-1 text-sm text-coral font-body">
+                          {scheduledForm.formState.errors.slots?.[index]?.instructions?.message}
+                        </p>
+                      )}
                     </div>
                     <div className="border-t border-charcoal/10 pt-4 space-y-4">
                       <span className="block text-sm font-medium text-muted font-body">
@@ -828,22 +843,6 @@ export function CreateEventForm({
                           />
                           <span className="text-sm font-medium text-charcoal font-body">
                             Require a comment response when signing up
-                          </span>
-                        </label>
-                        <label className="flex cursor-pointer items-start gap-3">
-                          <input
-                            type="checkbox"
-                            {...scheduledForm.register(`slots.${index}.comment_show_publicly`)}
-                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
-                          />
-                          <span>
-                            <span className="block text-sm font-medium text-charcoal font-body">
-                              Show comment responses on the public signup page
-                            </span>
-                            <span className="mt-0.5 block text-xs text-muted font-body leading-relaxed">
-                              When enabled, what volunteers write may appear next to their name when
-                              others view the list.
-                            </span>
                           </span>
                         </label>
                       </div>
@@ -925,11 +924,17 @@ export function CreateEventForm({
                   <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                     Description
                   </label>
-                  <textarea
-                    {...simpleForm.register('description')}
-                    rows={3}
-                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
-                    placeholder="optional"
+                  <Controller
+                    control={simpleForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <MarkdownEditor
+                        value={field.value ?? ''}
+                        onChange={field.onChange}
+                        placeholder="optional"
+                        rows={3}
+                      />
+                    )}
                   />
                 </div>
                 <div>
@@ -961,11 +966,10 @@ export function CreateEventForm({
                     />
                     <span>
                       <span className="block text-sm font-medium text-charcoal font-body">
-                        Show who has signed up
+                        Display signup names and comments.
                       </span>
                       <span className="mt-0.5 block text-xs text-muted font-body">
-                        Volunteers can tap a slot to see who else has signed up. Turn off for
-                        anonymous signups.
+                        Turn off for anonymous signups.
                       </span>
                     </span>
                   </label>
@@ -978,24 +982,25 @@ export function CreateEventForm({
                 Items
               </h2>
               <div className="space-y-6">
-                {simpleSlots.map((_, index) => (
+                {simpleFields.map((field, index) => (
                   <div
-                    key={index}
+                    key={field.id}
                     className="rounded-xl border border-charcoal/10 p-4 space-y-4 bg-sand/30"
                   >
-                    <div className="flex justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-medium text-muted font-body">
                         Item {index + 1}
                       </span>
-                      {simpleSlots.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeSimpleSlot(index)}
-                          className="text-sm text-coral hover:text-coral/80"
-                        >
-                          Remove
-                        </button>
-                      )}
+                      <SlotCardActions
+                        listLength={simpleFields.length}
+                        index={index}
+                        onMoveUp={() => index > 0 && swapSimple(index, index - 1)}
+                        onMoveDown={() =>
+                          index < simpleFields.length - 1 && swapSimple(index, index + 1)
+                        }
+                        onRemove={() => removeSimpleSlot(index)}
+                        removeAriaLabel="Remove item"
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-charcoal mb-1 font-body">
@@ -1029,11 +1034,24 @@ export function CreateEventForm({
                       <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                         Description <span className="text-muted font-normal">(optional)</span>
                       </label>
-                      <textarea
-                        {...simpleForm.register(`slots.${index}.role_description`)}
-                        rows={2}
-                        className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
+                      <Controller
+                        control={simpleForm.control}
+                        name={`slots.${index}.role_description`}
+                        render={({ field }) => (
+                          <MarkdownEditor
+                            value={field.value ?? ''}
+                            onChange={field.onChange}
+                            placeholder="optional"
+                            maxLength={800}
+                            rows={2}
+                          />
+                        )}
                       />
+                      {simpleForm.formState.errors.slots?.[index]?.role_description && (
+                        <p className="mt-1 text-sm text-coral font-body">
+                          {simpleForm.formState.errors.slots?.[index]?.role_description?.message}
+                        </p>
+                      )}
                     </div>
                     <div className="border-t border-charcoal/10 pt-4 space-y-4">
                       <span className="block text-sm font-medium text-muted font-body">
@@ -1048,22 +1066,6 @@ export function CreateEventForm({
                           />
                           <span className="text-sm font-medium text-charcoal font-body">
                             Require a comment response when signing up
-                          </span>
-                        </label>
-                        <label className="flex cursor-pointer items-start gap-3">
-                          <input
-                            type="checkbox"
-                            {...simpleForm.register(`slots.${index}.comment_show_publicly`)}
-                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
-                          />
-                          <span>
-                            <span className="block text-sm font-medium text-charcoal font-body">
-                              Show comment responses on the public signup page
-                            </span>
-                            <span className="mt-0.5 block text-xs text-muted font-body leading-relaxed">
-                              When enabled, what volunteers write may appear next to their name when
-                              others view the list.
-                            </span>
                           </span>
                         </label>
                       </div>

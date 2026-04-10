@@ -13,7 +13,6 @@ const slotSchema = z.object({
   instructions: z.string().nullable().optional(),
   comment_label: z.string().max(60).optional(),
   comment_required: z.boolean().optional(),
-  comment_show_publicly: z.boolean().optional(),
 });
 
 const createEventSchema = z.object({
@@ -78,7 +77,8 @@ export async function POST(request: Request) {
     }
 
     const eventRow = event as { id: string };
-    const slotsToInsert = slots.map((s) => ({
+    const showSignups = eventPayload.show_signups ?? true;
+    const slotsToInsert = slots.map((s, index) => ({
       event_id: eventRow.id,
       role_name: s.role_name,
       role_description: s.role_description ?? null,
@@ -88,7 +88,8 @@ export async function POST(request: Request) {
       instructions: s.instructions ?? null,
       comment_label: normalizeCommentLabel(s.comment_label),
       comment_required: s.comment_required ?? false,
-      comment_show_publicly: s.comment_show_publicly ?? false,
+      comment_show_publicly: showSignups,
+      sort_order: index,
     }));
 
     const { error: slotsError } = await supabase

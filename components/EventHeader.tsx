@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { formatEventDateRange } from '@/lib/calendar';
 import type { Event } from '@/types/database';
+import { MarkdownBody } from '@/components/MarkdownBody';
 
 interface EventHeaderProps {
   event: Event;
@@ -32,9 +33,9 @@ export function EventHeader({ event, titleStyle }: EventHeaderProps) {
         )}
       </dl>
       {event.description && (
-               <p className="text-muted text-sm leading-relaxed font-body">
-          {event.description}
-        </p>
+        <div className="text-muted text-sm leading-relaxed font-body prose prose-sm max-w-none prose-p:text-muted prose-li:text-muted prose-headings:text-charcoal prose-strong:text-charcoal">
+          <MarkdownBody markdown={event.description} />
+        </div>
       )}
     </header>
   );

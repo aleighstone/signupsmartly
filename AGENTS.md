@@ -38,6 +38,15 @@ The app stores two shapes of values:
   git push origin main
   ```
 
+## Local development environment
+
+- **Local Supabase is running** via the Supabase CLI and Docker Desktop. Do not hardcode `https://www.signupsmartly.com` or any Supabase production URL in scripts or seed files — always read from `process.env.NEXT_PUBLIC_SUPABASE_URL` and `process.env.NEXT_PUBLIC_APP_URL`.
+- **Local app URL** is `http://localhost:3000` (Next.js may use 3001 if 3000 is busy — use whatever port `npm run dev` prints).
+- **Local Supabase Studio** (DB browser) is at `http://127.0.0.1:54323`.
+- **Mailpit** (catches auth emails locally) is at `http://127.0.0.1:54324`. Auth emails do not send for real locally.
+- **Resend emails** (confirmations, NPS, notifications) will fail silently in local dev — this is expected and acceptable.
+- To reset the local DB to a clean state: `supabase db reset && npm run seed-demo`.
+
 ## Auth / signup changes
 
 - **When modifying any code related to new user creation or sign-in** (e.g. signup flow, login, auth callback, sync-user, ensure-user-org), remind the user to run automated smoke tests with Claude QA before deploying.

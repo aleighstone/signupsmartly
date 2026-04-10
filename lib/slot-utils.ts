@@ -1,26 +1,5 @@
 import type { SlotWithSignups } from '@/types/database';
 
-/**
- * Before create/edit API payload: chronological order by spot date, start time,
- * then role name. Mutates a copy only. Slots with no start_time sort after
- * timed slots on the same date (`ZZ` sentinel).
- */
-export function sortScheduledSlotsForSave<
-  T extends { spot_date?: string; start_time?: string; role_name: string },
->(slots: T[]): T[] {
-  return [...slots].sort((a, b) => {
-    const dateA = a.spot_date ?? '';
-    const dateB = b.spot_date ?? '';
-    if (dateA !== dateB) return dateA < dateB ? -1 : 1;
-
-    const timeA = a.start_time ?? 'ZZ';
-    const timeB = b.start_time ?? 'ZZ';
-    if (timeA !== timeB) return timeA < timeB ? -1 : 1;
-
-    return a.role_name.localeCompare(b.role_name);
-  });
-}
-
 export function getSlotRemainingCapacity(slot: SlotWithSignups): number {
   const filled = slot.signups.length;
   return Math.max(0, slot.capacity - filled);
@@ -32,15 +11,20 @@ function startTimeSortMs(slot: SlotWithSignups): number {
   return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t;
 }
 
-function endTimeSortMs(slot: SlotWithSignups): number {
-  if (!slot.end_time) return Number.POSITIVE_INFINITY;
-  const t = new Date(slot.end_time).getTime();
-  return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t;
+/** Lower sort_order sorts first; nulls sort after explicit values. */
+function sortOrderRank(slot: SlotWithSignups): number {
+  return slot.sort_order ?? Number.MAX_SAFE_INTEGER;
+}
+
+function createdAtMs(slot: SlotWithSignups): number {
+  const t = new Date(slot.created_at).getTime();
+  return Number.isNaN(t) ? 0 : t;
 }
 
 /**
- * Public volunteer page: scheduled slots by start time, then end time, then role name;
- * simple list slots alphabetically by role name.
+ * Public volunteer page ordering (applied before SlotList).
+ * Simple: sort_order, then created_at.
+ * Scheduled: start_time, then sort_order within same start, then role_name, then created_at for legacy rows.
  */
 export function sortSlotsForVolunteerDisplay(
   slots: SlotWithSignups[],
@@ -48,17 +32,23 @@ export function sortSlotsForVolunteerDisplay(
 ): SlotWithSignups[] {
   const copy = [...slots];
   if (signupType === 'simple') {
-    copy.sort((a, b) =>
-      a.role_name.localeCompare(b.role_name, undefined, { sensitivity: 'base' })
-    );
+    copy.sort((a, b) => {
+      const byOrder = sortOrderRank(a) - sortOrderRank(b);
+      if (byOrder !== 0) return byOrder;
+      return createdAtMs(a) - createdAtMs(b);
+    });
     return copy;
   }
   copy.sort((a, b) => {
     const byStart = startTimeSortMs(a) - startTimeSortMs(b);
     if (byStart !== 0) return byStart;
-    const byEnd = endTimeSortMs(a) - endTimeSortMs(b);
-    if (byEnd !== 0) return byEnd;
-    return a.role_name.localeCompare(b.role_name, undefined, { sensitivity: 'base' });
+    const byOrder = sortOrderRank(a) - sortOrderRank(b);
+    if (byOrder !== 0) return byOrder;
+    const nameCmp = a.role_name.localeCompare(b.role_name, undefined, {
+      sensitivity: 'base',
+    });
+    if (nameCmp !== 0) return nameCmp;
+    return createdAtMs(a) - createdAtMs(b);
   });
   return copy;
 }

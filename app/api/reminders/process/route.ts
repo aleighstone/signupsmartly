@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { serviceSupabase as supabase } from '@/lib/supabase-service';
-import { sendSignupReminder, sendOrganizerDigest } from '@/lib/email';
+import {
+  sendSignupReminder,
+  sendOrganizerDigest,
+  sendFounderNewEventsDigest,
+} from '@/lib/email';
 import { reportProductionError } from '@/lib/error-reporter';
 import { effectiveNotificationPreference } from '@/lib/notifications';
 import type { Event, Slot, Signup } from '@/types/database';
@@ -38,89 +42,93 @@ export async function POST(request: Request) {
       .limit(BATCH_SIZE);
 
     if (error) throw error;
-    if (!rows || rows.length === 0) {
-      return NextResponse.json({ processed: 0 });
-    }
 
     let processed = 0;
 
-    for (const row of rows) {
-      // Narrow types
-      const signup = row as Signup & {
-        slots?: {
-          id: string;
-          start_time: string | null;
-          end_time: string | null;
-          event?: Event & {
-            organization?: { timezone?: string | null } | null;
-          } | null;
-        };
-      };
-
-      const slotData = signup.slots;
-      const slot = (Array.isArray(slotData) ? slotData[0] : slotData) as
-        | (Slot & {
+    if (rows && rows.length > 0) {
+      for (const row of rows) {
+        // Narrow types
+        const signup = row as Signup & {
+          slots?: {
+            id: string;
+            start_time: string | null;
+            end_time: string | null;
             event?: Event & {
               organization?: { timezone?: string | null } | null;
-            };
-          })
-        | undefined;
+            } | null;
+          };
+        };
 
-      if (!slot || !slot.event) {
-        // Tombstone so we don't retry forever
-        await markReminderSent(signup.id);
-        continue;
-      }
+        const slotData = signup.slots;
+        const slot = (Array.isArray(slotData) ? slotData[0] : slotData) as
+          | (Slot & {
+              event?: Event & {
+                organization?: { timezone?: string | null } | null;
+              };
+            })
+          | undefined;
 
-      const event = slot.event as Event & {
-        organization?: { timezone?: string | null } | null;
-      };
-
-      // Edge: simple list without date → skip and tombstone
-      if (event.signup_type === 'simple' && !event.start_date) {
-        await markReminderSent(signup.id);
-        continue;
-      }
-
-      const timezone = event.organization?.timezone || 'America/New_York';
-      const sendAt = computeSendTime({
-        signup,
-        slot,
-        event,
-        timezone,
-      });
-
-      if (!sendAt) {
-        await markReminderSent(signup.id);
-        continue;
-      }
-
-      // Skip and tombstone if the reminder window has passed by more than 24 hours
-      if (sendAt.getTime() < twentyFourHoursAgo.getTime()) {
-        await markReminderSent(signup.id);
-        continue;
-      }
-
-      // Daily cron: send any reminders whose target time has passed within the last 24 hours
-      if (sendAt.getTime() <= now.getTime()) {
-        try {
-          await sendSignupReminder({
-            signup,
-            slot: slot as Slot,
-            event: event as Event,
-          });
+        if (!slot || !slot.event) {
+          // Tombstone so we don't retry forever
           await markReminderSent(signup.id);
-          processed += 1;
-        } catch (err) {
-          console.error('Failed to send reminder for signup', signup.id, err);
-          // Do not mark reminder_sent_at so it can retry
+          continue;
+        }
+
+        const event = slot.event as Event & {
+          organization?: { timezone?: string | null } | null;
+        };
+
+        // Edge: simple list without date → skip and tombstone
+        if (event.signup_type === 'simple' && !event.start_date) {
+          await markReminderSent(signup.id);
+          continue;
+        }
+
+        const timezone = event.organization?.timezone || 'America/New_York';
+        const sendAt = computeSendTime({
+          signup,
+          slot,
+          event,
+          timezone,
+        });
+
+        if (!sendAt) {
+          await markReminderSent(signup.id);
+          continue;
+        }
+
+        // Skip and tombstone if the reminder window has passed by more than 24 hours
+        if (sendAt.getTime() < twentyFourHoursAgo.getTime()) {
+          await markReminderSent(signup.id);
+          continue;
+        }
+
+        // Daily cron: send any reminders whose target time has passed within the last 24 hours
+        if (sendAt.getTime() <= now.getTime()) {
+          try {
+            await sendSignupReminder({
+              signup,
+              slot: slot as Slot,
+              event: event as Event,
+            });
+            await markReminderSent(signup.id);
+            processed += 1;
+          } catch (err) {
+            console.error('Failed to send reminder for signup', signup.id, err);
+            // Do not mark reminder_sent_at so it can retry
+          }
         }
       }
     }
 
     // --- Organizer digest passes ---
     const digestProcessed = await runOrganizerDigests(now);
-    return NextResponse.json({ processed, digestProcessed });
+    const founderDigest = await runFounderNewEventsDigest(now);
+    return NextResponse.json({
+      processed,
+      digestProcessed,
+      founderDigest,
+    });
   } catch (err) {
     console.error('Reminder processing error:', err);
     await reportProductionError({ error: err, request, status: 500, extra: { handler: 'reminders/process' } }).catch(() => {});
@@ -350,6 +358,76 @@ async function runOrganizerDigests(now: Date): Promise<number> {
   }
 
   return digestProcessed;
+}
+
+async function runFounderNewEventsDigest(now: Date): Promise<{
+  sent: boolean;
+  count: number;
+}> {
+  const to = process.env.FOUNDER_DIGEST_EMAIL?.trim();
+  if (!to) {
+    return { sent: false, count: 0 };
+  }
+
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+  const { data, error } = await supabase
+    .from('events')
+    .select(
+      `
+      id,
+      title,
+      signup_type,
+      created_at,
+      users!events_created_by_fkey ( email, name )
+    `
+    )
+    .eq('published', true)
+    .gte('created_at', twentyFourHoursAgo.toISOString())
+    .not('created_by', 'is', null)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  type FounderEventRow = {
+    id: string;
+    title: string;
+    signup_type: string;
+    created_at: string;
+    users:
+      | { email: string; name: string }
+      | { email: string; name: string }[]
+      | null;
+  };
+
+  const events: {
+    id: string;
+    title: string;
+    signupType: 'scheduled' | 'simple';
+    creatorEmail: string;
+    creatorName: string | null;
+  }[] = [];
+
+  for (const row of (data || []) as FounderEventRow[]) {
+    const u = row.users;
+    const user = Array.isArray(u) ? u[0] : u;
+    if (!user?.email) continue;
+    const st = row.signup_type === 'simple' ? 'simple' : 'scheduled';
+    events.push({
+      id: row.id,
+      title: row.title,
+      signupType: st,
+      creatorEmail: user.email,
+      creatorName: user.name ?? null,
+    });
+  }
+
+  if (events.length === 0) {
+    return { sent: false, count: 0 };
+  }
+
+  await sendFounderNewEventsDigest({ to, events });
+  return { sent: true, count: events.length };
 }
 
 function groupAndFilterDigestRows(

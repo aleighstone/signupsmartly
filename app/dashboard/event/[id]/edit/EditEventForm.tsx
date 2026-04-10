@@ -3,14 +3,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePostHog } from '@posthog/react';
-import { useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { slotTimestampsToFormFields } from '@/lib/calendar';
-import { sortScheduledSlotsForSave } from '@/lib/slot-utils';
 import { DEFAULT_COMMENT_LABEL } from '@/lib/slot-comment';
-import type { EventWithSlots } from '@/types/database';
+import type { EventWithSlots, SlotWithSignups } from '@/types/database';
 import { CustomizeAppearanceSection } from '@/components/EventThemePickers';
+import { MarkdownEditor } from '@/components/MarkdownEditor';
+import { SlotCardActions } from '@/components/SlotCardActions';
 import { DEFAULT_COLOR_KEY, DEFAULT_FONT_KEY } from '@/data/themes';
 
 interface EditEventFormProps {
@@ -40,20 +41,18 @@ const scheduledSlotSchema = z.object({
   start_time: z.string().optional(),
   end_time: z.string().optional(),
   capacity: z.number().min(1),
-  instructions: z.string().optional(),
+  instructions: z.string().max(800, 'Max 800 characters').optional(),
   comment_label: z.string().max(60, 'Max 60 characters').optional(),
   comment_required: z.boolean().optional(),
-  comment_show_publicly: z.boolean().optional(),
 });
 
 const simpleSlotSchema = z.object({
   id: z.string().uuid().optional(),
   role_name: z.string().min(1),
   capacity: z.number().min(1),
-  role_description: z.string().optional(),
+  role_description: z.string().max(800, 'Max 800 characters').optional(),
   comment_label: z.string().max(60, 'Max 60 characters').optional(),
   comment_required: z.boolean().optional(),
-  comment_show_publicly: z.boolean().optional(),
 });
 
 const scheduledFormSchema = z.object({
@@ -136,7 +135,6 @@ export function EditEventForm({ event }: EditEventFormProps) {
               ? ''
               : s.comment_label,
           comment_required: s.comment_required ?? false,
-          comment_show_publicly: s.comment_show_publicly ?? false,
         };
       }),
     },
@@ -160,7 +158,6 @@ export function EditEventForm({ event }: EditEventFormProps) {
             ? ''
             : s.comment_label,
         comment_required: s.comment_required ?? false,
-        comment_show_publicly: s.comment_show_publicly ?? false,
       })),
     },
   });
@@ -168,10 +165,30 @@ export function EditEventForm({ event }: EditEventFormProps) {
   const scheduledSlots = scheduledForm.watch('slots');
   const simpleSlots = simpleForm.watch('slots');
 
-  const getSlotAt = (index: number) =>
-    simple ? event.slots[index] : event.slots[index];
+  const {
+    fields: scheduledSlotFields,
+    append: appendScheduledSlot,
+    remove: removeScheduledSlotField,
+    swap: swapScheduledSlots,
+  } = useFieldArray({ control: scheduledForm.control, name: 'slots' });
+
+  const {
+    fields: simpleSlotFields,
+    append: appendSimpleSlot,
+    remove: removeSimpleSlotField,
+    swap: swapSimpleSlots,
+  } = useFieldArray({ control: simpleForm.control, name: 'slots' });
+
+  /** Original server slot for this form row (by id), for signup counts / delete modal. */
+  const getEventSlotForFormIndex = (index: number): SlotWithSignups | undefined => {
+    const row = simple ? simpleSlots[index] : scheduledSlots[index];
+    const id = row?.id;
+    if (!id) return undefined;
+    return event.slots.find((s) => s.id === id);
+  };
+
   const getSignupCount = (index: number) =>
-    getSlotAt(index)?.signups?.length ?? 0;
+    getEventSlotForFormIndex(index)?.signups?.length ?? 0;
 
   const hasCapacityError = (index: number, capacity: number) => {
     const n = getSignupCount(index);
@@ -187,39 +204,31 @@ export function EditEventForm({ event }: EditEventFormProps) {
 
   const addSlot = () => {
     if (simple) {
-      simpleForm.setValue('slots', [
-        ...simpleSlots,
-        {
-          role_name: '',
-          capacity: 1,
-          role_description: '',
-          comment_label: '',
-          comment_required: false,
-          comment_show_publicly: false,
-        },
-      ]);
+      appendSimpleSlot({
+        role_name: '',
+        capacity: 1,
+        role_description: '',
+        comment_label: '',
+        comment_required: false,
+      });
     } else {
       const last = scheduledSlots[scheduledSlots.length - 1];
-      scheduledForm.setValue('slots', [
-        ...scheduledSlots,
-        {
-          id: undefined,
-          spot_date: last?.spot_date || event.start_date?.slice(0, 10) || '',
-          role_name: '',
-          start_time: '',
-          end_time: '',
-          capacity: 1,
-          instructions: '',
-          comment_label: '',
-          comment_required: false,
-          comment_show_publicly: false,
-        },
-      ]);
+      appendScheduledSlot({
+        id: undefined,
+        spot_date: last?.spot_date || event.start_date?.slice(0, 10) || '',
+        role_name: '',
+        start_time: '',
+        end_time: '',
+        capacity: 1,
+        instructions: '',
+        comment_label: '',
+        comment_required: false,
+      });
     }
   };
 
   const removeSlot = (index: number) => {
-    const slotData = getSlotAt(index);
+    const slotData = getEventSlotForFormIndex(index);
     const currentSlots = simple ? simpleSlots : scheduledSlots;
     const slotInForm = currentSlots[index];
     const slotId = slotInForm?.id ?? slotData?.id;
@@ -242,17 +251,11 @@ export function EditEventForm({ event }: EditEventFormProps) {
       setDeletedSlotIds((prev) => [...prev, { id: slotId, reason: reason ?? null }]);
     }
     if (simple) {
-      if (simpleSlots.length <= 1) return;
-      simpleForm.setValue(
-        'slots',
-        simpleSlots.filter((_, i) => i !== index)
-      );
+      if (simpleSlotFields.length <= 1) return;
+      removeSimpleSlotField(index);
     } else {
-      if (scheduledSlots.length <= 1) return;
-      scheduledForm.setValue(
-        'slots',
-        scheduledSlots.filter((_, i) => i !== index)
-      );
+      if (scheduledSlotFields.length <= 1) return;
+      removeScheduledSlotField(index);
     }
     setDeleteModal(null);
     setDeleteReason('');
@@ -262,6 +265,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
 
     if (simple) {
       const data = simpleForm.getValues();
+      const showSignups = data.show_signups ?? true;
       const slotsPayload = simpleSlots.map((s) => ({
           id: s.id,
           role_name: s.role_name,
@@ -271,7 +275,6 @@ export function EditEventForm({ event }: EditEventFormProps) {
           end_time: null as string | null,
           comment_label: s.comment_label?.trim() || undefined,
           comment_required: s.comment_required ?? false,
-          comment_show_publicly: s.comment_show_publicly ?? false,
         }));
       return {
         title: data.title,
@@ -279,7 +282,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
         location: data.location || null,
         start_date: data.start_date ? `${data.start_date}T00:00:00Z` : null,
         end_date: data.start_date ? `${data.start_date}T23:59:59Z` : null,
-        show_signups: data.show_signups ?? true,
+        show_signups: showSignups,
         theme: { colorKey, fontKey },
         slots: slotsPayload,
         deleted_slot_ids: deletedSlotIds,
@@ -287,17 +290,12 @@ export function EditEventForm({ event }: EditEventFormProps) {
     }
 
     const data = scheduledForm.getValues();
-    const sortedSlots = sortScheduledSlotsForSave(scheduledSlots);
-    const dates = sortedSlots.map((s) => s.spot_date).filter(Boolean) as string[];
-    const startDate = dates.length ? dates[0] : null;
-    const endDate =
-      dates.length
-        ? dates.length === 1
-          ? dates[0]
-          : dates.reduce((a, b) => (a > b ? a : b))
-        : null;
+    const showSignups = data.show_signups ?? true;
+    const dates = scheduledSlots.map((s) => s.spot_date).filter(Boolean) as string[];
+    const startDate = dates.length ? dates.reduce((a, b) => (a < b ? a : b)) : null;
+    const endDate = dates.length ? dates.reduce((a, b) => (a > b ? a : b)) : null;
 
-    const slotsPayload = sortedSlots.map((s) => {
+    const slotsPayload = scheduledSlots.map((s) => {
         const date = s.spot_date || startDate || '';
         const startTimeStr = s.start_time?.trim();
         const endTimeStr = s.end_time?.trim();
@@ -311,7 +309,6 @@ export function EditEventForm({ event }: EditEventFormProps) {
           end_time: date && endTimeStr ? toLiteralIso(date, endTimeStr) : null,
           comment_label: s.comment_label?.trim() || undefined,
           comment_required: s.comment_required ?? false,
-          comment_show_publicly: s.comment_show_publicly ?? false,
         };
       });
 
@@ -321,7 +318,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
       location: data.location || null,
       start_date: startDate ? `${startDate}T00:00:00Z` : null,
       end_date: endDate ? `${endDate}T23:59:59Z` : null,
-      show_signups: data.show_signups ?? true,
+      show_signups: showSignups,
       theme: { colorKey, fontKey },
       slots: slotsPayload,
       deleted_slot_ids: deletedSlotIds,
@@ -390,17 +387,21 @@ export function EditEventForm({ event }: EditEventFormProps) {
           className="space-y-8"
         >
           <EventDetailsSection
+            control={simpleForm.control}
             form={simpleForm as { register: (n: string) => object; formState: { errors: Record<string, unknown> } }}
             showEndDate={false}
             signupTypeLabel="Simple list"
           />
           <SlotsSectionSimple
+            control={simpleForm.control}
+            slotFields={simpleSlotFields}
             slots={simpleSlots}
             form={simpleForm as { register: (n: string) => object; formState: { errors: Record<string, unknown> } }}
             slotLabel={slot}
             slotsLabel={slots}
             onAdd={addSlot}
             onRemove={removeSlot}
+            onSwapSlots={swapSimpleSlots}
             getSignupCount={getSignupCount}
             hasCapacityError={hasCapacityError}
           />
@@ -424,17 +425,21 @@ export function EditEventForm({ event }: EditEventFormProps) {
           className="space-y-8"
         >
           <EventDetailsSection
+            control={scheduledForm.control}
             form={scheduledForm as { register: (n: string, o?: { valueAsNumber?: boolean }) => object; formState: { errors: Record<string, unknown> } }}
             showEndDate
             signupTypeLabel="Scheduled"
           />
           <SlotsSectionScheduled
+            control={scheduledForm.control}
+            slotFields={scheduledSlotFields}
             slots={scheduledSlots}
             form={scheduledForm as { register: (n: string, o?: { valueAsNumber?: boolean }) => object; formState: { errors: Record<string, unknown> } }}
             slotLabel={slot}
             slotsLabel={slots}
             onAdd={addSlot}
             onRemove={removeSlot}
+            onSwapSlots={swapScheduledSlots}
             getSignupCount={getSignupCount}
             hasCapacityError={hasCapacityError}
           />
@@ -518,10 +523,12 @@ export function EditEventForm({ event }: EditEventFormProps) {
 }
 
 function EventDetailsSection({
+  control,
   form,
   showEndDate,
   signupTypeLabel,
 }: {
+   control: Control<ScheduledFormData> | Control<SimpleFormData>;
   form: { register: (n: string, opts?: { valueAsNumber?: boolean }) => object; formState: { errors: Record<string, unknown> } };
   showEndDate: boolean;
   signupTypeLabel: string;
@@ -553,10 +560,16 @@ function EventDetailsSection({
           <label className="block text-sm font-medium text-charcoal mb-1 font-body">
             Description
           </label>
-          <textarea
-            {...form.register('description')}
-            rows={3}
-            className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30"
+          <Controller
+            control={control}
+            name="description"
+            render={({ field }) => (
+              <MarkdownEditor
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                rows={3}
+              />
+            )}
           />
         </div>
         <div>
@@ -599,11 +612,10 @@ function EventDetailsSection({
             />
             <span>
               <span className="block text-sm font-medium text-charcoal font-body">
-                Show who has signed up
+                Display signup names and comments.
               </span>
               <span className="mt-0.5 block text-xs text-muted font-body">
-                Volunteers can tap a slot to see who else has signed up. Turn off for anonymous
-                signups.
+                Turn off for anonymous signups.
               </span>
             </span>
           </label>
@@ -614,15 +626,20 @@ function EventDetailsSection({
 }
 
 function SlotsSectionSimple({
+  control,
+  slotFields,
   slots,
   form,
   slotLabel,
   slotsLabel,
   onAdd,
   onRemove,
+  onSwapSlots,
   getSignupCount,
   hasCapacityError,
 }: {
+  control: Control<SimpleFormData>;
+  slotFields: { id: string }[];
   slots: {
     id?: string;
     role_name: string;
@@ -636,6 +653,7 @@ function SlotsSectionSimple({
   slotsLabel: string;
   onAdd: () => void;
   onRemove: (i: number) => void;
+  onSwapSlots: (indexA: number, indexB: number) => void;
   getSignupCount: (i: number) => number;
   hasCapacityError: (i: number, cap: number) => boolean;
 }) {
@@ -645,26 +663,27 @@ function SlotsSectionSimple({
         {slotsLabel}
       </h2>
       <div className="space-y-6">
-        {slots.map((slotRow, index) => {
+        {slotFields.map((field, index) => {
           const capErr = hasCapacityError(index, slots[index].capacity);
           return (
             <div
-              key={slotRow.id ?? `simple-slot-${index}`}
+              key={field.id}
               className="rounded-xl border border-charcoal/10 p-4 space-y-4 bg-sand/30"
             >
-              <div className="flex justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium text-muted font-body">
                   {slotLabel} {index + 1}
                 </span>
-                {slots.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => onRemove(index)}
-                    className="text-sm text-coral hover:text-coral/80"
-                  >
-                    Remove
-                  </button>
-                )}
+                <SlotCardActions
+                  listLength={slotFields.length}
+                  index={index}
+                  onMoveUp={() => index > 0 && onSwapSlots(index, index - 1)}
+                  onMoveDown={() =>
+                    index < slotFields.length - 1 && onSwapSlots(index, index + 1)
+                  }
+                  onRemove={() => onRemove(index)}
+                  removeAriaLabel={`Remove ${slotLabel.toLowerCase()}`}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-charcoal mb-1 font-body">
@@ -695,12 +714,24 @@ function SlotsSectionSimple({
                 <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                   Instructions <span className="text-muted font-normal">(optional)</span>
                 </label>
-                <textarea
-                  {...form.register(`slots.${index}.role_description`)}
-                  rows={2}
-                  className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 placeholder:text-muted/70"
-                  placeholder="Any notes for volunteers"
+                <Controller
+                  control={control}
+                  name={`slots.${index}.role_description`}
+                  render={({ field }) => (
+                    <MarkdownEditor
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      placeholder="Any notes for volunteers"
+                      maxLength={800}
+                      rows={2}
+                    />
+                  )}
                 />
+                {(form.formState.errors.slots as Array<{ role_description?: { message?: string } }> | undefined)?.[index]?.role_description && (
+                  <p className="mt-1 text-sm text-coral font-body">
+                    {(form.formState.errors.slots as Array<{ role_description?: { message?: string } }>)[index].role_description?.message}
+                  </p>
+                )}
               </div>
               <div className="border-t border-charcoal/10 pt-4 space-y-4">
                 <span className="block text-sm font-medium text-muted font-body">
@@ -715,22 +746,6 @@ function SlotsSectionSimple({
                     />
                     <span className="text-sm font-medium text-charcoal font-body">
                       Require a comment response when signing up
-                    </span>
-                  </label>
-                  <label className="flex cursor-pointer items-start gap-3">
-                    <input
-                      type="checkbox"
-                      {...form.register(`slots.${index}.comment_show_publicly`)}
-                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
-                    />
-                    <span>
-                      <span className="block text-sm font-medium text-charcoal font-body">
-                        Show comment responses on the public signup page
-                      </span>
-                      <span className="mt-0.5 block text-xs text-muted font-body leading-relaxed">
-                        When enabled, what volunteers write may appear next to their name when others
-                        view the list.
-                      </span>
                     </span>
                   </label>
                 </div>
@@ -768,15 +783,20 @@ function SlotsSectionSimple({
 }
 
 function SlotsSectionScheduled({
+  control,
+  slotFields,
   slots,
   form,
   slotLabel,
   slotsLabel,
   onAdd,
   onRemove,
+  onSwapSlots,
   getSignupCount,
   hasCapacityError,
 }: {
+  control: Control<ScheduledFormData>;
+  slotFields: { id: string }[];
   slots: {
     id?: string;
     spot_date?: string;
@@ -793,6 +813,7 @@ function SlotsSectionScheduled({
   slotsLabel: string;
   onAdd: () => void;
   onRemove: (i: number) => void;
+  onSwapSlots: (indexA: number, indexB: number) => void;
   getSignupCount: (i: number) => number;
   hasCapacityError: (i: number, cap: number) => boolean;
 }) {
@@ -802,24 +823,25 @@ function SlotsSectionScheduled({
         {slotsLabel}
       </h2>
       <div className="space-y-6">
-        {slots.map((slotRow, index) => (
+        {slotFields.map((field, index) => (
           <div
-            key={slotRow.id ?? `scheduled-slot-${index}`}
+            key={field.id}
             className="rounded-xl border border-charcoal/10 p-4 space-y-4 bg-sand/30"
           >
-            <div className="flex justify-between">
+            <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-medium text-muted font-body">
                 {slotLabel} {index + 1}
               </span>
-              {slots.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => onRemove(index)}
-                  className="text-sm text-coral hover:text-coral/80"
-                >
-                  Remove
-                </button>
-              )}
+              <SlotCardActions
+                listLength={slotFields.length}
+                index={index}
+                onMoveUp={() => index > 0 && onSwapSlots(index, index - 1)}
+                onMoveDown={() =>
+                  index < slotFields.length - 1 && onSwapSlots(index, index + 1)
+                }
+                onRemove={() => onRemove(index)}
+                removeAriaLabel={`Remove ${slotLabel.toLowerCase()}`}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1 font-body">
@@ -884,12 +906,24 @@ function SlotsSectionScheduled({
               <label className="block text-sm font-medium text-charcoal mb-1 font-body">
                 Instructions <span className="text-muted font-normal">(optional)</span>
               </label>
-              <textarea
-                {...form.register(`slots.${index}.instructions`)}
-                rows={2}
-                className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 placeholder:text-muted/70"
-                placeholder="Any notes for volunteers"
+              <Controller
+                control={control}
+                name={`slots.${index}.instructions`}
+                render={({ field }) => (
+                  <MarkdownEditor
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    placeholder="Any notes for volunteers"
+                    maxLength={800}
+                    rows={2}
+                  />
+                )}
               />
+              {(form.formState.errors.slots as Array<{ instructions?: { message?: string } }> | undefined)?.[index]?.instructions && (
+                <p className="mt-1 text-sm text-coral font-body">
+                  {(form.formState.errors.slots as Array<{ instructions?: { message?: string } }>)[index].instructions?.message}
+                </p>
+              )}
             </div>
             <div className="border-t border-charcoal/10 pt-4 space-y-4">
               <span className="block text-sm font-medium text-muted font-body">
@@ -904,22 +938,6 @@ function SlotsSectionScheduled({
                   />
                   <span className="text-sm font-medium text-charcoal font-body">
                     Require a comment response when signing up
-                  </span>
-                </label>
-                <label className="flex cursor-pointer items-start gap-3">
-                  <input
-                    type="checkbox"
-                    {...form.register(`slots.${index}.comment_show_publicly`)}
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
-                  />
-                  <span>
-                    <span className="block text-sm font-medium text-charcoal font-body">
-                      Show comment responses on the public signup page
-                    </span>
-                    <span className="mt-0.5 block text-xs text-muted font-body leading-relaxed">
-                      When enabled, what volunteers write may appear next to their name when others
-                      view the list.
-                    </span>
                   </span>
                 </label>
               </div>

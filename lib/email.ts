@@ -486,6 +486,88 @@ export async function sendOrganizerDigest(params: {
   }
 }
 
+function escapeHtmlForEmail(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** Internal founder ops digest — see specs/founder-daily-new-events-digest-spec.md */
+export async function sendFounderNewEventsDigest(params: {
+  to: string;
+  events: {
+    id: string;
+    title: string;
+    signupType: 'scheduled' | 'simple';
+    creatorEmail: string;
+    creatorName: string | null;
+  }[];
+}): Promise<void> {
+  const { to, events } = params;
+  if (events.length === 0) return;
+
+  const logoUrl = `${APP_URL}/smartly-icon.png`;
+  const typeLabel = (t: 'scheduled' | 'simple') =>
+    t === 'scheduled' ? 'Scheduled' : 'Simple';
+
+  const blocks = events
+    .map((ev) => {
+      const url = `${APP_URL}/event/${ev.id}`;
+      const mailHref = `mailto:${encodeURIComponent(ev.creatorEmail)}`;
+      const creatorDisplay = ev.creatorName
+        ? `${escapeHtmlForEmail(ev.creatorName)} · <a href="${mailHref}" style="color: #15803D;">${escapeHtmlForEmail(ev.creatorEmail)}</a>`
+        : `<a href="${mailHref}" style="color: #15803D;">${escapeHtmlForEmail(ev.creatorEmail)}</a>`;
+      return `
+      <div style="background-color: #F0F9F0; border-radius: 8px; padding: 0 20px; margin-bottom: 16px;">
+        <p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Event:</strong> ${escapeHtmlForEmail(ev.title)}</p>
+        <p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Creator:</strong> ${creatorDisplay}</p>
+        <p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Type:</strong> ${typeLabel(ev.signupType)}</p>
+        <p style="margin: 0; padding: 12px 0;"><strong>Signup page:</strong> <a href="${url}" style="color: #15803D; font-weight: 600;">Open signup page →</a></p>
+      </div>`;
+    })
+    .join('');
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New events</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #27272A; margin: 0; padding: 0; background-color: #FAF9F6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
+      <div style="background-color: #27272A; padding: 20px 24px; display: flex; align-items: center;">
+        <img src="${logoUrl}" alt="SignupSmartly" width="28" height="28" style="display: block; margin-right: 16px;">
+        <span style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 1.25rem; color: #FFFFFF;">SignupSmartly</span>
+      </div>
+      <div style="padding: 24px;">
+        <h1 style="font-size: 24px; font-weight: 600; color: #27272A; margin: 0 0 8px;">New published events (24h)</h1>
+        <p style="margin: 0 0 20px; font-size: 14px; color: #71717A;">Rolling window ending at send time (UTC).</p>
+        ${blocks}
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: 'DAILY SUS UPDATE: New Events',
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send founder new-events digest: ${error.message}`);
+  }
+}
+
 // --- Feedback form email ---
 
 export async function sendFeedbackEmail(params: {

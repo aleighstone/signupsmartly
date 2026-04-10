@@ -31,7 +31,6 @@ const patchEventSchema = z.object({
       role_description: z.string().nullable().optional(),
       comment_label: z.string().max(60).optional(),
       comment_required: z.boolean().optional(),
-      comment_show_publicly: z.boolean().optional(),
     })
   ),
   deleted_slot_ids: z
@@ -151,6 +150,14 @@ export async function PATCH(
       })
       .eq('id', id);
 
+    const { data: eventVisibilityRow } = await serviceSupabase
+      .from('events')
+      .select('show_signups')
+      .eq('id', id)
+      .single();
+    const effectiveShowSignups =
+      (eventVisibilityRow as { show_signups?: boolean } | null)?.show_signups ?? true;
+
     const cancelledSignups: {
       signup: Signup & { cancel_token: string };
       slot: Slot;
@@ -186,7 +193,8 @@ export async function PATCH(
       await serviceSupabase.from('slots').delete().eq('id', slotId);
     }
 
-    for (const slot of slots) {
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i];
       if (slot.id) {
         await serviceSupabase
           .from('slots')
@@ -200,7 +208,8 @@ export async function PATCH(
             role_description: slot.role_description ?? null,
             comment_label: normalizeCommentLabel(slot.comment_label),
             comment_required: slot.comment_required ?? false,
-            comment_show_publicly: slot.comment_show_publicly ?? false,
+            comment_show_publicly: effectiveShowSignups,
+            sort_order: i,
           })
           .eq('id', slot.id)
           .eq('event_id', id);
@@ -218,7 +227,8 @@ export async function PATCH(
           role_description: slot.role_description ?? null,
           comment_label: normalizeCommentLabel(slot.comment_label),
           comment_required: slot.comment_required ?? false,
-          comment_show_publicly: slot.comment_show_publicly ?? false,
+          comment_show_publicly: effectiveShowSignups,
+          sort_order: i,
         });
       }
     }
