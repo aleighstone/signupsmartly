@@ -38,7 +38,7 @@ export default async function EventPage({ params }: PageProps) {
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href={fontsUrl} rel="stylesheet" />
       <style dangerouslySetInnerHTML={{ __html: themeStyleCss }} />
-      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
         {org && (
           <div className="mb-6">
             {isFalcons ? (
