@@ -7,6 +7,7 @@
     "build": "next build",
     "verify": "npm run lint && npm run build",
     "start": "next start",
+    "test": "jest",
     "lint": "next lint",
     "repair-slots": "dotenv -e .env.local -- tsx scripts/repair-slot-times.ts",
     "seed-demo": "dotenv -e .env.local -- tsx scripts/seed-demo-events.ts",
@@ -33,15 +34,18 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "dotenv-cli": "^7.4.2",
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
+    "jest": "^30.3.0",
     "postcss": "^8",
     "supabase": "^2.78.1",
     "tailwindcss": "^3.4.1",
+    "ts-jest": "^29.4.9",
     "tsx": "^4.19.0",
     "typescript": "^5"
   }
