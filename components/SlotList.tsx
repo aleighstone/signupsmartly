@@ -12,6 +12,7 @@ import {
   sortSlotsForVolunteerDisplay,
 } from '@/lib/slot-utils';
 import { MarkdownBody } from '@/components/MarkdownBody';
+import { DEFAULT_COMMENT_LABEL, normalizeCommentLabel } from '@/lib/slot-comment';
 
 interface SlotListProps {
   slots: SlotWithSignups[];
@@ -248,6 +249,13 @@ export function SlotList({
               const multiCapLink =
                 showSignups && slot.capacity > 1;
               const countLabel = isSimple ? 'signed up' : 'volunteers';
+              const singleCapComment =
+                showSignups &&
+                slot.capacity === 1 &&
+                slot.signups[0]?.comment?.trim();
+              const commentLabel = normalizeCommentLabel(
+                slot.comment_label ?? DEFAULT_COMMENT_LABEL
+              );
 
               return (
                 <li
@@ -280,7 +288,14 @@ export function SlotList({
                       {slot.signups.length} {countLabel} · View signups →
                     </button>
                   ) : (
-                    <p className="mt-1 text-sm text-muted font-body">{names}</p>
+                    <div className="mt-1 space-y-0.5">
+                      <p className="text-sm text-muted font-body">{names}</p>
+                      {singleCapComment ? (
+                        <p className="text-xs text-muted font-body">
+                          {commentLabel}: {slot.signups[0]!.comment!.trim()}
+                        </p>
+                      ) : null}
+                    </div>
                   )}
                 </li>
               );
