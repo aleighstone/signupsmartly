@@ -27,7 +27,6 @@ const MAY15_9AM   = '2026-05-15T09:00:00.000Z'; // Friday May 15, 2026, 9:00 AM
 const MAY15_1030  = '2026-05-15T10:30:00.000Z'; // Friday May 15, 2026, 10:30 AM
 const MAY15_MID   = '2026-05-15T00:00:00.000Z'; // Friday May 15, 2026 — date-only slot (UTC midnight)
 const APR5_MID    = '2026-04-05T00:00:00.000Z'; // Sunday Apr 5, 2026
-const MAY31_END   = '2026-05-31T23:59:59.000Z'; // Sunday May 31, 2026
 
 // Plain YYYY-MM-DD strings as stored at the event level for simple lists
 const DATE_MAY15  = '2026-05-15';
