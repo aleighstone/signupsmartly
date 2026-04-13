@@ -561,7 +561,10 @@ function EventDetailsSection({
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+          <label
+            htmlFor="signupsmartly-event-desc"
+            className="block text-sm font-medium text-charcoal mb-1 font-body"
+          >
             Description
           </label>
           <Controller
@@ -569,8 +572,12 @@ function EventDetailsSection({
             name="description"
             render={({ field }) => (
               <MarkdownEditor
-                value={field.value ?? ''}
+                ref={field.ref}
+                id="signupsmartly-event-desc"
+                name="signupsmartly-event-description"
+                value={typeof field.value === 'string' ? field.value : ''}
                 onChange={field.onChange}
+                onBlur={field.onBlur}
                 rows={3}
               />
             )}
@@ -723,8 +730,11 @@ function SlotsSectionSimple({
                   name={`slots.${index}.role_description`}
                   render={({ field }) => (
                     <MarkdownEditor
-                      value={field.value ?? ''}
+                      ref={field.ref}
+                      name={field.name}
+                      value={typeof field.value === 'string' ? field.value : ''}
                       onChange={field.onChange}
+                      onBlur={field.onBlur}
                       placeholder="Any notes for volunteers"
                       maxLength={800}
                       rows={2}
@@ -915,8 +925,11 @@ function SlotsSectionScheduled({
                 name={`slots.${index}.instructions`}
                 render={({ field }) => (
                   <MarkdownEditor
-                    value={field.value ?? ''}
+                    ref={field.ref}
+                    name={field.name}
+                    value={typeof field.value === 'string' ? field.value : ''}
                     onChange={field.onChange}
+                    onBlur={field.onBlur}
                     placeholder="Any notes for volunteers"
                     maxLength={800}
                     rows={2}

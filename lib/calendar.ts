@@ -142,6 +142,33 @@ export function formatSlotDateUTC(isoString: string | null): string {
   }).format(new Date(isoString));
 }
 
+/** Organizer dashboard: slot date as MM/DD/YYYY using the UTC calendar day of the stored instant. */
+export function formatSlotDateMMDDYYYYUTC(isoString: string | null): string {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  if (Number.isNaN(d.getTime())) return '';
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  const yyyy = String(d.getUTCFullYear());
+  return `${mm}/${dd}/${yyyy}`;
+}
+
+/**
+ * Organizer signups table / CSV: MM/DD/YYYY from slot start; append a time range only when both
+ * `start_time` and `end_time` are set (no lone start time, no "All day").
+ */
+export function formatOrganizerSlotDateAndTime(
+  startTime: string | null,
+  endTime: string | null
+): string {
+  if (!startTime) return '';
+  const datePart = formatSlotDateMMDDYYYYUTC(startTime);
+  if (!endTime) return datePart;
+  const timePart = formatTimeRange(startTime, endTime);
+  if (!timePart || timePart === 'All day') return datePart;
+  return `${datePart} ${timePart}`;
+}
+
 /** When a scheduled slot has no stored start_time, fall back to event-level dates (matches Event header). */
 export type ScheduledSlotEventDateFallback = {
   startDate: string | null;

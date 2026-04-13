@@ -665,7 +665,10 @@ export function CreateEventForm({
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                  <label
+                    htmlFor="signupsmartly-event-desc"
+                    className="block text-sm font-medium text-charcoal mb-1 font-body"
+                  >
                     Description
                   </label>
                   <Controller
@@ -673,8 +676,12 @@ export function CreateEventForm({
                     name="description"
                     render={({ field }) => (
                       <MarkdownEditor
-                        value={field.value ?? ''}
+                        ref={field.ref}
+                        id="signupsmartly-event-desc"
+                        name="signupsmartly-event-description"
+                        value={typeof field.value === 'string' ? field.value : ''}
                         onChange={field.onChange}
+                        onBlur={field.onBlur}
                         placeholder="optional"
                         rows={3}
                       />
@@ -818,8 +825,11 @@ export function CreateEventForm({
                         name={`slots.${index}.instructions`}
                         render={({ field }) => (
                           <MarkdownEditor
-                            value={field.value ?? ''}
+                            ref={field.ref}
+                            name={field.name}
+                            value={typeof field.value === 'string' ? field.value : ''}
                             onChange={field.onChange}
+                            onBlur={field.onBlur}
                             placeholder="Any notes for volunteers"
                             maxLength={800}
                             rows={2}
@@ -923,7 +933,10 @@ export function CreateEventForm({
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                  <label
+                    htmlFor="signupsmartly-event-desc"
+                    className="block text-sm font-medium text-charcoal mb-1 font-body"
+                  >
                     Description
                   </label>
                   <Controller
@@ -931,8 +944,12 @@ export function CreateEventForm({
                     name="description"
                     render={({ field }) => (
                       <MarkdownEditor
-                        value={field.value ?? ''}
+                        ref={field.ref}
+                        id="signupsmartly-event-desc"
+                        name="signupsmartly-event-description"
+                        value={typeof field.value === 'string' ? field.value : ''}
                         onChange={field.onChange}
+                        onBlur={field.onBlur}
                         placeholder="optional"
                         rows={3}
                       />
@@ -1041,8 +1058,11 @@ export function CreateEventForm({
                         name={`slots.${index}.role_description`}
                         render={({ field }) => (
                           <MarkdownEditor
-                            value={field.value ?? ''}
+                            ref={field.ref}
+                            name={field.name}
+                            value={typeof field.value === 'string' ? field.value : ''}
                             onChange={field.onChange}
+                            onBlur={field.onBlur}
                             placeholder="optional"
                             maxLength={800}
                             rows={2}

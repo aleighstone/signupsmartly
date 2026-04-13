@@ -5,7 +5,11 @@ import { getEventWithSlotsForDashboard, getEventCoverage, getOrgSlugForUser } fr
 import { AppLayout } from '@/components/AppLayout';
 import { CoverageWithStillNeeded } from './CoverageWithStillNeeded';
 import { EventNotificationOverride } from './EventNotificationOverride';
-import { formatEventDateRange, formatTimeRange, formatSignupTimestamp } from '@/lib/calendar';
+import {
+  formatEventDateRange,
+  formatOrganizerSlotDateAndTime,
+  formatSignupTimestamp,
+} from '@/lib/calendar';
 import { SignupsActions } from './SignupsActions';
 import { SignupsTable } from './SignupsTable';
 import { TrackSignupsPageView } from '@/app/providers/PostHogTracker';
@@ -20,7 +24,7 @@ interface PageProps {
 type TableRow = {
   slotId: string;
   role: string;
-  time: string | null;
+  dateAndTime: string | null;
   isEmpty: boolean;
   signup?: {
     id: string;
@@ -37,7 +41,7 @@ type CsvRow = {
   role: string;
   name: string;
   email: string;
-  time: string | null;
+  dateAndTime: string | null;
   comment: string | null;
   comment_label: string;
   createdAt: string;
@@ -74,14 +78,16 @@ export default async function SignupsPage({ params }: PageProps) {
   const csvRows: CsvRow[] = [];
 
   for (const slot of eventData.slots) {
-    const slotTime = isSimple ? null : formatTimeRange(slot.start_time, slot.end_time);
+    const slotDateAndTime = isSimple
+      ? null
+      : formatOrganizerSlotDateAndTime(slot.start_time, slot.end_time);
     const signupSource = (s: { source?: 'volunteer' | 'organizer' }) => s.source ?? 'volunteer';
 
     for (const signup of slot.signups) {
       tableRows.push({
         slotId: slot.id,
         role: slot.role_name,
-        time: slotTime,
+        dateAndTime: slotDateAndTime,
         isEmpty: false,
         signup: {
           id: signup.id,
@@ -97,7 +103,7 @@ export default async function SignupsPage({ params }: PageProps) {
         role: slot.role_name,
         name: signup.name,
         email: signup.email ?? '',
-        time: slotTime,
+        dateAndTime: slotDateAndTime,
         comment: signup.comment,
         comment_label: slot.comment_label ?? DEFAULT_COMMENT_LABEL,
         createdAt: formatSignupTimestamp(signup.created_at),
@@ -109,7 +115,7 @@ export default async function SignupsPage({ params }: PageProps) {
       tableRows.push({
         slotId: slot.id,
         role: slot.role_name,
-        time: slotTime,
+        dateAndTime: slotDateAndTime,
         isEmpty: true,
       });
     }

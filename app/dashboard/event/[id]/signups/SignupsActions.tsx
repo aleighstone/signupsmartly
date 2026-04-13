@@ -14,7 +14,7 @@ interface SignupsActionsProps {
     role: string;
     name: string;
     email: string;
-    time: string | null;
+    dateAndTime: string | null;
     comment: string | null;
     comment_label: string;
     createdAt: string;
@@ -139,15 +139,23 @@ export function SignupsActions({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showExportDropdown]);
 
-  const csvHeaders = isSimple
+   const csvHeaders = isSimple
     ? ['Item', 'Name', 'Email', 'Comment', 'Signup Timestamp', 'Source']
-    : ['Spot', 'Name', 'Email', 'Time', 'Comment', 'Signup Timestamp', 'Source'];
+    : ['Spot', 'Date & Time', 'Name', 'Email', 'Comment', 'Signup Timestamp', 'Source'];
 
   const csvRows = rows.map((r) => {
     const commentCell = formatCommentForExport(r.comment_label, r.comment);
     return isSimple
       ? [r.role, r.name, r.email, commentCell, r.createdAt, r.source]
-      : [r.role, r.name, r.email, r.time || '', commentCell, r.createdAt, r.source];
+      : [
+          r.role,
+          r.dateAndTime || '',
+          r.name,
+          r.email,
+          commentCell,
+          r.createdAt,
+          r.source,
+        ];
   });
 
   const csvContent = [csvHeaders, ...csvRows]

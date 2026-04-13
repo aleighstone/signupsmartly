@@ -38,6 +38,11 @@ The app stores two shapes of values:
   git push origin main
   ```
 
+## Shell and Git (zsh)
+
+- **Bracket segments in paths are globs.** In zsh, a path like `app/dashboard/event/[id]/edit/EditEventForm.tsx` treats `[id]` as a character class; if it doesn’t match files, the shell errors **`zsh: no matches found`** before `git` runs — nothing gets staged and `git push` may look “up to date” with no deploy.
+- **Fix:** Quote the path (`git add 'app/dashboard/event/[id]/edit/EditEventForm.tsx'`), escape the brackets, use **`git add -u`** / **`git add .`** from the repo root, or **`noglob git add ...`** when listing paths literally.
+
 ## Local development environment
 
 - **Local Supabase is running** via the Supabase CLI and Docker Desktop. Do not hardcode `https://www.signupsmartly.com` or any Supabase production URL in scripts or seed files — always read from `process.env.NEXT_PUBLIC_SUPABASE_URL` and `process.env.NEXT_PUBLIC_APP_URL`.
