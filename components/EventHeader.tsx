@@ -21,10 +21,12 @@ export function EventHeader({ event, titleStyle }: EventHeaderProps) {
         {event.title}
       </h1>
       <dl className="flex flex-col gap-1 text-muted font-body">
-        <div>
-          <dt className="sr-only">Date</dt>
-          <dd>{dateRange}</dd>
-        </div>
+        {dateRange && (
+          <div>
+            <dt className="sr-only">Date</dt>
+            <dd>{dateRange}</dd>
+          </div>
+        )}
         {event.location && (
           <div>
             <dt className="sr-only">Location</dt>

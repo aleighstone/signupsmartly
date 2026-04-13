@@ -870,7 +870,7 @@ function SlotsSectionScheduled({
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                  Start time
+                  Start time <span className="text-muted font-normal">(optional)</span>
                 </label>
                 <input
                   type="time"
@@ -880,7 +880,7 @@ function SlotsSectionScheduled({
               </div>
               <div>
                 <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                  End time
+                  End time <span className="text-muted font-normal">(optional)</span>
                 </label>
                 <input
                   type="time"
