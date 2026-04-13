@@ -305,7 +305,11 @@ export function EditEventForm({ event }: EditEventFormProps) {
           capacity: s.capacity,
           instructions: s.instructions?.trim() || null,
           start_time:
-            date && startTimeStr ? toLiteralIso(date, startTimeStr) : null,
+            date && startTimeStr
+              ? toLiteralIso(date, startTimeStr)
+              : date
+                ? `${date}T00:00:00.000Z`
+                : null,
           end_time: date && endTimeStr ? toLiteralIso(date, endTimeStr) : null,
           comment_label: s.comment_label?.trim() || undefined,
           comment_required: s.comment_required ?? false,

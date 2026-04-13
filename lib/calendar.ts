@@ -217,11 +217,38 @@ export type FormatScheduledSlotWhenOptions = {
   omitRedundantDate?: boolean;
 };
 
+function isUtcMidnight(iso: string): boolean {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return false;
+  return (
+    d.getUTCHours() === 0 &&
+    d.getUTCMinutes() === 0 &&
+    d.getUTCSeconds() === 0 &&
+    d.getUTCMilliseconds() === 0
+  );
+}
+
+/** Time suffix for volunteer UI: no "All day"; date-only slots (UTC midnight, no end) omit time. */
+function volunteerSlotTimePart(
+  startTime: string | null,
+  endTime: string | null
+): string {
+  if (!startTime && !endTime) return '';
+  if (startTime && !endTime && isUtcMidnight(startTime)) return '';
+  const t = formatTimeRange(startTime, endTime);
+  if (t === 'All day') return '';
+  return t;
+}
+
+function joinDateAndVolunteerTime(dateLine: string, timePart: string): string {
+  return timePart ? `${dateLine} · ${timePart}` : dateLine;
+}
+
 /**
  * Full volunteer-facing line: date + time range for scheduled slots.
  * If the slot spans two UTC calendar days, both dates are shown.
  * If `startTime` is missing, uses `eventFallback` dates when provided so volunteers
- * still see the event window (e.g. "Apr 1 – Apr 3, 2026 · All day").
+ * still see the event window (without a misleading "All day" when no times exist).
  */
 export function formatScheduledSlotWhen(
   startTime: string | null,
@@ -230,7 +257,10 @@ export function formatScheduledSlotWhen(
   options?: FormatScheduledSlotWhenOptions
 ): string {
   const omitRedundantDate = options?.omitRedundantDate ?? false;
-  const timePart = formatTimeRange(startTime, endTime);
+  const timePart = volunteerSlotTimePart(startTime, endTime);
+  /** Omit repeating the calendar date in the header only when we have a real time to show. */
+  const omitDateBecauseHeader = omitRedundantDate && timePart.length > 0;
+
   if (!startTime) {
     if (eventFallback?.startDate) {
       const dateLine = formatEventDateRange(
@@ -238,8 +268,8 @@ export function formatScheduledSlotWhen(
         eventFallback.endDate
       );
       if (dateLine) {
-        if (omitRedundantDate) return timePart;
-        return `${dateLine} · ${timePart}`;
+        if (omitDateBecauseHeader) return timePart;
+        return joinDateAndVolunteerTime(dateLine, timePart);
       }
     }
     return timePart;
@@ -247,10 +277,10 @@ export function formatScheduledSlotWhen(
   const startDate = formatSlotDateUTC(startTime);
   const endDate = endTime ? formatSlotDateUTC(endTime) : null;
   if (endDate && endDate !== startDate) {
-    return `${startDate} – ${endDate} · ${timePart}`;
+    return joinDateAndVolunteerTime(`${startDate} – ${endDate}`, timePart);
   }
-  if (omitRedundantDate) return timePart;
-  return `${startDate} · ${timePart}`;
+  if (omitDateBecauseHeader) return timePart;
+  return joinDateAndVolunteerTime(startDate, timePart);
 }
 
 /**

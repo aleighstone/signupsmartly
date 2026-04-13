@@ -454,7 +454,9 @@ export function CreateEventForm({
               start_time:
                 date && startTimeStr
                   ? toLiteralIso(date, startTimeStr)
-                  : null,
+                  : date
+                    ? `${date}T00:00:00.000Z`
+                    : null,
               end_time:
                 date && endTimeStr ? toLiteralIso(date, endTimeStr) : null,
               capacity: s.capacity,
