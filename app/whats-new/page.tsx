@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
+import { ChangelogEntryText } from '@/components/ChangelogEntryText';
 import { changelog } from '@/data/changelog';
 import type { ChangeType } from '@/data/changelog';
 
@@ -69,9 +70,9 @@ export default function WhatsNewPage() {
                     <span className="w-[72px] shrink-0">
                       <ChangeTag type={change.type} />
                     </span>
-                    <span className="text-charcoal font-body leading-relaxed flex-1 min-w-0">
-                      {change.text}
-                    </span>
+                    <div className="flex-1 min-w-0 text-charcoal">
+                      <ChangelogEntryText markdown={change.text} />
+                    </div>
                   </li>
                 ))}
               </ul>
