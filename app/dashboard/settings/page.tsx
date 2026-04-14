@@ -28,13 +28,13 @@ export default async function SettingsPage() {
       <div className="mb-6">
         <Link
           href="/dashboard"
-          className="text-sm text-muted hover:text-charcoal transition-colors"
+          className="text-sm text-muted hover:text-charcoal transition-colors font-body"
         >
           ← Back to Dashboard
         </Link>
       </div>
       <h1 className="text-2xl font-semibold text-charcoal font-heading">Settings</h1>
-      <div className="mt-8 max-w-xl">
+      <div className="mt-8 w-full">
         <NotificationSettingsForm initialPreference={preference} />
       </div>
     </AppLayout>
