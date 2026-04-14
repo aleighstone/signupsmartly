@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePostHog } from '@posthog/react';
 import { Controller, useFieldArray, useForm, type Control } from 'react-hook-form';
@@ -12,6 +12,7 @@ import type { EventWithSlots, SlotWithSignups } from '@/types/database';
 import { CustomizeAppearanceSection } from '@/components/EventThemePickers';
 import { MarkdownEditor } from '@/components/MarkdownEditor';
 import { SlotCardActions } from '@/components/SlotCardActions';
+import { UnsavedChangesModal } from '@/components/UnsavedChangesModal';
 import { DEFAULT_COLOR_KEY, DEFAULT_FONT_KEY } from '@/data/themes';
 
 interface EditEventFormProps {
@@ -92,6 +93,8 @@ export function EditEventForm({ event }: EditEventFormProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [unsavedModalOpen, setUnsavedModalOpen] = useState(false);
+  const [isSavingFromModal, setIsSavingFromModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleteModal, setDeleteModal] = useState<{
     index: number;
@@ -330,8 +333,8 @@ export function EditEventForm({ event }: EditEventFormProps) {
     };
   };
 
-  const onSubmit = async () => {
-    if (anyCapacityError()) return;
+  const saveEdits = async (): Promise<boolean> => {
+    if (anyCapacityError()) return false;
     setIsSubmitting(true);
     setError(null);
     try {
@@ -363,12 +366,58 @@ export function EditEventForm({ event }: EditEventFormProps) {
 
       router.push(`/dashboard/event/${event.id}/signups`);
       router.refresh();
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
+      return false;
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const onSubmit = async () => {
+    await saveEdits();
+  };
+
+  const handleBackClick = () => {
+    const isDirty = simple ? simpleForm.formState.isDirty : scheduledForm.formState.isDirty;
+    if (!isDirty) {
+      router.push(`/dashboard/event/${event.id}/signups`);
+      return;
+    }
+    setUnsavedModalOpen(true);
+  };
+
+  const handleModalSave = async () => {
+    const form = simple ? simpleForm : scheduledForm;
+    if (!(await form.trigger())) return;
+    setIsSavingFromModal(true);
+    try {
+      const ok = await saveEdits();
+      if (ok) setUnsavedModalOpen(false);
+    } finally {
+      setIsSavingFromModal(false);
+    }
+  };
+
+  const handleModalDiscard = () => {
+    setUnsavedModalOpen(false);
+    router.push(`/dashboard/event/${event.id}/signups`);
+  };
+
+  const closeUnsavedModal = useCallback(() => setUnsavedModalOpen(false), []);
+
+  useEffect(() => {
+    const isDirty = simple ? simpleForm.formState.isDirty : scheduledForm.formState.isDirty;
+    if (!isDirty) return;
+
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [simple, simpleForm.formState.isDirty, scheduledForm.formState.isDirty]);
 
   const handleConfirmDeleteWithSignups = () => {
     if (!deleteModal) return;
@@ -394,6 +443,27 @@ export function EditEventForm({ event }: EditEventFormProps) {
 
   return (
     <>
+      <div className="mb-6">
+        <button
+          type="button"
+          onClick={handleBackClick}
+          className="text-sm text-muted hover:text-charcoal transition-colors font-body"
+        >
+          ← Back to signups
+        </button>
+      </div>
+
+      <h1 className="text-2xl font-semibold text-charcoal font-heading mb-6">Edit signup</h1>
+
+      <UnsavedChangesModal
+        isOpen={unsavedModalOpen}
+        variant={event.published ? 'published' : 'draft'}
+        isSaving={isSavingFromModal}
+        onPrimary={handleModalSave}
+        onDiscard={handleModalDiscard}
+        onCancel={closeUnsavedModal}
+      />
+
       {error && (
         <div
           className="mb-6 rounded-xl border border-coral/30 bg-coral/10 px-4 py-3 text-sm text-charcoal font-body"

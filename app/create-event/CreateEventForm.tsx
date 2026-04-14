@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePostHog } from '@posthog/react';
 import { useRouter } from 'next/navigation';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { CustomizeAppearanceSection } from '@/components/EventThemePickers';
 import { MarkdownEditor } from '@/components/MarkdownEditor';
 import { SlotCardActions } from '@/components/SlotCardActions';
+import { UnsavedChangesModal } from '@/components/UnsavedChangesModal';
 import { DEFAULT_COLOR_KEY, DEFAULT_FONT_KEY } from '@/data/themes';
 
 type SignupType = 'scheduled' | 'simple' | 'template';
@@ -261,6 +262,9 @@ export function CreateEventForm({
   const [helpOpen, setHelpOpen] = useState(false);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [unsavedModalOpen, setUnsavedModalOpen] = useState(false);
+  const [isSavingFromModal, setIsSavingFromModal] = useState(false);
+  const [createModalPending, setCreateModalPending] = useState<'publish' | 'draft' | null>(null);
   const [lastCreated, setLastCreated] = useState<{
     title: string;
     signupType: 'scheduled' | 'simple';
@@ -426,7 +430,7 @@ export function CreateEventForm({
     setTimeout(() => document.querySelector<HTMLInputElement>('[name="title"]')?.focus(), 0);
   };
 
-  const onSubmitScheduled = async (data: ScheduledFormData) => {
+  const onSubmitScheduled = async (data: ScheduledFormData): Promise<boolean> => {
     setIsSubmitting(true);
     try {
       const dates = data.slots.map((s) => s.spot_date).filter(Boolean) as string[];
@@ -501,14 +505,16 @@ export function CreateEventForm({
         })),
       });
       setSaveModalOpen(true);
+      return true;
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Something went wrong');
+      return false;
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const onSubmitSimple = async (data: SimpleFormData) => {
+  const onSubmitSimple = async (data: SimpleFormData): Promise<boolean> => {
     setIsSubmitting(true);
     try {
       const dateVal = data.start_date?.trim();
@@ -564,16 +570,111 @@ export function CreateEventForm({
         })),
       });
       setSaveModalOpen(true);
+      return true;
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Something went wrong');
+      return false;
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const closeUnsavedModal = useCallback(() => setUnsavedModalOpen(false), []);
+
+  const handleBackClick = () => {
+    if (signupType === 'template') {
+      router.push('/dashboard');
+      return;
+    }
+    const isDirty =
+      signupType === 'scheduled'
+        ? scheduledForm.formState.isDirty
+        : simpleForm.formState.isDirty;
+    if (!isDirty) {
+      router.push('/dashboard');
+      return;
+    }
+    setUnsavedModalOpen(true);
+  };
+
+  const handleModalPublish = async () => {
+    preparePublishSubmit();
+    setCreateModalPending('publish');
+    setIsSavingFromModal(true);
+    try {
+      let success = false;
+      if (signupType === 'scheduled') {
+        await scheduledForm.handleSubmit(async (data) => {
+          success = await onSubmitScheduled(data);
+        })();
+      } else if (signupType === 'simple') {
+        await simpleForm.handleSubmit(async (data) => {
+          success = await onSubmitSimple(data);
+        })();
+      }
+      if (success) setUnsavedModalOpen(false);
+    } finally {
+      setIsSavingFromModal(false);
+      setCreateModalPending(null);
+    }
+  };
+
+  const handleModalSaveAsDraft = async () => {
+    prepareDraftSubmit();
+    setCreateModalPending('draft');
+    setIsSavingFromModal(true);
+    try {
+      let success = false;
+      if (signupType === 'scheduled') {
+        await scheduledForm.handleSubmit(async (data) => {
+          success = await onSubmitScheduled(data);
+        })();
+      } else if (signupType === 'simple') {
+        await simpleForm.handleSubmit(async (data) => {
+          success = await onSubmitSimple(data);
+        })();
+      }
+      if (success) setUnsavedModalOpen(false);
+    } finally {
+      setIsSavingFromModal(false);
+      setCreateModalPending(null);
+    }
+  };
+
+  const handleModalDiscard = () => {
+    setUnsavedModalOpen(false);
+    router.push('/dashboard');
+  };
+
+  useEffect(() => {
+    if (signupType === 'template') return;
+    const isDirty =
+      signupType === 'scheduled'
+        ? scheduledForm.formState.isDirty
+        : simpleForm.formState.isDirty;
+    if (!isDirty) return;
+
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [signupType, scheduledForm.formState.isDirty, simpleForm.formState.isDirty]);
+
   return (
     <>
       <SignupTypeHelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
+      <UnsavedChangesModal
+        isOpen={unsavedModalOpen}
+        variant="create"
+        isSaving={isSavingFromModal}
+        createPending={createModalPending}
+        onPrimary={handleModalPublish}
+        onSaveAsDraft={handleModalSaveAsDraft}
+        onDiscard={handleModalDiscard}
+        onCancel={closeUnsavedModal}
+      />
       {lastCreated && (
         <SaveAsTemplateModal
           isOpen={saveModalOpen}
@@ -597,6 +698,15 @@ export function CreateEventForm({
       )}
 
       <div className="mt-6 space-y-6">
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={handleBackClick}
+            className="text-sm text-muted hover:text-charcoal transition-colors font-body"
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-charcoal font-body">
             I want to
