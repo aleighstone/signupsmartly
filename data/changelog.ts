@@ -16,6 +16,7 @@ export const changelog: Release[] = [
     changes: [
       { type: 'new', text: 'Copy Signup — duplicate any of your signups with one click. The copy opens in draft mode so you can review and adjust before publishing.' },
       { type: 'improved', text: 'Organizer signup view — dates now display correctly across all signup types, including simple list signups with no date set.' },
+      { type: 'improved', text: 'Spot and item order — rearrange how slots appear on the public page using the up and down arrows when you edit an event. Scheduled signups still default to chronological order by date and time; simple lists default to the order you added items, and you can fine-tune either anytime.' },
     ],
   },
   {
