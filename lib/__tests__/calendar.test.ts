@@ -274,11 +274,19 @@ describe('slotTimestampsToFormFields', () => {
     });
   });
 
-  test('date-only slot (UTC midnight, no end)', () => {
+  test('date-only slot (UTC midnight, no end) — blank time fields for edit UI', () => {
     expect(slotTimestampsToFormFields(MAY15_MID, null, null)).toEqual({
       spot_date: '2026-05-15',
-      start_time: '00:00',
+      start_time: '',
       end_time: '',
+    });
+  });
+
+  test('UTC midnight start with end time still shows 00:00 start', () => {
+    expect(slotTimestampsToFormFields(MAY15_MID, MAY15_1030, null)).toEqual({
+      spot_date: '2026-05-15',
+      start_time: '00:00',
+      end_time: '10:30',
     });
   });
 

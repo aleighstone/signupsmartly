@@ -66,7 +66,7 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
       if (!res.ok) throw new Error('Failed to copy signup');
       const { eventId } = (await res.json()) as { eventId?: string };
       if (!eventId) throw new Error('Failed to copy signup');
-      router.push(`/dashboard/event/${eventId}/edit?copied=1`);
+      router.push(`/dashboard/event/${eventId}/edit`);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not copy signup');
     }

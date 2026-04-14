@@ -7,12 +7,10 @@ import { EditEventForm } from './EditEventForm';
 
 interface PageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ copied?: string }>;
 }
 
-export default async function EditEventPage({ params, searchParams }: PageProps) {
+export default async function EditEventPage({ params }: PageProps) {
   const { id } = await params;
-  const { copied } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/login?next=${encodeURIComponent(`/dashboard/event/${id}/edit`)}`);
@@ -22,11 +20,6 @@ export default async function EditEventPage({ params, searchParams }: PageProps)
 
   return (
     <AppLayout>
-      {copied === '1' ? (
-        <div className="mb-4 rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm text-charcoal font-body">
-          Copy created - review and publish when ready.
-        </div>
-      ) : null}
       <div className="mb-6">
         <Link
           href={`/dashboard/event/${id}/signups`}

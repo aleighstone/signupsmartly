@@ -332,6 +332,9 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
  * Convert stored slot timestamps into `<input type="date">` / `<input type="time">`
  * values using UTC (same literal semantics as formatTimeRange). Avoids brittle
  * string slicing on ISO variants (single-digit hours, missing `T`, etc.).
+ *
+ * Date-only slots are stored as UTC midnight with no `end_time`; the edit form
+ * shows blank time inputs so organizers are not shown a phantom 12:00 AM.
  */
 export function slotTimestampsToFormFields(
   startTime: string | null,
@@ -354,9 +357,14 @@ export function slotTimestampsToFormFields(
       ? fallbackDateYmd.slice(0, 10)
       : '';
 
+  const dateOnlyPlaceholder =
+    !!startTime &&
+    !endTime &&
+    isUtcMidnight(startTime);
+
   return {
     spot_date: s.ymd || fb,
-    start_time: s.hm,
-    end_time: e.hm,
+    start_time: dateOnlyPlaceholder ? '' : s.hm,
+    end_time: dateOnlyPlaceholder ? '' : e.hm,
   };
 }
