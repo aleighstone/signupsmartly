@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePostHog } from '@posthog/react';
 import { useRouter } from 'next/navigation';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
@@ -255,6 +255,8 @@ export function CreateEventForm({
   const router = useRouter();
   const posthog = usePostHog();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitIntent, setSubmitIntent] = useState<'publish' | 'draft'>('publish');
+  const submitIntentRef = useRef<'publish' | 'draft'>('publish');
   const [signupType, setSignupType] = useState<SignupType>('scheduled');
   const [helpOpen, setHelpOpen] = useState(false);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -372,6 +374,16 @@ export function CreateEventForm({
     router.refresh();
   };
 
+  const preparePublishSubmit = () => {
+    submitIntentRef.current = 'publish';
+    setSubmitIntent('publish');
+  };
+
+  const prepareDraftSubmit = () => {
+    submitIntentRef.current = 'draft';
+    setSubmitIntent('draft');
+  };
+
   const handleLoadTemplate = (t: Template) => {
     if (posthog) {
       posthog.capture('template_used', { signup_type: t.signup_type });
@@ -433,7 +445,7 @@ export function CreateEventForm({
           location: data.location || null,
           start_date: startDate ? `${startDate}T00:00:00Z` : null,
           end_date: endDate ? `${endDate}T23:59:59Z` : null,
-          published: true,
+          published: submitIntentRef.current === 'publish',
           show_signups: showSignups,
           theme: { colorKey, fontKey },
           slots: data.slots.map((s) => {
@@ -513,7 +525,7 @@ export function CreateEventForm({
           location: data.location || null,
           start_date: dateVal ? `${dateVal}T00:00:00Z` : null,
           end_date: dateVal ? `${dateVal}T23:59:59Z` : null,
-          published: true,
+          published: submitIntentRef.current === 'publish',
           show_signups: showSignups,
           theme: { colorKey, fontKey },
           slots: data.slots.map((s) => ({
@@ -899,13 +911,27 @@ export function CreateEventForm({
               onFontChange={setFontKey}
             />
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="rounded-xl bg-sage px-6 py-3 text-sm font-medium text-white hover:bg-sage-hover disabled:opacity-60 transition-colors font-body"
-            >
-              {isSubmitting ? 'Creating…' : 'Create Signup'}
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                onClick={preparePublishSubmit}
+                className="rounded-xl bg-sage px-6 py-3 text-sm font-medium text-white hover:bg-sage-hover disabled:opacity-60 transition-colors font-body"
+              >
+                {isSubmitting && submitIntent === 'publish' ? 'Publishing…' : 'Publish'}
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => {
+                  prepareDraftSubmit();
+                  void scheduledForm.handleSubmit(onSubmitScheduled)();
+                }}
+                className="rounded-xl border border-charcoal/20 bg-surface px-6 py-3 text-sm font-medium text-charcoal hover:bg-charcoal/5 disabled:opacity-60 transition-colors font-body"
+              >
+                {isSubmitting && submitIntent === 'draft' ? 'Saving…' : 'Save as Draft'}
+              </button>
+            </div>
           </form>
         ) : (
           <form
@@ -1132,13 +1158,27 @@ export function CreateEventForm({
               onFontChange={setFontKey}
             />
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="rounded-xl bg-sage px-6 py-3 text-sm font-medium text-white hover:bg-sage-hover disabled:opacity-60 transition-colors font-body"
-            >
-              {isSubmitting ? 'Creating…' : 'Create Signup'}
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                onClick={preparePublishSubmit}
+                className="rounded-xl bg-sage px-6 py-3 text-sm font-medium text-white hover:bg-sage-hover disabled:opacity-60 transition-colors font-body"
+              >
+                {isSubmitting && submitIntent === 'publish' ? 'Publishing…' : 'Publish'}
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => {
+                  prepareDraftSubmit();
+                  void simpleForm.handleSubmit(onSubmitSimple)();
+                }}
+                className="rounded-xl border border-charcoal/20 bg-surface px-6 py-3 text-sm font-medium text-charcoal hover:bg-charcoal/5 disabled:opacity-60 transition-colors font-body"
+              >
+                {isSubmitting && submitIntent === 'draft' ? 'Saving…' : 'Save as Draft'}
+              </button>
+            </div>
           </form>
         )}
       </div>

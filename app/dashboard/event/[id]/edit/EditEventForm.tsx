@@ -91,6 +91,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
   const slots = slotsLabel(event);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleteModal, setDeleteModal] = useState<{
     index: number;
@@ -374,6 +375,23 @@ export function EditEventForm({ event }: EditEventFormProps) {
     doRemoveSlot(deleteModal.index, deleteModal.slotId, deleteReason || null);
   };
 
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    try {
+      const res = await fetch(`/api/events/${event.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ published: true }),
+      });
+      if (!res.ok) throw new Error('Failed to publish');
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   return (
     <>
       {error && (
@@ -382,6 +400,27 @@ export function EditEventForm({ event }: EditEventFormProps) {
           role="alert"
         >
           {error}
+        </div>
+      )}
+
+      {!event.published && (
+        <div className="mb-6 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+            <span className="inline-flex w-fit shrink-0 items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 font-body">
+              Draft
+            </span>
+            <p className="text-sm text-amber-800 font-body">
+              This signup is not live yet. Publish it when you&apos;re ready.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void handlePublish()}
+            disabled={isPublishing}
+            className="ml-0 shrink-0 rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white hover:bg-sage-hover disabled:opacity-60 transition-colors font-body sm:ml-4"
+          >
+            {isPublishing ? 'Publishing…' : 'Publish'}
+          </button>
         </div>
       )}
 

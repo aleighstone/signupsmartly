@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { CoverageMeter } from '@/components/CoverageMeter';
 
@@ -11,6 +12,7 @@ type EventCardProps = {
     start_date: string | null;
     end_date: string | null;
     signup_type: 'scheduled' | 'simple';
+    published: boolean;
   };
   dateLabel: string;
   coverage: { filled: number; total: number; percentage: number };
@@ -18,8 +20,10 @@ type EventCardProps = {
 };
 
 export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCardProps) {
+  const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -38,12 +42,49 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
     };
   }, [menuOpen]);
 
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    try {
+      const res = await fetch(`/api/events/${event.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ published: true }),
+      });
+      if (!res.ok) throw new Error('Failed to publish');
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    setMenuOpen(false);
+    try {
+      const res = await fetch(`/api/events/${event.id}/copy`, { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to copy signup');
+      const { eventId } = (await res.json()) as { eventId?: string };
+      if (!eventId) throw new Error('Failed to copy signup');
+      router.push(`/dashboard/event/${eventId}/edit?copied=1`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not copy signup');
+    }
+  };
+
   return (
     <li className="rounded-xl border border-charcoal/10 bg-surface p-5 shadow-soft sm:p-6">
       <div className="min-w-0">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1 pr-2">
-            <h2 className="font-semibold text-charcoal font-heading">{event.title}</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="font-semibold text-charcoal font-heading">{event.title}</h2>
+              {!event.published && (
+                <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 font-body">
+                  Draft
+                </span>
+              )}
+            </div>
             <p className="mt-0.5 text-sm text-muted font-body">{dateLabel}</p>
           </div>
 
@@ -66,6 +107,28 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
                 role="menu"
                 className="absolute right-0 z-20 mt-2 w-48 min-w-[12rem] rounded-xl border border-charcoal/15 bg-surface py-1 shadow-soft-md"
               >
+                {!event.published ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-charcoal hover:bg-charcoal/5 font-body"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      void handlePublish();
+                    }}
+                    disabled={isPublishing}
+                  >
+                    {isPublishing ? 'Publishing…' : 'Publish'}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-charcoal hover:bg-charcoal/5 font-body"
+                  onClick={() => void handleCopy()}
+                >
+                  Copy signup
+                </button>
                 <Link
                   href={`/dashboard/event/${event.id}/edit`}
                   role="menuitem"
@@ -90,19 +153,35 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-        <Link href={`/dashboard/event/${event.id}/signups`} className="btn-primary w-full text-center">
-          View My Signups
-        </Link>
-        <a
-          href={signupPageUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-secondary w-full text-center"
-        >
-          Signup Page
-        </a>
-      </div>
+      {!event.published ? (
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+          <Link href={`/dashboard/event/${event.id}/signups`} className="btn-primary w-full text-center">
+            View My Signups
+          </Link>
+          <button
+            type="button"
+            onClick={() => void handlePublish()}
+            disabled={isPublishing}
+            className="btn-secondary w-full text-center disabled:opacity-60"
+          >
+            {isPublishing ? 'Publishing…' : 'Publish'}
+          </button>
+        </div>
+      ) : (
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+          <Link href={`/dashboard/event/${event.id}/signups`} className="btn-primary w-full text-center">
+            View My Signups
+          </Link>
+          <a
+            href={signupPageUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary w-full text-center"
+          >
+            Signup Page
+          </a>
+        </div>
+      )}
     </li>
   );
 }

@@ -13,6 +13,7 @@ const patchEventSchema = z.object({
   start_date: z.string().nullable().optional(),
   end_date: z.string().nullable().optional(),
   show_signups: z.boolean().optional(),
+  published: z.boolean().optional(),
   theme: z
     .object({
       colorKey: z.string().optional(),
@@ -56,6 +57,49 @@ export async function PATCH(
     }
 
     const body = await request.json();
+    const bodyKeys =
+      body && typeof body === 'object' && !Array.isArray(body)
+        ? Object.keys(body as Record<string, unknown>)
+        : [];
+    const isPublishOnlyPatch =
+      bodyKeys.length === 1 &&
+      bodyKeys[0] === 'published' &&
+      typeof (body as { published?: unknown }).published === 'boolean';
+
+    if (isPublishOnlyPatch) {
+      const published = (body as { published: boolean }).published;
+      const { data: eventRow, error: eventError } = await serviceSupabase
+        .from('events')
+        .select('id, organization_id')
+        .eq('id', id)
+        .single();
+
+      if (eventError || !eventRow) {
+        return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+      }
+
+      const eventMeta = eventRow as { id: string; organization_id: string };
+
+      const { data: membership } = await serviceSupabase
+        .from('organization_members')
+        .select('id')
+        .eq('organization_id', eventMeta.organization_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!membership) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
+      await serviceSupabase
+        .from('events')
+        // @ts-expect-error Supabase Update type inference
+        .update({ published })
+        .eq('id', id);
+
+      return NextResponse.json({ id });
+    }
+
     const parsed = patchEventSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -101,6 +145,7 @@ export async function PATCH(
       start_date,
       end_date,
       show_signups,
+      published,
       theme,
       slots,
       deleted_slot_ids = [],
@@ -146,6 +191,7 @@ export async function PATCH(
         start_date: start_date ?? null,
         end_date: end_date ?? null,
         ...(show_signups !== undefined ? { show_signups } : {}),
+        ...(published !== undefined ? { published } : {}),
         ...(theme !== undefined ? { theme } : {}),
       })
       .eq('id', id);
