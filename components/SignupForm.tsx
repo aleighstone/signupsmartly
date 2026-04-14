@@ -234,7 +234,7 @@ export function SignupForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`flex-1 rounded-full px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity font-body ${
+          className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity font-body ${
             volunteerPageThemed
               ? 'hover:opacity-90 focus:ring-charcoal/30'
               : primaryColor

@@ -155,7 +155,7 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
               href={calendarUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-[48px] min-w-[140px] w-full items-center justify-center rounded-full border-2 border-transparent px-6 py-3.5 text-base font-semibold font-body transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-charcoal/30 focus:ring-offset-2"
+              className="inline-flex min-h-[48px] min-w-[140px] w-full items-center justify-center rounded-xl border-2 border-transparent px-6 py-3.5 text-base font-semibold font-body transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-charcoal/30 focus:ring-offset-2"
               style={{
                 backgroundColor: 'var(--theme-primary)',
                 color: 'var(--theme-btn-text)',

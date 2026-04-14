@@ -129,7 +129,7 @@ function SlotCard({
           onSignUpClick?.();
           onSignUp();
         }}
-        className={`shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold font-body transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 ${
+        className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-semibold font-body transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 ${
           volunteerPageThemed ? 'focus:ring-charcoal/40' : 'btn-primary'
         }`}
         style={buttonStyle}
