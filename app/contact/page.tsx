@@ -74,7 +74,7 @@ export default function ContactPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="mt-8 max-w-xl space-y-4 rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft"
+        className="mt-8 w-full space-y-4 rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft"
       >
         {error && (
           <p className="rounded-xl bg-coral p-3 text-sm text-white font-body">
