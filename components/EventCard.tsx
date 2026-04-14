@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { CoverageMeter } from '@/components/CoverageMeter';
 
+/** Full-width stacked on mobile; from sm up, right-aligned row using half the card, two equal buttons. */
+const CARD_ACTION_ROW =
+  'mt-5 flex w-full justify-end';
+const CARD_ACTION_GRID =
+  'grid w-full grid-cols-1 gap-3 sm:w-1/2 sm:grid-cols-2 sm:gap-4';
+
 type EventCardProps = {
   event: {
     id: string;
@@ -154,32 +160,36 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
       </div>
 
       {!event.published ? (
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-          <Link href={`/dashboard/event/${event.id}/signups`} className="btn-primary w-full text-center">
-            View My Signups
-          </Link>
-          <button
-            type="button"
-            onClick={() => void handlePublish()}
-            disabled={isPublishing}
-            className="btn-secondary w-full text-center disabled:opacity-60"
-          >
-            {isPublishing ? 'Publishing…' : 'Publish'}
-          </button>
+        <div className={CARD_ACTION_ROW}>
+          <div className={CARD_ACTION_GRID}>
+            <Link href={`/dashboard/event/${event.id}/signups`} className="btn-primary w-full text-center">
+              View My Signups
+            </Link>
+            <button
+              type="button"
+              onClick={() => void handlePublish()}
+              disabled={isPublishing}
+              className="btn-secondary w-full text-center disabled:opacity-60"
+            >
+              {isPublishing ? 'Publishing…' : 'Publish'}
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-          <Link href={`/dashboard/event/${event.id}/signups`} className="btn-primary w-full text-center">
-            View My Signups
-          </Link>
-          <a
-            href={signupPageUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary w-full text-center"
-          >
-            Signup Page
-          </a>
+        <div className={CARD_ACTION_ROW}>
+          <div className={CARD_ACTION_GRID}>
+            <Link href={`/dashboard/event/${event.id}/signups`} className="btn-primary w-full text-center">
+              View My Signups
+            </Link>
+            <a
+              href={signupPageUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary w-full text-center"
+            >
+              Signup Page
+            </a>
+          </div>
         </div>
       )}
     </li>
