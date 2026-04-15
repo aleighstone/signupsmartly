@@ -156,14 +156,7 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                       + Add
                     </button>
                   ) : (
-                    <span className="flex items-center gap-2 flex-wrap">
-                      {row.signup!.name}
-                      {row.signup!.source === 'organizer' && (
-                        <span className="text-xs px-2 py-0.5 rounded bg-charcoal/10 text-muted font-body">
-                          added by organizer
-                        </span>
-                      )}
-                    </span>
+                    row.signup!.name
                   )}
                 </td>
                 <td className={`align-top px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-muted'}`}>
@@ -196,7 +189,14 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                     ''
                   ) : (
                     <div className="flex items-start justify-between gap-2">
-                      <span className="min-w-0 font-body">{row.signup!.createdAt}</span>
+                      <div className="min-w-0 flex-1">
+                        <span className="block font-body">{row.signup!.createdAt}</span>
+                        {row.signup!.source === 'organizer' && (
+                          <span className="mt-1 inline-block text-xs px-2 py-0.5 rounded bg-charcoal/10 text-muted font-body">
+                            by organizer
+                          </span>
+                        )}
+                      </div>
                       <button
                         type="button"
                         onClick={() =>
