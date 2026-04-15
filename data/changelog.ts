@@ -13,6 +13,15 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: 'April 15, 2026',
+    changes: [
+      {
+        type: 'new',
+        text: '**Remove a signup**: Organizers can remove a volunteer from the **View My Signups** page by clicking the trash icon and confirming. You could already add signups there; now you have full control to add and remove signups from the dashboard.',
+      },
+    ],
+  },
+  {
     date: 'April 13, 2026',
     changes: [
       {
