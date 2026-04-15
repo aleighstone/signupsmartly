@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Trash2 } from 'lucide-react';
 import { AddSignupModal } from './AddSignupModal';
+import { DeleteSignupModal } from './DeleteSignupModal';
 import { DEFAULT_COMMENT_LABEL, normalizeCommentLabel } from '@/lib/slot-comment';
 
 type TableRow = {
@@ -32,12 +34,37 @@ interface SignupsTableProps {
   isSimple: boolean;
 }
 
+/** Split organizer date/time display: first comma, or MM/DD/YYYY vs rest. */
+function splitDateAndTimeForTable(
+  dateAndTime: string | null
+): { datePart: string; timePart: string | null } {
+  if (!dateAndTime?.trim()) return { datePart: '', timePart: null };
+  const s = dateAndTime.trim();
+  const commaIdx = s.indexOf(',');
+  if (commaIdx !== -1) {
+    const datePart = s.slice(0, commaIdx).trim();
+    const rest = s.slice(commaIdx + 1).trim();
+    return { datePart, timePart: rest || null };
+  }
+  const m = /^(\d{2}\/\d{2}\/\d{4})(?:\s+(.+))?$/.exec(s);
+  if (m) {
+    return { datePart: m[1], timePart: m[2]?.trim() || null };
+  }
+  return { datePart: s, timePart: null };
+}
+
 export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
   const router = useRouter();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [addModalPreselected, setAddModalPreselected] = useState<{
     id: string;
     role_name: string;
+  } | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    signupId: string;
+    name: string;
+    role: string;
   } | null>(null);
 
   const handleAddClick = (slotId: string, role: string) => {
@@ -47,6 +74,16 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
 
   const handleAdded = () => {
     router.refresh();
+  };
+
+  const openDeleteModal = (signupId: string, name: string, role: string) => {
+    setDeleteTarget({ signupId, name, role });
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
   };
 
   const label = isSimple ? 'Item' : 'Spot';
@@ -89,8 +126,24 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                   {row.role}
                 </td>
                 {!isSimple && (
-                  <td className={`align-top px-4 py-3 text-sm font-body whitespace-nowrap ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>
-                    {row.dateAndTime ?? ''}
+                  <td
+                    className={`align-top px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}
+                  >
+                    {(() => {
+                      const { datePart, timePart } = splitDateAndTimeForTable(
+                        row.dateAndTime
+                      );
+                      if (!datePart && !timePart) return '';
+                      if (!timePart) {
+                        return <span className="block">{datePart}</span>;
+                      }
+                      return (
+                        <>
+                          <span className="block">{datePart}</span>
+                          <span className="block text-muted">{timePart}</span>
+                        </>
+                      );
+                    })()}
                   </td>
                 )}
                 <td className={`align-top px-4 py-3 text-sm font-body break-words ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>
@@ -100,7 +153,7 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                       onClick={() => handleAddClick(row.slotId, row.role)}
                       className="text-sage hover:text-sage-hover font-medium focus:outline-none focus:underline"
                     >
-                      + Add signup
+                      + Add
                     </button>
                   ) : (
                     <span className="flex items-center gap-2 flex-wrap">
@@ -121,16 +174,16 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                     ''
                   ) : (
                     (() => {
-                      const label = normalizeCommentLabel(row.signup!.comment_label);
+                      const lbl = normalizeCommentLabel(row.signup!.comment_label);
                       const text = row.signup!.comment?.trim();
-                      const custom = label !== DEFAULT_COMMENT_LABEL;
+                      const custom = lbl !== DEFAULT_COMMENT_LABEL;
                       if (!text && !custom) return '—';
                       if (!text) return <span className="text-muted">—</span>;
                       if (!custom) return text;
                       return (
                         <div className="space-y-1">
                           <p className="text-xs font-medium uppercase tracking-wide text-muted font-body">
-                            {label}
+                            {lbl}
                           </p>
                           <p className="text-sm text-charcoal font-body whitespace-pre-wrap">{text}</p>
                         </div>
@@ -139,7 +192,27 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                   )}
                 </td>
                 <td className={`align-top px-4 py-3 text-sm ${row.isEmpty ? 'text-muted' : 'text-muted'}`}>
-                  {row.isEmpty ? '' : row.signup!.createdAt}
+                  {row.isEmpty ? (
+                    ''
+                  ) : (
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="min-w-0 font-body">{row.signup!.createdAt}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openDeleteModal(
+                            row.signup!.id,
+                            row.signup!.name,
+                            row.role
+                          )
+                        }
+                        className="inline-flex shrink-0 items-center justify-center rounded p-1 text-charcoal/65 hover:text-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-sage/30"
+                        aria-label={`Remove ${row.signup!.name} from ${row.role}`}
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden strokeWidth={2} />
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
@@ -154,6 +227,13 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
         slots={slots}
         isSimple={isSimple}
         onAdded={handleAdded}
+      />
+
+      <DeleteSignupModal
+        isOpen={deleteModalOpen}
+        onClose={closeDeleteModal}
+        target={deleteTarget}
+        onRemoved={() => router.refresh()}
       />
     </>
   );
