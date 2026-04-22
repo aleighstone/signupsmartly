@@ -311,6 +311,55 @@ export function formatScheduledSlotWhen(
 }
 
 /**
+ * Returns the date portion and time portion of a scheduled slot separately,
+ * for use in visual hierarchy rendering.
+ */
+export function formatScheduledSlotParts(
+  startTime: string | null,
+  endTime: string | null,
+  eventFallback?: ScheduledSlotEventDateFallback | null
+): { dateLine: string; timeLine: string } {
+  const timeLine = volunteerSlotTimePart(startTime, endTime);
+
+  if (!startTime) {
+    const dateLine = eventFallback?.startDate
+      ? formatEventDateRange(eventFallback.startDate, eventFallback.endDate) ||
+        ''
+      : '';
+    return { dateLine, timeLine };
+  }
+
+  const startDate = formatSlotDateUTC(startTime);
+  const endDate = endTime ? formatSlotDateUTC(endTime) : null;
+  const dateLine =
+    endDate && endDate !== startDate
+      ? `${startDate} – ${endDate}`
+      : startDate;
+
+  return { dateLine, timeLine };
+}
+
+/**
+ * Prefix a short weekday (UTC) for single-day secondary date lines, e.g. "Sat, May 16, 2026".
+ * Uses month/day/year without repeating a long weekday (formatSlotDateUTC includes weekday).
+ */
+export function prefixWeekday(dateIso: string): string {
+  const d = new Date(dateIso);
+  if (Number.isNaN(d.getTime())) return '';
+  const weekday = new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    timeZone: 'UTC',
+  }).format(d);
+  const rest = new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(d);
+  return `${weekday}, ${rest}`;
+}
+
+/**
  * Format signup timestamp for display. No timezone conversion — shows UTC as stored.
  */
 export function formatSignupTimestamp(isoString: string): string {

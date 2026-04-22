@@ -1,21 +1,21 @@
 {
   "cookies": [
     {
-      "name": "sb-127-auth-token",
-      "value": "base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSkZVekkxTmlJc0ltdHBaQ0k2SW1JNE1USTJPV1l4TFRJeFpEZ3ROR1l5WlMxaU56RTVMV015TWpRd1lUZzBNR1E1TUNJc0luUjVjQ0k2SWtwWFZDSjkuZXlKcGMzTWlPaUpvZEhSd09pOHZNVEkzTGpBdU1DNHhPalUwTXpJeEwyRjFkR2d2ZGpFaUxDSnpkV0lpT2lKaVl6VmpNV1U0TXkwNU56QmpMVFJqWXpJdFlqUTVNQzB4TVdRMU9EZzRaVE14WXpnaUxDSmhkV1FpT2lKaGRYUm9aVzUwYVdOaGRHVmtJaXdpWlhod0lqb3hOemMyT0RnNE5UQTJMQ0pwWVhRaU9qRTNOelk0T0RRNU1EWXNJbVZ0WVdsc0lqb2lZV3hzYVhOdmJteGxhV2RvYzNSdmJtVkFaMjFoYVd3dVkyOXRJaXdpY0dodmJtVWlPaUlpTENKaGNIQmZiV1YwWVdSaGRHRWlPbnNpY0hKdmRtbGtaWElpT2lKbGJXRnBiQ0lzSW5CeWIzWnBaR1Z5Y3lJNld5SmxiV0ZwYkNKZGZTd2lkWE5sY2w5dFpYUmhaR0YwWVNJNmV5SmxiV0ZwYkY5MlpYSnBabWxsWkNJNmRISjFaWDBzSW5KdmJHVWlPaUpoZFhSb1pXNTBhV05oZEdWa0lpd2lZV0ZzSWpvaVlXRnNNU0lzSW1GdGNpSTZXM3NpYldWMGFHOWtJam9pY0dGemMzZHZjbVFpTENKMGFXMWxjM1JoYlhBaU9qRTNOelk0T0RRNU1EWjlYU3dpYzJWemMybHZibDlwWkNJNklqRXpNREpoWlRsbUxUUmtZamd0Tkdaa09TMWhaVGxqTFdZNFpUVmtZV0pqT0dFek55SXNJbWx6WDJGdWIyNTViVzkxY3lJNlptRnNjMlY5LklTVkxEVjlYU0dKQ1VJTUlKVERJTEZnbzdNczZpNS1oR0ZWY1Z3cjRHazhBcFhmS2hJVWJpTVpGSUJhYU1IMERtSllueGsyY2hpRGJ4RXdnM2Rwa0NBIiwidG9rZW5fdHlwZSI6ImJlYXJlciIsImV4cGlyZXNfaW4iOjM2MDAsImV4cGlyZXNfYXQiOjE3NzY4ODg1MDYsInJlZnJlc2hfdG9rZW4iOiI1YWlmczZvYm9xNW4iLCJ1c2VyIjp7ImlkIjoiYmM1YzFlODMtOTcwYy00Y2MyLWI0OTAtMTFkNTg4OGUzMWM4IiwiYXVkIjoiYXV0aGVudGljYXRlZCIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiZW1haWwiOiJhbGxpc29ubGVpZ2hzdG9uZUBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI2LTA0LTIwVDE4OjI2OjQ5LjE4NTQ5MVoiLCJwaG9uZSI6IiIsImNvbmZpcm1lZF9hdCI6IjIwMjYtMDQtMjBUMTg6MjY6NDkuMTg1NDkxWiIsImxhc3Rfc2lnbl9pbl9hdCI6IjIwMjYtMDQtMjJUMTk6MDg6MjYuODA3NTE5NDIxWiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwiaWRlbnRpdGllcyI6W3siaWRlbnRpdHlfaWQiOiJkYWU4YjI3Ni04MzZjLTRmY2EtODc2Ni1jNDg4NmFkZTcyZjkiLCJpZCI6ImJjNWMxZTgzLTk3MGMtNGNjMi1iNDkwLTExZDU4ODhlMzFjOCIsInVzZXJfaWQiOiJiYzVjMWU4My05NzBjLTRjYzItYjQ5MC0xMWQ1ODg4ZTMxYzgiLCJpZGVudGl0eV9kYXRhIjp7ImVtYWlsIjoiYWxsaXNvbmxlaWdoc3RvbmVAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImJjNWMxZTgzLTk3MGMtNGNjMi1iNDkwLTExZDU4ODhlMzFjOCJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNi0wNC0yMFQxODoyNjo0OS4xODM0MDNaIiwiY3JlYXRlZF9hdCI6IjIwMjYtMDQtMjBUMTg6MjY6NDkuMTgzNDI1WiIsInVwZGF0ZWRfYXQiOiIyMDI2LTA0LTIwVDE4OjI2OjQ5LjE4MzQyNVoiLCJlbWFpbCI6ImFsbGlzb25sZWlnaHN0b25lQGdtYWlsLmNvbSJ9XSwiY3JlYXRlZF9hdCI6IjIwMjYtMDQtMjBUMTg6MjY6NDkuMTgwMTI1WiIsInVwZGF0ZWRfYXQiOiIyMDI2LTA0LTIyVDE5OjA4OjI2LjgwOTU4NFoiLCJpc19hbm9ueW1vdXMiOmZhbHNlfSwid2Vha19wYXNzd29yZCI6bnVsbH0",
+      "name": "_fbp",
+      "value": "fb.0.1776893604708.235607685148756823",
       "domain": "localhost",
       "path": "/",
-      "expires": 1811444906.82025,
+      "expires": 1784669605,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
-      "name": "_fbp",
-      "value": "fb.0.1776884906868.5588261852720907",
+      "name": "sb-127-auth-token",
+      "value": "base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSkZVekkxTmlJc0ltdHBaQ0k2SW1JNE1USTJPV1l4TFRJeFpEZ3ROR1l5WlMxaU56RTVMV015TWpRd1lUZzBNR1E1TUNJc0luUjVjQ0k2SWtwWFZDSjkuZXlKcGMzTWlPaUpvZEhSd09pOHZNVEkzTGpBdU1DNHhPalUwTXpJeEwyRjFkR2d2ZGpFaUxDSnpkV0lpT2lJM1pUazJPR00zTlMweE5UaGtMVFF5TXpJdFlUZzBPUzFpWkRVellXWTNOVFppWmpJaUxDSmhkV1FpT2lKaGRYUm9aVzUwYVdOaGRHVmtJaXdpWlhod0lqb3hOemMyT0RrM01qQTBMQ0pwWVhRaU9qRTNOelk0T1RNMk1EUXNJbVZ0WVdsc0lqb2lZV3hzYVhOdmJteGxhV2RvYzNSdmJtVkFaMjFoYVd3dVkyOXRJaXdpY0dodmJtVWlPaUlpTENKaGNIQmZiV1YwWVdSaGRHRWlPbnNpY0hKdmRtbGtaWElpT2lKbGJXRnBiQ0lzSW5CeWIzWnBaR1Z5Y3lJNld5SmxiV0ZwYkNKZGZTd2lkWE5sY2w5dFpYUmhaR0YwWVNJNmV5SmxiV0ZwYkY5MlpYSnBabWxsWkNJNmRISjFaWDBzSW5KdmJHVWlPaUpoZFhSb1pXNTBhV05oZEdWa0lpd2lZV0ZzSWpvaVlXRnNNU0lzSW1GdGNpSTZXM3NpYldWMGFHOWtJam9pY0dGemMzZHZjbVFpTENKMGFXMWxjM1JoYlhBaU9qRTNOelk0T1RNMk1EUjlYU3dpYzJWemMybHZibDlwWkNJNklqWXpORGxtWVRZMExUUXhOelF0TkdKallpMWhaVFJqTFRFNU9UUTNOMk14TTJZME55SXNJbWx6WDJGdWIyNTViVzkxY3lJNlptRnNjMlY5LmdmU202dVcwQXBhQUo0YnJFWDg0UDFIbU90b2Q4OEp3czk4eEFnRDdSVlpYVEVaV3k2c3hiWWpQNEFmX2lRcjJTbGpzSl85aDJRMW1iVldXSms4a2pBIiwidG9rZW5fdHlwZSI6ImJlYXJlciIsImV4cGlyZXNfaW4iOjM2MDAsImV4cGlyZXNfYXQiOjE3NzY4OTcyMDQsInJlZnJlc2hfdG9rZW4iOiJpeG9vY2pndWRrb2QiLCJ1c2VyIjp7ImlkIjoiN2U5NjhjNzUtMTU4ZC00MjMyLWE4NDktYmQ1M2FmNzU2YmYyIiwiYXVkIjoiYXV0aGVudGljYXRlZCIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiZW1haWwiOiJhbGxpc29ubGVpZ2hzdG9uZUBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI2LTA0LTIyVDIxOjMxOjE1LjIxNzUyNloiLCJwaG9uZSI6IiIsImNvbmZpcm1lZF9hdCI6IjIwMjYtMDQtMjJUMjE6MzE6MTUuMjE3NTI2WiIsImxhc3Rfc2lnbl9pbl9hdCI6IjIwMjYtMDQtMjJUMjE6MzM6MjQuNzEwMDkyODM5WiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwiaWRlbnRpdGllcyI6W3siaWRlbnRpdHlfaWQiOiIwYmI2YjI5NC1jMDlhLTQxMWMtYjBjNi0yMTg0ZGJjNzBkYzkiLCJpZCI6IjdlOTY4Yzc1LTE1OGQtNDIzMi1hODQ5LWJkNTNhZjc1NmJmMiIsInVzZXJfaWQiOiI3ZTk2OGM3NS0xNThkLTQyMzItYTg0OS1iZDUzYWY3NTZiZjIiLCJpZGVudGl0eV9kYXRhIjp7ImVtYWlsIjoiYWxsaXNvbmxlaWdoc3RvbmVAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjdlOTY4Yzc1LTE1OGQtNDIzMi1hODQ5LWJkNTNhZjc1NmJmMiJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNi0wNC0yMlQyMTozMToxNS4yMTU1MjFaIiwiY3JlYXRlZF9hdCI6IjIwMjYtMDQtMjJUMjE6MzE6MTUuMjE1NTQ2WiIsInVwZGF0ZWRfYXQiOiIyMDI2LTA0LTIyVDIxOjMxOjE1LjIxNTU0NloiLCJlbWFpbCI6ImFsbGlzb25sZWlnaHN0b25lQGdtYWlsLmNvbSJ9XSwiY3JlYXRlZF9hdCI6IjIwMjYtMDQtMjJUMjE6MzE6MTUuMjEzOTA1WiIsInVwZGF0ZWRfYXQiOiIyMDI2LTA0LTIyVDIxOjMzOjI0LjcxNDE0MVoiLCJpc19hbm9ueW1vdXMiOmZhbHNlfSwid2Vha19wYXNzd29yZCI6bnVsbH0",
       "domain": "localhost",
       "path": "/",
-      "expires": 1784660907,
+      "expires": 1811453604.722574,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -30,16 +30,16 @@
           "value": "empty"
         },
         {
+          "name": "signupsmartly_fb_CompleteRegistration_7e968c75-158d-4232-a849-bd53af756bf2",
+          "value": "1"
+        },
+        {
           "name": "lastExternalReferrerTime",
-          "value": "1776884906861"
+          "value": "1776893604701"
         },
         {
           "name": "ph_phc_iJXeaj3dy5VucLO5tfcBibnaubMzbHFCE0Y1L0eayOh_posthog",
-          "value": "{\"$initialization_time\":\"2026-04-22T19:08:26.594Z\",\"$configured_session_timeout_ms\":1800000,\"distinct_id\":\"bc5c1e83-970c-4cc2-b490-11d5888e31c8\",\"$device_id\":\"019db697-fa65-7391-a662-98f672dfe29b\",\"$user_state\":\"identified\",\"$error_tracking_suppression_rules\":[],\"$session_recording_remote_config\":{\"cache_timestamp\":1776884906683,\"enabled\":false,\"networkPayloadCapture\":{\"capturePerformance\":{\"network_timing\":true,\"web_vitals\":false,\"web_vitals_allowed_metrics\":null}},\"canvasRecording\":{},\"sampleRate\":null,\"minimumDurationMilliseconds\":null},\"$autocapture_disabled_server_side\":false,\"$product_tours_enabled_server_side\":false,\"$heatmaps_enabled_server_side\":false,\"$web_vitals_enabled_server_side\":false,\"$web_vitals_allowed_metrics\":null,\"$exception_capture_enabled_server_side\":false,\"$dead_clicks_enabled_server_side\":false,\"$epp\":true,\"$user_id\":\"bc5c1e83-970c-4cc2-b490-11d5888e31c8\",\"$stored_person_properties\":{\"email\":\"allisonleighstone@gmail.com\"}}"
-        },
-        {
-          "name": "signupsmartly_fb_CompleteRegistration_bc5c1e83-970c-4cc2-b490-11d5888e31c8",
-          "value": "1"
+          "value": "{\"$initialization_time\":\"2026-04-22T21:33:24.063Z\",\"$configured_session_timeout_ms\":1800000,\"distinct_id\":\"7e968c75-158d-4232-a849-bd53af756bf2\",\"$device_id\":\"019db71c-b0e1-742c-923a-8587c730b144\",\"$user_state\":\"identified\",\"$error_tracking_suppression_rules\":[],\"$session_recording_remote_config\":{\"cache_timestamp\":1776893604618,\"enabled\":false,\"networkPayloadCapture\":{\"capturePerformance\":{\"network_timing\":true,\"web_vitals\":false,\"web_vitals_allowed_metrics\":null}},\"canvasRecording\":{},\"sampleRate\":null,\"minimumDurationMilliseconds\":null},\"$autocapture_disabled_server_side\":false,\"$product_tours_enabled_server_side\":false,\"$heatmaps_enabled_server_side\":false,\"$web_vitals_enabled_server_side\":false,\"$web_vitals_allowed_metrics\":null,\"$exception_capture_enabled_server_side\":false,\"$dead_clicks_enabled_server_side\":false,\"$epp\":true,\"$user_id\":\"7e968c75-158d-4232-a849-bd53af756bf2\",\"$stored_person_properties\":{\"email\":\"allisonleighstone@gmail.com\"}}"
         }
       ]
     }

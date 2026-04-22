@@ -12,6 +12,9 @@
 | Organizer smoke tests: draft, unsaved changes, copy signup | `e2e/organizer.smoke.ts`, `playwright.config.ts` | deployed |
 | Playwright config: explicit testMatch for chromium project | `playwright.config.ts` | deployed |
 | AGENTS.md: remind user to start supabase + dev server before tests | `AGENTS.md` | deployed |
+| Reminder timing options: 1 week before + 3 days before | `components/SignupModal.tsx`, `app/api/reminders/process/route.ts` | deployed |
+| Confirmation email: event name links to signup page | `lib/email.ts` | deployed |
+| What's New page updated with above two features | `data/changelog.ts` | deployed |
 
 ### Backlog
 

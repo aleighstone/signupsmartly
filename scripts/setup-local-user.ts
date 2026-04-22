@@ -1,32 +1,76 @@
 /**
- * One-time setup script for local development.
+ * Sets up the local development user and organization after a `supabase db reset`.
  *
- * Creates the users, organizations, and organization_members rows
- * needed to match the local Supabase auth account and the seed script.
+ * Uses the Supabase admin API to create the auth user (which handles all internal
+ * auth schema requirements correctly), then creates the matching public schema rows.
  *
- * Run AFTER `supabase start` and BEFORE `npm run seed-demo`:
- *   npx dotenv -e .env.local -- tsx scripts/setup-local-user.ts
+ * The auth user UUID is looked up dynamically from the email — no hardcoded UUID needed.
+ * The resolved UUID is printed at the end so seed-demo-events.ts can use it.
  *
- * Safe to re-run — uses upsert so it won't duplicate records.
+ * Full reset workflow:
+ *   supabase db reset
+ *   npm run setup-local      ← run this; it prints the organizer UUID
+ *   npm run seed-demo        ← uses the same email lookup; prints event IDs for .env.local
  */
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
 
-const ORGANIZER_USER_ID   = 'bc5c1e83-970c-4cc2-b490-11d5888e31c8';
-const ORGANIZATION_ID     = 'e19c419e-04d8-481b-b786-0e5bdb8462e1';
-const ORGANIZER_EMAIL     = process.env.E2E_ORGANIZER_EMAIL ?? 'test@test.com';
-const ORGANIZER_NAME      = 'Allison';
+const ORGANIZATION_ID  = 'e19c419e-04d8-481b-b786-0e5bdb8462e1';
+const ORGANIZER_EMAIL  = process.env.E2E_ORGANIZER_EMAIL  ?? 'allisonleighstone@gmail.com';
+const ORGANIZER_PASSWORD = process.env.E2E_ORGANIZER_PASSWORD ?? 'Events123!';
+const ORGANIZER_NAME   = 'Allison';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } }
 );
 
 async function main() {
-  console.log('Setting up local user records...\n');
+  console.log('Setting up local development user...\n');
 
-  // 1. Create organization
+  // 1. Create auth user via admin API — handles all auth schema internals correctly.
+  //    If the user already exists (safe to re-run), we skip creation and look them up.
+  let organizerUserId: string;
+
+  const { data: createData, error: createError } =
+    await supabase.auth.admin.createUser({
+      email: ORGANIZER_EMAIL,
+      password: ORGANIZER_PASSWORD,
+      email_confirm: true,
+    });
+
+  if (createError) {
+    if (createError.message?.toLowerCase().includes('already registered') ||
+        createError.message?.toLowerCase().includes('already exists')) {
+      // User exists — look them up by email
+      console.log('Auth user already exists — looking up existing user...');
+      const { data: { users }, error: listError } =
+        await supabase.auth.admin.listUsers();
+      if (listError) {
+        console.error('❌ Could not list auth users:', listError.message);
+        process.exit(1);
+      }
+      const existing = users.find((u) => u.email === ORGANIZER_EMAIL);
+      if (!existing) {
+        console.error('❌ Could not find existing auth user with email:', ORGANIZER_EMAIL);
+        process.exit(1);
+      }
+      organizerUserId = existing.id;
+    } else {
+      console.error('❌ Failed to create auth user:', createError.message);
+      process.exit(1);
+    }
+  } else {
+    organizerUserId = createData.user.id;
+    console.log('✅ Auth user created');
+  }
+
+  console.log('   UUID:', organizerUserId);
+  console.log('   Email:', ORGANIZER_EMAIL);
+
+  // 2. Organization
   const { error: orgError } = await supabase
     .from('organizations')
     .upsert({
@@ -39,29 +83,29 @@ async function main() {
     console.error('❌ Failed to create organization:', orgError.message);
     process.exit(1);
   }
-  console.log('✅ Organization ready:', ORGANIZATION_ID);
+  console.log('✅ Organization ready');
 
-  // 2. Create user row (matches auth.users.id)
+  // 3. Public user profile
   const { error: userError } = await supabase
     .from('users')
     .upsert({
-      id: ORGANIZER_USER_ID,
+      id: organizerUserId,
       email: ORGANIZER_EMAIL,
       name: ORGANIZER_NAME,
     }, { onConflict: 'id' });
 
   if (userError) {
-    console.error('❌ Failed to create user:', userError.message);
+    console.error('❌ Failed to create user profile:', userError.message);
     process.exit(1);
   }
-  console.log('✅ User ready:', ORGANIZER_USER_ID);
+  console.log('✅ User profile ready');
 
-  // 3. Create organization_members row
+  // 4. Org membership
   const { error: memberError } = await supabase
     .from('organization_members')
     .upsert({
       organization_id: ORGANIZATION_ID,
-      user_id: ORGANIZER_USER_ID,
+      user_id: organizerUserId,
       role: 'owner',
     }, { onConflict: 'organization_id,user_id' });
 
@@ -71,7 +115,10 @@ async function main() {
   }
   console.log('✅ Membership ready: owner of org\n');
 
-  console.log('All done! You can now run: npm run seed-demo');
+  console.log('All done! Now run: npm run seed-demo');
 }
 
-main();
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

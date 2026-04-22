@@ -23,7 +23,7 @@ export default function Home() {
 
       <section className="flex-1 flex flex-col items-center justify-center px-4 py-16 sm:py-24">
         <div className="max-w-2xl text-center">
-          <h1 className="text-4xl font-semibold tracking-tight text-charcoal sm:text-5xl font-heading">
+          <h1 className="text-4xl font-semibold tracking-tight text-charcoal sm:text-5xl font-display">
             SignupSmartly - smarter than a genius
           </h1>
 

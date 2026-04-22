@@ -21,6 +21,11 @@ export function CoverageMeter({
 }: CoverageMeterProps) {
   const remaining = Math.max(0, total - filled);
   const barHeight = size === 'sm' ? 'h-2' : 'h-3';
+  const themeColorStyle = volunteerPageThemed
+    ? { color: 'var(--theme-primary)' }
+    : primaryColor
+      ? { color: primaryColor }
+      : undefined;
 
   return (
     <div className="space-y-1.5">
@@ -52,7 +57,10 @@ export function CoverageMeter({
       <p className="text-sm text-charcoal font-body">
         {filled} of {total} {signupType === 'simple' ? 'items' : 'spots'} filled
         {remaining > 0 && (
-          <span className="ml-1 font-medium">
+          <span
+            className={`ml-1 font-semibold ${volunteerPageThemed || primaryColor ? '' : 'text-sage'}`}
+            style={themeColorStyle}
+          >
             · {remaining} still needed
           </span>
         )}

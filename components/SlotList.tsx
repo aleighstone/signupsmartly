@@ -1,9 +1,12 @@
 'use client';
 
 import { usePostHog } from '@posthog/react';
+import { Zap, Check } from 'lucide-react';
 import type { ScheduledSlotEventDateFallback } from '@/lib/calendar';
 import {
+  formatScheduledSlotParts,
   formatScheduledSlotWhen,
+  prefixWeekday,
   scheduledSlotsShareSingleCalendarDay,
 } from '@/lib/calendar';
 import type { SlotWithSignups } from '@/types/database';
@@ -13,6 +16,77 @@ import {
 } from '@/lib/slot-utils';
 import { MarkdownBody } from '@/components/MarkdownBody';
 import { DEFAULT_COMMENT_LABEL, normalizeCommentLabel } from '@/lib/slot-comment';
+
+function ScheduledSlotVolunteerHeading({
+  slot,
+  isSingleDay,
+  omitRedundantSlotDate,
+  eventDateFallback,
+}: {
+  slot: SlotWithSignups;
+  isSingleDay: boolean;
+  omitRedundantSlotDate: boolean;
+  eventDateFallback?: ScheduledSlotEventDateFallback | null;
+}) {
+  const { dateLine, timeLine } = formatScheduledSlotParts(
+    slot.start_time,
+    slot.end_time,
+    eventDateFallback
+  );
+  const whenFallback = formatScheduledSlotWhen(
+    slot.start_time,
+    slot.end_time,
+    eventDateFallback,
+    { omitRedundantDate: omitRedundantSlotDate }
+  );
+
+  const timeLessSingleDay = isSingleDay && !timeLine;
+
+  if (timeLessSingleDay) {
+    return (
+      <>
+        <h3 className="text-base font-semibold text-charcoal font-body leading-tight">
+          {whenFallback}
+        </h3>
+        <h4 className="mt-0.5 text-sm font-medium text-charcoal font-body">
+          {slot.role_name}
+        </h4>
+      </>
+    );
+  }
+
+  if (isSingleDay && timeLine) {
+    return (
+      <>
+        {slot.start_time ? (
+          <p className="text-sm text-muted font-body">
+            {prefixWeekday(slot.start_time)}
+          </p>
+        ) : null}
+        <h3 className="text-base font-semibold text-charcoal font-body leading-tight">
+          {timeLine}
+        </h3>
+        <h4 className="mt-0.5 text-sm font-medium text-charcoal font-body">
+          {slot.role_name}
+        </h4>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <h3 className="text-base font-semibold text-charcoal font-body leading-tight">
+        {dateLine}
+      </h3>
+      {timeLine ? (
+        <p className="text-sm text-muted font-body mt-0.5">{timeLine}</p>
+      ) : null}
+      <h4 className="mt-0.5 text-sm font-medium text-charcoal font-body">
+        {slot.role_name}
+      </h4>
+    </>
+  );
+}
 
 interface SlotListProps {
   slots: SlotWithSignups[];
@@ -40,6 +114,7 @@ function SlotCard({
   isSimple,
   eventDateFallback,
   omitRedundantSlotDate,
+  isSingleDay,
   primaryColor,
   volunteerPageThemed,
 }: {
@@ -54,15 +129,10 @@ function SlotCard({
   isSimple: boolean;
   eventDateFallback?: ScheduledSlotEventDateFallback | null;
   omitRedundantSlotDate?: boolean;
+  isSingleDay: boolean;
   primaryColor?: string;
   volunteerPageThemed?: boolean;
 }) {
-  const whenScheduled = formatScheduledSlotWhen(
-    slot.start_time,
-    slot.end_time,
-    isSimple ? null : eventDateFallback,
-    { omitRedundantDate: omitRedundantSlotDate }
-  );
   const unitLabel = isSimple ? 'item' : 'spot';
   const spotsText =
     remaining === 1
@@ -80,22 +150,30 @@ function SlotCard({
 
   const linkColorStyle = volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined;
 
+  const openCountStyle = volunteerPageThemed
+    ? { color: 'var(--theme-primary)' }
+    : primaryColor
+      ? { color: primaryColor }
+      : undefined;
+  const openCountClass = volunteerPageThemed || primaryColor ? '' : 'text-sage';
+
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
         {isSimple ? (
           <h3 className="font-medium text-charcoal font-body">{slot.role_name}</h3>
         ) : (
-          <>
-            <h3 className="text-base font-semibold text-charcoal font-heading">
-              {whenScheduled}
-            </h3>
-            <h4 className="mt-1 text-sm font-medium text-charcoal font-body">
-              {slot.role_name}
-            </h4>
-          </>
+          <ScheduledSlotVolunteerHeading
+            slot={slot}
+            isSingleDay={isSingleDay}
+            omitRedundantSlotDate={omitRedundantSlotDate ?? false}
+            eventDateFallback={eventDateFallback}
+          />
         )}
-        <p className="mt-1 text-sm text-charcoal font-body">
+        <p
+          className={`mt-1 text-sm font-semibold font-body ${openCountClass}`}
+          style={openCountStyle}
+        >
           {spotsText}
           {showSeeWho ? (
             <>
@@ -152,9 +230,10 @@ export function SlotList({
 }: SlotListProps) {
   const posthog = usePostHog();
   const isSimple = signupType === 'simple';
-  const omitRedundantSlotDate =
+  const isSingleDay =
     !isSimple &&
     scheduledSlotsShareSingleCalendarDay(slots, eventDateFallback ?? null);
+  const omitRedundantSlotDate = isSingleDay;
   const orderedSlots = sortSlotsForVolunteerDisplay(slots, signupType);
   const openSlots = orderedSlots.filter((s) => getSlotRemainingCapacity(s) > 0);
   const filledSlots = orderedSlots.filter((s) => getSlotRemainingCapacity(s) === 0);
@@ -173,16 +252,25 @@ export function SlotList({
     onOpenSignups(slot);
   };
 
+  const sectionIconClass = volunteerPageThemed ? '' : 'text-sage';
+  const sectionIconStyle = volunteerPageThemed
+    ? { color: 'var(--theme-primary)' }
+    : undefined;
+
   return (
     <div className="space-y-8">
       <section>
         <h2
-          className={`mb-4 flex items-center gap-2 text-lg font-semibold text-charcoal ${volunteerPageThemed ? '' : 'font-heading'}`}
+          className="mb-4 flex items-center gap-2 text-base font-semibold uppercase tracking-wide text-charcoal/50 font-body"
           style={volunteerPageThemed ? { fontFamily: 'var(--theme-font)' } : undefined}
         >
-          <span aria-hidden style={volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined}>
-            ⚡
-          </span>
+          <Zap
+            size={14}
+            strokeWidth={2.5}
+            className={sectionIconClass}
+            style={sectionIconStyle}
+            aria-hidden
+          />
           Still Needed
         </h2>
         {openSlots.length === 0 ? (
@@ -216,6 +304,7 @@ export function SlotList({
                     isSimple={isSimple}
                     eventDateFallback={eventDateFallback}
                     omitRedundantSlotDate={omitRedundantSlotDate}
+                    isSingleDay={isSingleDay}
                     primaryColor={primaryColor}
                     volunteerPageThemed={volunteerPageThemed}
                   />
@@ -229,22 +318,14 @@ export function SlotList({
       {filledSlots.length > 0 && (
         <section>
           <h2
-            className={`mb-4 flex items-center gap-2 text-lg font-semibold text-charcoal ${volunteerPageThemed ? '' : 'font-heading'}`}
+            className="mb-4 flex items-center gap-2 text-base font-semibold uppercase tracking-wide text-charcoal/50 font-body"
             style={volunteerPageThemed ? { fontFamily: 'var(--theme-font)' } : undefined}
           >
-            <span aria-hidden style={volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined}>
-              ✔
-            </span>
+            <Check size={14} strokeWidth={2.5} className="text-charcoal/40" aria-hidden />
             {filledLabel}
           </h2>
           <ul className="space-y-3">
             {filledSlots.map((slot) => {
-              const whenScheduled = formatScheduledSlotWhen(
-                slot.start_time,
-                slot.end_time,
-                isSimple ? null : eventDateFallback,
-                { omitRedundantDate: omitRedundantSlotDate }
-              );
               const names = slot.signups.map((s) => s.name).join(', ');
               const multiCapLink =
                 showSignups && slot.capacity > 1;
@@ -260,21 +341,19 @@ export function SlotList({
               return (
                 <li
                   key={slot.id}
-                  className="rounded-xl border border-charcoal/10 bg-surface/60 px-4 py-3 shadow-soft"
+                  className="rounded-xl border border-charcoal/10 bg-surface/60 px-4 py-3 shadow-soft opacity-60"
                 >
                   {isSimple ? (
                     <p className="font-medium text-charcoal font-body">
                       {slot.role_name}
                     </p>
                   ) : (
-                    <>
-                      <h3 className="text-base font-semibold text-charcoal font-heading">
-                        {whenScheduled}
-                      </h3>
-                      <h4 className="mt-1 text-sm font-medium text-charcoal font-body">
-                        {slot.role_name}
-                      </h4>
-                    </>
+                    <ScheduledSlotVolunteerHeading
+                      slot={slot}
+                      isSingleDay={isSingleDay}
+                      omitRedundantSlotDate={omitRedundantSlotDate}
+                      eventDateFallback={eventDateFallback}
+                    />
                   )}
                   {multiCapLink ? (
                     <button

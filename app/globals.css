@@ -16,7 +16,8 @@
 
   --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 
-  --font-heading: 'Quicksand', sans-serif;
+  --font-display: 'Quicksand', sans-serif; /* logo wordmark + hero h1 ONLY */
+  --font-heading: 'Inter', sans-serif; /* h2–h6, all UI headings */
   --font-body: 'Inter', sans-serif;
 
   /* Legacy aliases for compatibility */
@@ -36,7 +37,7 @@ body {
 }
 
 h1, h2, h3 {
-  font-family: var(--font-quicksand), var(--font-heading), sans-serif;
+  font-family: var(--font-inter), var(--font-heading), sans-serif;
 }
 
 /* Buttons: primary and secondary share identical dimensions (transparent border on primary

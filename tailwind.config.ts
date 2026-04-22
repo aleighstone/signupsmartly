@@ -23,7 +23,8 @@ const config: Config = {
         lg: "var(--radius-lg)",
       },
       fontFamily: {
-        heading: ["var(--font-quicksand)", "sans-serif"],
+        display: ["var(--font-quicksand)", "var(--font-display)", "sans-serif"],
+        heading: ["var(--font-inter)", "var(--font-heading)", "sans-serif"],
         body: ["var(--font-inter)", "sans-serif"],
       },
       boxShadow: {

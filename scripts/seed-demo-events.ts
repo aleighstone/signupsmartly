@@ -1,21 +1,30 @@
 /**
- * Seed demo events for screenshots.
+ * Seed demo events for local development and E2E testing.
  *
- * Creates 4 events with slots and pre-filled signups using Will Ferrell movie
- * character names. Uses test emails and mix of organizer/volunteer signups.
+ * Creates 5 events with slots and pre-filled signups using Will Ferrell movie
+ * character names. All dates are relative to today so they're always in the future.
+ *
+ * Events created:
+ *   1. Spring Track Meet        — single-date, many roles   → E2E_TEST_EVENT_ID
+ *   2. Parent-Teacher Conf.     — single-date, appointment slots
+ *   3. Baseball Snack Duty      — multi-date (spans weeks)  → E2E_TEST_MULTI_DATE_EVENT_ID
+ *   4. Book Club                — simple list (no dates)
+ *   5. Playwright Stable Draft  — always a draft            → E2E_TEST_DRAFT_EVENT_ID
+ *
+ * At the end the script prints all three IDs in .env.local format for easy copy-paste.
  *
  * Usage:
- *   npx dotenv -e .env.local -- tsx scripts/seed-demo-events.ts
+ *   npm run seed-demo
  *
- * Requires: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ * Requires: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (in .env.local)
  */
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
 import { randomUUID } from 'crypto';
 
-const ORGANIZATION_ID = 'e19c419e-04d8-481b-b786-0e5bdb8462e1';
-const ORGANIZER_USER_ID = 'bc5c1e83-970c-4cc2-b490-11d5888e31c8';
+const ORGANIZATION_ID  = 'e19c419e-04d8-481b-b786-0e5bdb8462e1';
+const ORGANIZER_EMAIL  = process.env.E2E_ORGANIZER_EMAIL ?? 'allisonleighstone@gmail.com';
 
 const TEST_EMAILS = [
   'allison.troup@gmail.com',
@@ -37,11 +46,23 @@ const CHARACTERS = [
   { name: 'Derek Huff', email: 2 },
 ];
 
+// ─── Date helpers ──────────────────────────────────────────────────────────────
+
+/** Returns a YYYY-MM-DD string for today + N days (UTC). */
+function futureDate(daysFromNow: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + daysFromNow);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Returns an ISO timestamp for a given YYYY-MM-DD date and HH:MM time (stored as UTC). */
 function ts(date: string, time: string): string {
   const [h, m] = time.split(':').map((x) => parseInt(x, 10) || 0);
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date}T${pad(h)}:${pad(m)}:00.000Z`;
 }
+
+// ─── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -55,18 +76,33 @@ async function main() {
     auth: { persistSession: false },
   });
 
+  // Look up the organizer UUID from auth — avoids any hardcoded UUID
+  const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+  if (listError) {
+    console.error('Failed to list auth users:', listError.message);
+    console.error('Make sure you ran: npm run setup-local');
+    process.exit(1);
+  }
+  const organizer = users.find((u) => u.email === ORGANIZER_EMAIL);
+  if (!organizer) {
+    console.error(`Organizer not found in auth.users with email: ${ORGANIZER_EMAIL}`);
+    console.error('Run: npm run setup-local');
+    process.exit(1);
+  }
+  const ORGANIZER_USER_ID = organizer.id;
+
   let charIdx = 0;
   function nextSignup(source: 'volunteer' | 'organizer') {
     const c = CHARACTERS[charIdx % CHARACTERS.length];
     charIdx++;
-    const email = TEST_EMAILS[c.email];
-    return { name: c.name, email, source };
+    return { name: c.name, email: TEST_EMAILS[c.email], source };
   }
 
   console.log('Seeding demo events...\n');
 
-  // ─── 1. Track Meet ─────────────────────────────────────────────────────
-  const trackMeetDate = '2026-04-11';
+  // ─── 1. Track Meet — single-date, 3 weeks from now ────────────────────────
+  // This is E2E_TEST_EVENT_ID (single-date → time-hero visual hierarchy)
+  const trackMeetDate = futureDate(21);
   const { data: e1, error: err1 } = await supabase
     .from('events')
     .insert({
@@ -84,10 +120,7 @@ async function main() {
     .select('id')
     .single();
 
-  if (err1) {
-    console.error('Track Meet insert failed:', err1);
-    process.exit(1);
-  }
+  if (err1 || !e1) { console.error('Track Meet insert failed:', err1); process.exit(1); }
 
   const trackSlots = [
     { role_name: 'Setup Crew', start: '7:00', end: '8:30', cap: 4, instructions: 'Help set up tables, signage, and equipment before the meet begins' },
@@ -102,7 +135,7 @@ async function main() {
     const { data: slot } = await supabase
       .from('slots')
       .insert({
-        event_id: e1!.id,
+        event_id: e1.id,
         role_name: s.role_name,
         start_time: ts(trackMeetDate, s.start),
         end_time: ts(trackMeetDate, s.end),
@@ -112,22 +145,23 @@ async function main() {
       .select('id')
       .single();
 
-    // Pre-fill some signups: Setup 2/4, Registration 1/3, Timer 3/6, Finish 2/4, Concessions 0, Cleanup 1/4
+    if (!slot) continue;
+
     const signups: { slot_id: string; name: string; email: string; source: 'volunteer' | 'organizer' }[] = [];
     if (s.role_name === 'Setup Crew') {
-      signups.push({ ...nextSignup('volunteer'), slot_id: slot!.id, email: TEST_EMAILS[0] });
-      signups.push({ ...nextSignup('organizer'), slot_id: slot!.id, email: TEST_EMAILS[1] });
+      signups.push({ ...nextSignup('volunteer'), slot_id: slot.id });
+      signups.push({ ...nextSignup('organizer'), slot_id: slot.id });
     } else if (s.role_name === 'Registration & Check-In') {
-      signups.push({ ...nextSignup('volunteer'), slot_id: slot!.id, email: TEST_EMAILS[2] });
+      signups.push({ ...nextSignup('volunteer'), slot_id: slot.id });
     } else if (s.role_name === 'Timer') {
-      signups.push({ ...nextSignup('volunteer'), slot_id: slot!.id, email: TEST_EMAILS[0] });
-      signups.push({ ...nextSignup('volunteer'), slot_id: slot!.id, email: TEST_EMAILS[1] });
-      signups.push({ ...nextSignup('organizer'), slot_id: slot!.id, email: TEST_EMAILS[2] });
+      signups.push({ ...nextSignup('volunteer'), slot_id: slot.id });
+      signups.push({ ...nextSignup('volunteer'), slot_id: slot.id });
+      signups.push({ ...nextSignup('organizer'), slot_id: slot.id });
     } else if (s.role_name === 'Finish Line Judge') {
-      signups.push({ ...nextSignup('volunteer'), slot_id: slot!.id, email: TEST_EMAILS[0] });
-      signups.push({ ...nextSignup('organizer'), slot_id: slot!.id, email: TEST_EMAILS[1] });
+      signups.push({ ...nextSignup('volunteer'), slot_id: slot.id });
+      signups.push({ ...nextSignup('organizer'), slot_id: slot.id });
     } else if (s.role_name === 'Cleanup Crew') {
-      signups.push({ ...nextSignup('volunteer'), slot_id: slot!.id, email: TEST_EMAILS[2] });
+      signups.push({ ...nextSignup('volunteer'), slot_id: slot.id });
     }
 
     for (const sig of signups) {
@@ -142,10 +176,10 @@ async function main() {
       });
     }
   }
-  console.log('✓ Track Meet (Spring Track Meet #3)');
+  console.log('✓ Track Meet (Spring Track Meet #3) —', trackMeetDate);
 
-  // ─── 2. Parent Teacher Conferences ─────────────────────────────────────
-  const confDate = '2026-04-30';
+  // ─── 2. Parent Teacher Conferences — single-date, 5 weeks from now ────────
+  const confDate = futureDate(35);
   const { data: e2, error: err2 } = await supabase
     .from('events')
     .insert({
@@ -163,10 +197,7 @@ async function main() {
     .select('id')
     .single();
 
-  if (err2) {
-    console.error('Conferences insert failed:', err2);
-    process.exit(1);
-  }
+  if (err2 || !e2) { console.error('Conferences insert failed:', err2); process.exit(1); }
 
   const confSlots = [
     { start: '15:00', end: '15:15' },
@@ -182,14 +213,11 @@ async function main() {
 
   for (let i = 0; i < confSlots.length; i++) {
     const s = confSlots[i];
-    const desc =
-      i >= 6
-        ? 'Evening slot — 15-minute individual conference'
-        : '15-minute individual conference';
+    const desc = i >= 6 ? 'Evening slot — 15-minute individual conference' : '15-minute individual conference';
     const { data: slot } = await supabase
       .from('slots')
       .insert({
-        event_id: e2!.id,
+        event_id: e2.id,
         role_name: 'Parent Conference',
         start_time: ts(confDate, s.start),
         end_time: ts(confDate, s.end),
@@ -199,11 +227,11 @@ async function main() {
       .select('id')
       .single();
 
-    // Fill slots 0, 2, 4, 7 for variety
+    if (!slot) continue;
     if ([0, 2, 4, 7].includes(i)) {
       const sig = nextSignup(i === 7 ? 'organizer' : 'volunteer');
       await supabase.from('signups').insert({
-        slot_id: slot!.id,
+        slot_id: slot.id,
         name: sig.name,
         email: sig.email,
         source: sig.source,
@@ -213,9 +241,12 @@ async function main() {
       });
     }
   }
-  console.log('✓ Parent Teacher Conferences');
+  console.log('✓ Parent Teacher Conferences —', confDate);
 
-  // ─── 3. Baseball Snack Duty ────────────────────────────────────────────
+  // ─── 3. Baseball Snack Duty — multi-date, spans several weeks ─────────────
+  // This is E2E_TEST_MULTI_DATE_EVENT_ID (multi-date → date-hero visual hierarchy)
+  const baseballStart = futureDate(7);
+  const baseballEnd = futureDate(84); // ~12 weeks
   const { data: e3, error: err3 } = await supabase
     .from('events')
     .insert({
@@ -224,8 +255,8 @@ async function main() {
       description:
         'One family per game brings snacks for the whole team after the final out. Please bring enough for 15 kids plus 2 coaches. Arrive with snacks by warm-up time. Individual bagged snacks and drinks work great!',
       location: 'Riverside Park, Field 3',
-      start_date: '2026-04-05T00:00:00.000Z',
-      end_date: '2026-05-31T23:59:59.000Z',
+      start_date: `${baseballStart}T00:00:00.000Z`,
+      end_date: `${baseballEnd}T23:59:59.000Z`,
       signup_type: 'scheduled',
       published: true,
       created_by: ORGANIZER_USER_ID,
@@ -233,44 +264,42 @@ async function main() {
     .select('id')
     .single();
 
-  if (err3) {
-    console.error('Baseball insert failed:', err3);
-    process.exit(1);
-  }
+  if (err3 || !e3) { console.error('Baseball insert failed:', err3); process.exit(1); }
 
-  const baseballSlots = [
-    { date: '2026-04-05', name: 'April 5 Home Game', start: '9:30', end: '11:00' },
-    { date: '2026-04-12', name: 'April 12 Away Game', start: '9:30', end: '11:00' },
-    { date: '2026-04-19', name: 'April 19 Home Game', start: '11:30', end: '13:00' },
-    { date: '2026-05-03', name: 'May 3 Home Game', start: '9:30', end: '11:00' },
-    { date: '2026-05-17', name: 'May 17 Home Game', start: '11:30', end: '13:00' },
-    { date: '2026-05-31', name: 'May 31 — Last Game of Season!', start: '9:30', end: '11:00' },
+  const baseballGames = [
+    { offset: 7,  label: 'Game 1 — Home',          start: '9:30',  end: '11:00' },
+    { offset: 14, label: 'Game 2 — Away',           start: '9:30',  end: '11:00' },
+    { offset: 21, label: 'Game 3 — Home',           start: '11:30', end: '13:00' },
+    { offset: 35, label: 'Game 4 — Home',           start: '9:30',  end: '11:00' },
+    { offset: 56, label: 'Game 5 — Home',           start: '11:30', end: '13:00' },
+    { offset: 84, label: 'Game 6 — Last Game! 🎉', start: '9:30',  end: '11:00' },
   ];
 
-  for (let i = 0; i < baseballSlots.length; i++) {
-    const s = baseballSlots[i];
-    const instructions =
-      i === 5
-        ? 'End of season! Feel free to go all out 🎉'
-        : 'Post-game snacks for ~14 players';
+  for (let i = 0; i < baseballGames.length; i++) {
+    const g = baseballGames[i];
+    const gameDate = futureDate(g.offset);
+    const instructions = i === 5
+      ? 'End of season! Feel free to go all out 🎉'
+      : 'Post-game snacks for ~14 players';
     const { data: slot } = await supabase
       .from('slots')
       .insert({
-        event_id: e3!.id,
-        role_name: s.name,
-        start_time: ts(s.date, s.start),
-        end_time: ts(s.date, s.end),
+        event_id: e3.id,
+        role_name: g.label,
+        start_time: ts(gameDate, g.start),
+        end_time: ts(gameDate, g.end),
         capacity: 1,
         instructions,
       })
       .select('id')
       .single();
 
-    // Fill April 5, April 19, May 31
+    if (!slot) continue;
+    // Fill games 1, 3, 6
     if ([0, 2, 5].includes(i)) {
       const sig = nextSignup(i === 2 ? 'organizer' : 'volunteer');
       await supabase.from('signups').insert({
-        slot_id: slot!.id,
+        slot_id: slot.id,
         name: sig.name,
         email: sig.email,
         source: sig.source,
@@ -280,15 +309,15 @@ async function main() {
       });
     }
   }
-  console.log('✓ Baseball Snack Duty');
+  console.log('✓ Baseball Snack Duty (multi-date) —', baseballStart, 'to', baseballEnd);
 
-  // ─── 4. Book Club (Simple List) ────────────────────────────────────────
-  const bookDate = '2026-05-03';
+  // ─── 4. Book Club — simple list (no dates) ────────────────────────────────
+  const bookDate = futureDate(28);
   const { data: e4, error: err4 } = await supabase
     .from('events')
     .insert({
       organization_id: ORGANIZATION_ID,
-      title: 'Read or Die Book Club (March) — "River is Waiting"',
+      title: 'Read or Die Book Club — "River is Waiting"',
       description:
         'We\'re reading "River is Waiting" by Wally Lamb this month. Please sign up to bring something! Shera will handle the main dish. Any questions, text the group chat.',
       location: "Shera's house, 42 Elm Street",
@@ -301,10 +330,7 @@ async function main() {
     .select('id')
     .single();
 
-  if (err4) {
-    console.error('Book Club insert failed:', err4);
-    process.exit(1);
-  }
+  if (err4 || !e4) { console.error('Book Club insert failed:', err4); process.exit(1); }
 
   const bookItems = [
     { role_name: 'Red wine', cap: 2, desc: 'One bottle per signup — any variety you enjoy' },
@@ -315,12 +341,11 @@ async function main() {
     { role_name: 'Plates, napkins & cutlery', cap: 1, desc: 'Paper is fine' },
   ];
 
-  for (let i = 0; i < bookItems.length; i++) {
-    const item = bookItems[i];
+  for (const item of bookItems) {
     const { data: slot } = await supabase
       .from('slots')
       .insert({
-        event_id: e4!.id,
+        event_id: e4.id,
         role_name: item.role_name,
         role_description: item.desc,
         start_time: null,
@@ -331,41 +356,72 @@ async function main() {
       .select('id')
       .single();
 
-    // Fill: Red wine 1/2, White wine 2/2, Dessert 1/1
+    if (!slot) continue;
+
     if (item.role_name === 'Red wine') {
       const sig = nextSignup('volunteer');
       await supabase.from('signups').insert({
-        slot_id: slot!.id,
-        name: sig.name,
-        email: sig.email,
-        source: sig.source,
-        cancel_token: randomUUID(),
-        reminder_opt_in: true,
-        reminder_offset: '1_day',
+        slot_id: slot.id, name: sig.name, email: sig.email, source: sig.source,
+        cancel_token: randomUUID(), reminder_opt_in: true, reminder_offset: '1_day',
       });
     } else if (item.role_name === 'White wine or rosé') {
       const s1 = nextSignup('volunteer');
       const s2 = nextSignup('organizer');
       await supabase.from('signups').insert([
-        { slot_id: slot!.id, name: s1.name, email: s1.email, source: s1.source, cancel_token: randomUUID(), reminder_opt_in: true, reminder_offset: '1_day' },
-        { slot_id: slot!.id, name: s2.name, email: s2.email, source: s2.source, cancel_token: randomUUID(), reminder_opt_in: true, reminder_offset: '1_day' },
+        { slot_id: slot.id, name: s1.name, email: s1.email, source: s1.source, cancel_token: randomUUID(), reminder_opt_in: true, reminder_offset: '1_day' },
+        { slot_id: slot.id, name: s2.name, email: s2.email, source: s2.source, cancel_token: randomUUID(), reminder_opt_in: true, reminder_offset: '1_day' },
       ]);
     } else if (item.role_name === 'Dessert') {
       const sig = nextSignup('volunteer');
       await supabase.from('signups').insert({
-        slot_id: slot!.id,
-        name: sig.name,
-        email: sig.email,
-        source: sig.source,
-        cancel_token: randomUUID(),
-        reminder_opt_in: true,
-        reminder_offset: '1_day',
+        slot_id: slot.id, name: sig.name, email: sig.email, source: sig.source,
+        cancel_token: randomUUID(), reminder_opt_in: true, reminder_offset: '1_day',
       });
     }
   }
   console.log('✓ Book Club (Read or Die)');
 
-  console.log('\nDone. View events at: https://www.signupsmartly.com/dashboard');
+  // ─── 5. Playwright Stable Draft — always unpublished, for E2E tests ───────
+  // This is E2E_TEST_DRAFT_EVENT_ID — a permanent draft that never gets published.
+  // Tests that check "draft 404" and "Draft pill on dashboard" target this event.
+  const draftDate = futureDate(60);
+  const { data: e5, error: err5 } = await supabase
+    .from('events')
+    .insert({
+      organization_id: ORGANIZATION_ID,
+      title: 'Playwright Stable Draft — do not publish',
+      description: 'This event exists only to support E2E tests. Do not publish it.',
+      location: 'Test Location',
+      start_date: `${draftDate}T00:00:00.000Z`,
+      end_date: `${draftDate}T23:59:59.000Z`,
+      signup_type: 'simple',
+      published: false,
+      created_by: ORGANIZER_USER_ID,
+    })
+    .select('id')
+    .single();
+
+  if (err5 || !e5) { console.error('Stable Draft insert failed:', err5); process.exit(1); }
+
+  // One slot so the edit page has something to render
+  await supabase.from('slots').insert({
+    event_id: e5.id,
+    role_name: 'Placeholder item',
+    role_description: 'Exists only for test scaffolding',
+    start_time: null,
+    end_time: null,
+    capacity: 1,
+    instructions: null,
+  });
+  console.log('✓ Playwright Stable Draft');
+
+  // ─── Summary ──────────────────────────────────────────────────────────────
+  console.log('\n─────────────────────────────────────────────────────────────');
+  console.log('Done! Copy these into your .env.local:\n');
+  console.log(`E2E_TEST_EVENT_ID=${e1.id}`);
+  console.log(`E2E_TEST_MULTI_DATE_EVENT_ID=${e3.id}`);
+  console.log(`E2E_TEST_DRAFT_EVENT_ID=${e5.id}`);
+  console.log('─────────────────────────────────────────────────────────────\n');
 }
 
 main().catch((e) => {

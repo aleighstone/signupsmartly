@@ -151,7 +151,7 @@ test.describe('Draft event', () => {
     await page.goto('/dashboard');
     // Scope to the specific draft card to avoid matching other events
     const draftCard = page.locator(`li:has(a[href*="${draftId}"])`);
-    await expect(draftCard.getByText('Draft')).toBeVisible();
+    await expect(draftCard.getByText('Draft', { exact: true })).toBeVisible();
     await expect(draftCard.getByRole('button', { name: /^publish$/i })).toBeVisible();
     await expect(draftCard.getByRole('link', { name: /signup page/i })).not.toBeVisible();
   });

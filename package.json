@@ -14,6 +14,7 @@
     "repair-slots": "dotenv -e .env.local -- tsx scripts/repair-slot-times.ts",
     "setup-local": "dotenv -e .env.local -- tsx scripts/setup-local-user.ts",
     "seed-demo": "dotenv -e .env.local -- tsx scripts/seed-demo-events.ts",
+    "clean-test-data": "dotenv -e .env.local -- tsx scripts/cleanup-test-data.ts",
     "delete-falcons-events": "dotenv -e .env.local -- tsx scripts/delete-falcons-events.ts"
   },
   "dependencies": {

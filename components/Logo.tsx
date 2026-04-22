@@ -21,7 +21,7 @@ export function Logo({ link = true, href = '/', className = '' }: LogoProps) {
         className="shrink-0"
         aria-hidden
       />
-      <span className="hidden font-heading font-semibold text-charcoal sm:inline">
+      <span className="hidden font-display font-semibold text-charcoal sm:inline">
         SignupSmartly
       </span>
     </>

@@ -88,3 +88,42 @@ test.describe('Volunteer signup flow', () => {
     // This test just verifies the page doesn't crash — date presence varies by event
   });
 });
+
+test.describe('Slot card visual hierarchy', () => {
+  test('single-date event: time is the h3 heading in slot cards', async ({
+    page,
+  }) => {
+    const eventId = process.env.E2E_TEST_EVENT_ID;
+    if (!eventId) {
+      test.skip(true, 'E2E_TEST_EVENT_ID not set');
+      return;
+    }
+    await page.goto(`/event/${eventId}`);
+    // The h3 in the first open slot card should contain a time pattern (e.g. "9:00 AM")
+    const firstCard = page.locator('ul').first().locator('li').first();
+    const h3 = firstCard.locator('h3');
+    await expect(h3).toBeVisible();
+    await expect(h3).toHaveText(/\d+:\d+\s*(AM|PM)/i);
+  });
+
+  test('multi-date event: date is the h3 heading in slot cards', async ({
+    page,
+  }) => {
+    const multiDateEventId = process.env.E2E_TEST_MULTI_DATE_EVENT_ID;
+    if (!multiDateEventId) {
+      test.skip(
+        true,
+        'E2E_TEST_MULTI_DATE_EVENT_ID not set — skipping multi-date hierarchy test'
+      );
+      return;
+    }
+    await page.goto(`/event/${multiDateEventId}`);
+    const firstCard = page.locator('ul').first().locator('li').first();
+    const h3 = firstCard.locator('h3');
+    await expect(h3).toBeVisible();
+    // h3 should contain a month name (date), not a time
+    await expect(h3).toHaveText(
+      /January|February|March|April|May|June|July|August|September|October|November|December/i
+    );
+  });
+});

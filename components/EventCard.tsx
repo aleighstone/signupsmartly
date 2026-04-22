@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { MoreVertical } from 'lucide-react';
 import { CoverageMeter } from '@/components/CoverageMeter';
 
 /** Full-width stacked on mobile; from sm up, right-aligned row using half the card, two equal buttons. */
@@ -104,9 +105,7 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
               aria-label="More actions for this signup"
             >
               <span className="sr-only">Open menu</span>
-              <svg width={20} height={20} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-              </svg>
+              <MoreVertical size={18} strokeWidth={2} aria-hidden />
             </button>
             {menuOpen ? (
               <div
