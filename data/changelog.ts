@@ -13,6 +13,15 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: 'April 22, 2026',
+    changes: [
+      {
+        type: 'improved',
+        text: '**Confirmation and reminder emails**: The volunteer confirmation email now links the event name to the public signup page so people can reopen or share it easily. Reminder timing adds *1 week before* and *3 days before*, alongside *1 day before* and *morning of the event*; you can update your choice anytime from the reminder preferences link in the email.',
+      },
+    ],
+  },
+  {
     date: 'April 15, 2026',
     changes: [
       {
