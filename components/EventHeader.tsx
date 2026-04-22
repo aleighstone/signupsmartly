@@ -20,17 +20,17 @@ export function EventHeader({ event, titleStyle }: EventHeaderProps) {
       >
         {event.title}
       </h1>
-      <dl className="flex flex-col gap-1 text-muted font-body">
+      <dl className="flex flex-col gap-1 font-body">
         {dateRange && (
           <div>
             <dt className="sr-only">Date</dt>
-            <dd>{dateRange}</dd>
+            <dd className="text-base font-semibold text-charcoal leading-tight">{dateRange}</dd>
           </div>
         )}
         {event.location && (
           <div>
             <dt className="sr-only">Location</dt>
-            <dd>{event.location}</dd>
+            <dd className="text-sm font-medium text-charcoal">{event.location}</dd>
           </div>
         )}
       </dl>
