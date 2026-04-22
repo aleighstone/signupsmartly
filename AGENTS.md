@@ -25,6 +25,11 @@ The app stores two shapes of values:
 - **Project path:** `/Users/allisonstone/Documents/signupsmartly`
 - SignupSmartly has its **own git repository** and deploys from this repo, not from digitaleigh-dev.
 
+## What’s New (`data/changelog.ts`)
+
+- When adding or editing entries for `/whats-new`, set `Release.date` to the **actual calendar date the change shipped** (when it went to production), in the form **Month D, YYYY** (e.g. `April 22, 2026`).
+- **Do not** use invented or future dates. If several items ship the same day, use one release block for that date and list multiple `changes`. Keep the array **newest date first**.
+
 ## Deployment
 
 - **Always share the deploy commands** after making changes so the user can push to production.

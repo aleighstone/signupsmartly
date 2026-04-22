@@ -7,7 +7,8 @@ export type Change = {
 };
 
 export type Release = {
-  date: string; // Display string, e.g. "March 22, 2026"
+  /** Real calendar date the changes went live (not a placeholder). Format: "Month D, YYYY" — newest releases first in the array. */
+  date: string;
   changes: Change[];
 };
 
@@ -15,6 +16,10 @@ export const changelog: Release[] = [
   {
     date: 'April 22, 2026',
     changes: [
+      {
+        type: 'improved',
+        text: '**Volunteer signup page**: Clearer hierarchy on themed signups—shift time stands out first, role name sits beneath it, and how many spots are open matches your theme color (same as the signup button and coverage bar). Section labels use crisp icons instead of emoji, filled slots are slightly softened so open needs stay the focus, and the “still needed” line on the coverage meter follows the same accent color.',
+      },
       {
         type: 'improved',
         text: '**Confirmation and reminder emails**: The volunteer confirmation email now links the event name to the public signup page so people can reopen or share it easily. Reminder timing adds *1 week before* and *3 days before*, alongside *1 day before* and *morning of the event*; you can update your choice anytime from the reminder preferences link in the email.',
