@@ -23,8 +23,9 @@
 
       --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 
-      --font-heading: 'Quicksand', sans-serif;
-      --font-body: 'Inter', sans-serif;
+      --font-display: 'Quicksand', sans-serif; /* logo wordmark + hero h1 ONLY */
+      --font-heading: 'Inter', sans-serif;     /* h2–h6, all UI headings */
+      --font-body:    'Inter', sans-serif;
     }
 
     /* --- BASE STYLES --- */
@@ -38,9 +39,13 @@
     }
 
     h1, h2, h3 {
-      font-family: var(--font-heading);
+      font-family: var(--font-heading); /* Inter */
       color: var(--text-primary);
       margin-top: 0;
+    }
+
+    .font-display {
+      font-family: var(--font-display); /* Quicksand — logo & hero h1 only */
     }
 
     .container {
@@ -127,7 +132,7 @@
       display: inline-block;
       padding: 10px 20px;
       border-radius: var(--radius-md);
-      font-family: var(--font-heading);
+      font-family: var(--font-body); /* Inter */
       font-weight: 600;
       font-size: 1rem;
       text-decoration: none;
@@ -288,7 +293,7 @@
 <body>
 <div class="container">
   <div style="text-align: center; margin-bottom: 60px;">
-    <h1 style="font-size: 3rem; margin-bottom: 10px;">SignupSmartly</h1>
+    <h1 class="font-display" style="font-size: 3rem; margin-bottom: 10px;">SignupSmartly</h1>
     <p style="color: var(--text-muted); font-size: 1.2rem;">Design System &amp; Style Guide: Focused Organic</p>
   </div>
 
@@ -333,10 +338,14 @@
 
   <h2 class="section-title">Typography</h2>
   <div class="type-specimen">
-    <h1>Heading 1 (Quicksand Bold)</h1>
-    <h2>Heading 2 (Quicksand Bold)</h2>
-    <h3>Heading 3 (Quicksand Bold)</h3>
-    <p style="margin-top: 20px;"><strong>Body Text (Inter Regular):</strong> Productivity isn't about doing more things; it's about doing the right things efficiently. SignupSmartly is designed to reduce friction and help teams organize their data seamlessly. Notice how this text is highly legible for long-form reading, while the headings provide a friendly, organic structure.</p>
+    <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 4px;">Display — Quicksand Bold — logo wordmark &amp; hero h1 only</p>
+    <h1 class="font-display">Heading 1 (Quicksand Bold)</h1>
+
+    <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 4px; margin-top: 24px;">Heading — Inter Semibold — all UI headings (h2–h6)</p>
+    <h2>Heading 2 (Inter Semibold)</h2>
+    <h3>Heading 3 (Inter Semibold)</h3>
+
+    <p style="margin-top: 24px;"><strong>Body Text (Inter Regular):</strong> Productivity isn't about doing more things; it's about doing the right things efficiently. SignupSmartly is designed to reduce friction and help teams organize their data seamlessly. Notice how this text is highly legible for long-form reading, while the headings provide a clean, structured hierarchy.</p>
   </div>
 
   <h2 class="section-title">Survey &amp; Feedback</h2>
@@ -402,7 +411,7 @@
     }
 
     .ep-header-name {
-      font-family: var(--font-heading);
+      font-family: var(--font-display); /* Quicksand — logo wordmark */
       font-weight: 700;
       font-size: 18px;
       color: #ffffff;
@@ -415,7 +424,7 @@
     }
 
     .ep-content h2 {
-      font-family: var(--font-heading);
+      font-family: var(--font-heading); /* Inter */
       font-size: 22px;
       font-weight: 700;
       color: var(--text-primary);
@@ -480,7 +489,7 @@
       text-decoration: none;
       font-weight: 600;
       font-size: 14px;
-      font-family: var(--font-heading);
+      font-family: var(--font-body); /* Inter */
       border: 2px solid #27272A;
     }
 
