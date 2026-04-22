@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { DEFAULT_COMMENT_LABEL, normalizeCommentLabel } from '@/lib/slot-comment';
+import { volunteerReminderOffsetZod } from '@/lib/reminder-offset';
 
 function disclosureFieldWord(commentLabel: string | undefined): string {
   const n = normalizeCommentLabel(commentLabel ?? '');
@@ -16,7 +17,7 @@ const baseSignupSchema = z.object({
   email: z.string().email('Valid email required'),
   comment: z.string().max(500).optional(),
   reminder_opt_in: z.boolean(),
-  reminder_offset: z.enum(['1_day', 'morning_of']),
+  reminder_offset: volunteerReminderOffsetZod,
 });
 
 function buildSignupSchema(commentRequired: boolean) {
@@ -223,6 +224,8 @@ export function SignupForm({
                 disabled={isSubmitting}
                 {...register('reminder_offset')}
               >
+                <option value="1_week">1 week before</option>
+                <option value="3_days">3 days before</option>
                 <option value="1_day">1 day before</option>
                 <option value="morning_of">Morning of the event</option>
               </select>

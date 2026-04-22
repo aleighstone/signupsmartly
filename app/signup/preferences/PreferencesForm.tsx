@@ -1,11 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  REMINDER_OFFSET_LABELS,
+  VOLUNTEER_REMINDER_OFFSET_VALUES,
+  type ReminderOffset,
+} from '@/lib/reminder-offset';
 
 interface PreferencesFormProps {
   token: string;
   initialOptIn: boolean;
-  initialOffset: '1_day' | 'morning_of';
+  initialOffset: ReminderOffset;
   slotName?: string;
   hasDate: boolean;
   primaryColor?: string | null;
@@ -89,13 +94,17 @@ export function PreferencesForm(props: PreferencesFormProps) {
               backgroundPosition: 'right 0.75rem center',
             }}
             value={offset}
-            onChange={(e) =>
-              setOffset(e.target.value as '1_day' | 'morning_of')
-            }
+            onChange={(e) => setOffset(e.target.value as ReminderOffset)}
             disabled={disabled || !optIn}
           >
-            <option value="1_day">1 day before</option>
-            <option value="morning_of">Morning of the event</option>
+            {VOLUNTEER_REMINDER_OFFSET_VALUES.map((value) => (
+              <option key={value} value={value}>
+                {REMINDER_OFFSET_LABELS[value]}
+              </option>
+            ))}
+            {(offset === '1_hour' || initialOffset === '1_hour') && (
+              <option value="1_hour">1 hour before</option>
+            )}
           </select>
         </div>
       </div>

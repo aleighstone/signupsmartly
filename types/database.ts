@@ -285,7 +285,12 @@ export interface Database {
           cancel_token: string;
           source: 'volunteer' | 'organizer';
           reminder_opt_in: boolean;
-          reminder_offset: '1_day' | 'morning_of';
+          reminder_offset:
+            | '1_week'
+            | '3_days'
+            | '1_day'
+            | 'morning_of'
+            | '1_hour';
           reminder_sent_at: string | null;
           created_at: string;
         };
@@ -299,7 +304,12 @@ export interface Database {
           cancel_token?: string;
           source?: 'volunteer' | 'organizer';
           reminder_opt_in?: boolean;
-          reminder_offset?: '1_day' | 'morning_of';
+          reminder_offset?:
+            | '1_week'
+            | '3_days'
+            | '1_day'
+            | 'morning_of'
+            | '1_hour';
           reminder_sent_at?: string | null;
           created_at?: string;
         };
@@ -313,7 +323,12 @@ export interface Database {
           cancel_token?: string;
           source?: 'volunteer' | 'organizer';
           reminder_opt_in?: boolean;
-          reminder_offset?: '1_day' | 'morning_of';
+          reminder_offset?:
+            | '1_week'
+            | '3_days'
+            | '1_day'
+            | 'morning_of'
+            | '1_hour';
           reminder_sent_at?: string | null;
           created_at?: string;
         };

@@ -95,7 +95,12 @@ export async function createSignup(params: {
   email: string;
   comment?: string;
   reminder_opt_in?: boolean;
-  reminder_offset?: '1_day' | 'morning_of';
+  reminder_offset?:
+    | '1_week'
+    | '3_days'
+    | '1_day'
+    | 'morning_of'
+    | '1_hour';
 }) {
   const { data, error } = await supabase
     .from('signups')

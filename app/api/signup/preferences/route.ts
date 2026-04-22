@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { serviceSupabase } from '@/lib/supabase-service';
 import { reportProductionError } from '@/lib/error-reporter';
+import { reminderOffsetDbZod } from '@/lib/reminder-offset';
 
 const schema = z.object({
   token: z.string().min(1),
   reminder_opt_in: z.boolean(),
-  reminder_offset: z.enum(['1_day', 'morning_of']),
+  reminder_offset: reminderOffsetDbZod,
 });
 
 export async function PATCH(request: Request) {

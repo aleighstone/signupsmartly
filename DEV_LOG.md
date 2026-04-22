@@ -2,52 +2,78 @@
 
 ---
 
+## 2026-04-22
+
+### Shipped
+
+| What | File(s) | Status |
+|---|---|---|
+| Fix cron: accept GET requests from Vercel scheduler | `app/api/reminders/process/route.ts` | deployed |
+| Organizer smoke tests: draft, unsaved changes, copy signup | `e2e/organizer.smoke.ts`, `playwright.config.ts` | deployed |
+| Playwright config: explicit testMatch for chromium project | `playwright.config.ts` | deployed |
+| AGENTS.md: remind user to start supabase + dev server before tests | `AGENTS.md` | deployed |
+
+### Backlog
+
+| Item | Notes |
+|---|---|
+| Publish a draft from dashboard — E2E test | Publish button exists, no test that verifies it actually goes live |
+| Clean up orphan draft events after test runs | Each test run leaves drafts in local DB — consider a teardown step |
+
+### Lessons
+
+| What happened | Fix / note |
+|---|---|
+| Cron was sending GET but route only handled POST | Add `export async function GET` that delegates to POST |
+| Playwright strict mode failed on multiple "Draft" pills | Use `.first()` when testing "at least one exists" |
+| Backdrop button intercepted by modal card | Use `page.keyboard.press('Escape')` instead of clicking backdrop |
+| `chromium` project ran only auth setup, no tests | Add explicit `testMatch: /organizer\.smoke\.ts/` to chromium project |
+| Tests ran without dev server — user had to cancel and restart | Always remind: supabase start + npm run dev before any test command |
+
+### Resume here
+
+> Next session: nothing urgent. Either tackle the backlog items above or start a new feature.
+
+---
+
 ## 2026-04-20
 
-### ✅ Features Completed & Shipped
+### Shipped
 
-- **Playwright E2E smoke test suite** (`e2e/`) — `staged, uncommitted`
-  - `playwright.config.ts` — 3 projects (setup, chromium, volunteer), dotenv loading, auto dev server
-  - `e2e/auth.setup.ts` — UI login → saves session to `e2e/.auth/organizer.json`
-  - `e2e/organizer.smoke.ts` — dashboard, create/edit forms, back-button guard, signups table
-  - `e2e/volunteer.smoke.ts` — public event page, draft 404, full signup flow, confirmation page
-  - All tests passing ✅
-- **`scripts/setup-local-user.ts`** — one-time local setup: upserts org + user + org_members — `untracked`
-- **`LOCAL_DEV_GUIDE.docx`** — printable 1-page local dev cheat sheet — `untracked`
-- **`AGENTS.md`** — added Dev Log section for auto-append on future sessions — `unstaged`
+| What | File(s) | Status |
+|---|---|---|
+| Playwright E2E smoke suite | `e2e/auth.setup.ts`, `organizer.smoke.ts`, `volunteer.smoke.ts`, `playwright.config.ts` | committed |
+| Fix: modal selector in volunteer tests | `e2e/volunteer.smoke.ts` | committed |
+| Fix: submit button scoped to dialog | `e2e/volunteer.smoke.ts` | committed |
+| Local user setup script | `scripts/setup-local-user.ts` | committed |
+| Local dev cheat sheet | `LOCAL_DEV_GUIDE.docx` | committed |
+| Dev log + AGENTS.md update | `DEV_LOG.md`, `AGENTS.md` | committed |
 
-### 🤔 What Did I Learn?
+### Backlog
 
-- Local Supabase auth is a separate identity from production — user row can exist without org membership, causing silent failures that look like auth bugs
-- Playwright doesn't auto-load `.env.local` — needs explicit `dotenv` call in `playwright.config.ts`
-- Modal backdrop intercepts pointer events — always scope Playwright selectors to `getByRole('dialog')` before querying buttons inside modals
+| Item | Notes |
+|---|---|
+| Draft mode / copy signup | Spec written. Ship status unconfirmed — check git log |
+| Unsaved changes modal | Spec written. Ship status unconfirmed — check git log |
+| `FOUNDER_DIGEST_EMAIL` | Add to Vercel env vars |
+| `E2E_TEST_DRAFT_EVENT_ID` | Add to `.env.local` to enable skipped draft visibility test |
 
-### 🧪 Tests: Written vs. Needed
+### Tests still needed
 
-**Written:** Full volunteer + organizer smoke suites (see above)
+| Test case | Risk |
+|---|---|
+| Slot count decrements after signup | high |
+| Duplicate email signup rejected | high |
+| Published visible / draft returns 404 | high |
+| Cancel signup from organizer table | medium |
+| Cancel link on confirmation page | medium |
 
-**Still needed:**
-1. Slot availability decrements after signup
-2. Duplicate email signup rejection
-3. Published vs. draft visibility on public page
-4. Cancel signup from organizer table
-5. Cancel link on confirmation page works end-to-end
+### Lessons
 
-### 🔧 Work In Progress
-
-- Playwright files staged but not committed — needs `git commit + push`
-- Draft mode / copy signup — spec written, ship status unconfirmed
-- Unsaved changes modal — spec written, ship status unconfirmed
-- `FOUNDER_DIGEST_EMAIL` missing from Vercel env vars
-
-### 📍 Resume Here
-
-> **Open terminal in `/Users/allisonstone/Documents/signupsmartly`** and run:
-> ```
-> git add .
-> git commit -m "Add Playwright E2E smoke test suite"
-> git push origin main
-> ```
-> Then run `git log --oneline -10` to confirm whether draft mode + unsaved changes modal shipped in a prior session.
+| What happened | Fix / note |
+|---|---|
+| Local auth worked but app showed nothing | User row existed but org_members row was missing |
+| Playwright ignored `.env.local` | Add `dotenv` call explicitly in `playwright.config.ts` |
+| Submit button clicked wrong element | Always scope to `getByRole('dialog')` before querying inside modals |
 
 ---

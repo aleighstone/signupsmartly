@@ -16,12 +16,26 @@ const ADMIN_EMAIL =
 
 const EMAIL_FROM = FROM_EMAIL;
 
+function escapeHtmlAttr(url: string): string {
+  return url.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+function escapeHtmlText(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function buildSignupEmailDetails(params: {
   signup: Signup;
   slot: Slot;
   event: Event;
+  /** Confirmation email only: link event title to public `/event/[id]` page. */
+  linkEventTitleToSignupPage?: boolean;
 }) {
-  const { signup, slot, event } = params;
+  const { signup, slot, event, linkEventTitleToSignupPage } = params;
   if (!signup.email) {
     throw new Error('Cannot send confirmation: signup has no email');
   }
@@ -56,7 +70,11 @@ function buildSignupEmailDetails(params: {
     !isSimple && startTimeStr && endTimeStr
       ? `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Time:</strong> ${startTimeStr} – ${endTimeStr}</p>`
       : '';
-  const eventRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Event:</strong> ${event.title}</p>`;
+  const eventPageUrl = `${APP_URL}/event/${event.id}`;
+  const eventTitleHtml = linkEventTitleToSignupPage
+    ? `<a href="${escapeHtmlAttr(eventPageUrl)}" target="_blank" rel="noopener noreferrer" style="color: #15803D; text-decoration: underline;">${escapeHtmlText(event.title)}</a>`
+    : event.title;
+  const eventRow = `<p style="margin: 0; padding: 12px 0; border-bottom: 1px solid #E5F2E5;"><strong>Event:</strong> ${eventTitleHtml}</p>`;
   const locationRow = event.location
     ? `<p style="margin: 0; padding: 12px 0;"><strong>Location:</strong> ${event.location}</p>`
     : '';
@@ -97,7 +115,12 @@ export async function sendSignupConfirmation(params: {
 }) {
   const { signup, slot, event } = params;
   const { cancelUrl, manageUrl, logoUrl, detailRows } =
-    buildSignupEmailDetails({ signup, slot, event });
+    buildSignupEmailDetails({
+      signup,
+      slot,
+      event,
+      linkEventTitleToSignupPage: true,
+    });
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,

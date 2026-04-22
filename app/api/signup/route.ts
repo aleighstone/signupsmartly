@@ -7,6 +7,7 @@ import { sendSignupConfirmation, sendOrganizerInstantNotification } from '@/lib/
 import { reportProductionError } from '@/lib/error-reporter';
 import { effectiveNotificationPreference } from '@/lib/notifications';
 import { serviceSupabase } from '@/lib/supabase-service';
+import { volunteerReminderOffsetZod } from '@/lib/reminder-offset';
 
 function sameEmail(a: string, b: string) {
   return a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -27,7 +28,7 @@ const signupSchema = z.object({
   email: z.string().email(),
   comment: z.string().max(500).optional(),
   reminder_opt_in: z.boolean().optional(),
-  reminder_offset: z.enum(['1_day', 'morning_of']).optional(),
+  reminder_offset: volunteerReminderOffsetZod.optional(),
 });
 
 export async function POST(request: Request) {

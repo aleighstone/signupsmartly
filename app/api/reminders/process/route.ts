@@ -175,10 +175,28 @@ function computeSendTime(params: {
       }).format(new Date(iso))
     );
 
+  if (offset === '1_week') {
+    const baseIso = slot.start_time || event.start_date!;
+    const base = getDateInTz(baseIso);
+    return new Date(base.getTime() - 7 * 24 * 60 * 60 * 1000);
+  }
+
+  if (offset === '3_days') {
+    const baseIso = slot.start_time || event.start_date!;
+    const base = getDateInTz(baseIso);
+    return new Date(base.getTime() - 3 * 24 * 60 * 60 * 1000);
+  }
+
   if (offset === '1_day') {
     const baseIso = slot.start_time || event.start_date!;
     const base = getDateInTz(baseIso);
     return new Date(base.getTime() - 24 * 60 * 60 * 1000);
+  }
+
+  if (offset === '1_hour') {
+    const baseIso = slot.start_time || event.start_date!;
+    const base = getDateInTz(baseIso);
+    return new Date(base.getTime() - 60 * 60 * 1000);
   }
 
   if (offset === 'morning_of') {
