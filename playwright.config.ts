@@ -39,6 +39,7 @@ export default defineConfig({
     // Main smoke tests run using the saved auth session
     {
       name: 'chromium',
+      testMatch: /organizer\.smoke\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'e2e/.auth/organizer.json',
