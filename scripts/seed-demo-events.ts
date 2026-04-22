@@ -15,7 +15,7 @@ import type { Database } from '../types/database';
 import { randomUUID } from 'crypto';
 
 const ORGANIZATION_ID = 'e19c419e-04d8-481b-b786-0e5bdb8462e1';
-const ORGANIZER_USER_ID = '8505859f-4555-45a5-8550-16318e8ed7d3';
+const ORGANIZER_USER_ID = 'bc5c1e83-970c-4cc2-b490-11d5888e31c8';
 
 const TEST_EMAILS = [
   'allison.troup@gmail.com',

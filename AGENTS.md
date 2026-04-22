@@ -68,6 +68,12 @@ The app stores two shapes of values:
 - Project uses a Vercel Hobby plan, so scheduled functions/cron jobs can only run once per day; reminder and background processing requirements must respect this limit.
 - Project uses a free Resend plan; when writing new email-related requirements, keep email volume modest and avoid designs that assume high-frequency or bulk email sending.
 
+## Dev Log
+
+- A running session log lives at `DEV_LOG.md` in the project root.
+- **At the end of every session**, append a new dated entry summarizing: what was completed, any bugs fixed, and backlog items carried forward.
+- Format: `## YYYY-MM-DD` heading, `### Completed` and `### Backlog` sections.
+
 ## History
 
 - SignupSmartly was originally created as a subfolder under `digitaleigh-dev`.

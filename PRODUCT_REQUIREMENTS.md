@@ -140,7 +140,10 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
   - Primary CTA: "Create your first event" → `/signup`
   - Secondary CTA: "Sign in" → `/login`
 - **Logged in, no events:** "Nothing to see here." + "Create your first signup"
-- **Logged in, has events:** List of signups with title, date range, coverage meter; "View My Signups" (primary), "Signup Page" (secondary, opens in new tab)
+- **Logged in, has events:** List of EventCards with title, date range, coverage meter
+- **EventCard — published:** "View My Signups" (primary), "Signup Page" (secondary, opens in new tab); three-dot menu: Edit signup, Copy signup
+- **EventCard — draft:** "Draft" pill next to title; "View My Signups" (primary), "Publish" (secondary); three-dot menu: Publish, Edit signup, Copy signup. "Signup Page" is hidden for drafts — no live page exists yet.
+- **Draft definition:** A signup is a draft when `published = false`. Drafts are only created two ways: (1) organizer clicks "Save as Draft" on the create form, (2) system creates a copy. Once published, a signup cannot be reverted to draft (v1).
 
 #### NPS Survey (Dashboard)
 
@@ -188,7 +191,8 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 
 - **Page title:** "Create Signup"
 - **Nav button:** "Create Signup"
-- **Submit button:** "Create Signup"
+- **Submit buttons:** "Publish" (creates event as live/published) and "Save as Draft" (creates event as draft, not visible to volunteers). Intent tracked via `submitIntent` state.
+- **Back navigation guard:** "← Back to Dashboard" button at top of form. If form is dirty (`formState.isDirty`), shows `UnsavedChangesModal` with three options: Publish, Save as Draft, Discard. If form is pristine, navigates immediately.
 - **Signup type selector:** "I want to [dropdown] [help]" — dropdown options: "organize by schedule", "request items in a simple list", "use one of my templates"; help (?) opens modal explaining the two types
 - **Use template:** When "use one of my templates" is selected, show template picker; selecting a template pre-fills spots/items, description, location (title and dates left empty)
 - **Post-creation modal:** After creating, offer "Save as template?" — 3 steps: (1) prompt with "Yes, Save it" / "No, I'm good.", (2) enter template name, (3) confirmation
@@ -213,9 +217,11 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 - Path renamed from `/roster` (redirect in place)
 - Back to Dashboard
 - Event title, date range, coverage meter (use "spots" for scheduled)
-- **Scheduled:** Table: Spot, Name, Email, Time, Notes, Signup Timestamp
-- **Simple list:** Table: Item, Name, Email, Notes, Signup Timestamp — no Time column
+- **Scheduled:** Table: Spot, Date & Time (date on first line, time on second), Name, Email, Notes, Signup Timestamp, Actions
+- **Simple list:** Table: Item, Name, Email, Notes, Signup Timestamp, Actions — no Date & Time column
 - **Table behavior:** No truncation; text wraps in all columns
+- **Organizer add signup:** "+ Add" button on empty rows in the Name cell; opens `AddSignupModal` pre-selected to that slot
+- **Organizer delete signup:** Trash icon (`Trash2` from lucide-react) on filled rows in the Actions cell; opens `DeleteSignupModal` showing "Remove [name] from [role]?"; confirms then soft-deletes (`cancelled = true`) via `DELETE /api/signup/organizer`. Organizer-added row shows "added by organizer" badge next to name.
 - **Coverage (# still needed):** Make clickable; opens modal listing spots/items that still need filling
 - **Notification settings:** Inline dropdown "Notifications for this event:" — Use my default / Instantly / Daily digest / Weekly digest / Never; auto-saves on change
 - **Actions (button order):** Copy Signup URL, Edit Event, Export (dropdown)
@@ -228,11 +234,13 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 ### Edit Event (`/dashboard/event/[id]/edit`)
 
 - Edit event details and spots/items
+- **Draft banner:** When `!event.published`, shows amber banner at top: "This signup is not live yet. Publish it when you're ready." with inline "Publish" button (calls `PATCH /api/events/[id]` with `{ published: true }`, then refreshes).
+- **Back navigation guard:** "← Back to signups" button (owned by `EditEventForm`, not page.tsx). If form is dirty, shows `UnsavedChangesModal`: published variant shows "Save Changes" / "Discard"; draft variant shows "Save" / "Discard". `beforeunload` also fires when dirty to catch tab close / hard navigation.
 - **Scheduled spots:** Date, Start time, End time, Spot name, Capacity, Instructions (optional), Notes label, Notes required, Show notes publicly toggle
 - **Simple items:** Item name, Capacity, Instructions (optional), Notes label, Notes required, Show notes publicly toggle
 - **Customize appearance** (collapsible): choose theme color + heading font for volunteer-facing pages
 - **Signup settings:** toggle "Show who signed up"
-- Linked from Signups page via "Edit Event" button
+- Linked from Signups page via "Edit Event" button and from EventCard three-dot menu
 
 ---
 
@@ -276,6 +284,7 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
   - NPS: `nps_dismissed_at`, `nps_submitted_at`
   - `notification_preference` — 'instant' | 'daily' | 'weekly' | 'never' (default: 'daily')
 - **Events** — title, description, location, start_date (optional), end_date (optional), signup_type ('scheduled' | 'simple'), published
+  - `published` — boolean; `false` = draft (not visible to volunteers, no public page). Copies always start as `false`. Create form can set either; once `true`, cannot revert to `false` (v1).
   - `show_signups` — boolean; controls whether volunteers can view who signed up on public event page (default true)
   - `theme` — json (`{ colorKey, fontKey }`) for volunteer-facing color + heading font
   - `notification_override` — 'instant' | 'daily' | 'weekly' | 'never' | null (use global)
@@ -306,8 +315,10 @@ A cleaner, ad-free way to coordinate volunteer and sign-up lists for community e
 - Next.js 14 (App Router), TypeScript
 - Supabase (Postgres, Auth)
 - Resend (confirmation emails)
-- Vercel (deployment)
+- Vercel (deployment — `main` branch = production; any other branch = preview URL)
 - Tailwind CSS
+- Jest + ts-jest (unit tests for pure utility functions in `lib/`)
+- GitHub Actions CI (runs `npm test` on every push to main and on PRs)
 
 ---
 
@@ -342,6 +353,18 @@ Use these flows to QA the app end-to-end.
 | Edit Event | Signups page → Edit Event | Edit event page loads; can edit spots/items including Instructions |
 | Edit Event instructions | Edit Event → add/edit Instructions on a spot or item → Save | Instructions persist; appear in Export List and signup modal |
 | Coverage (# still needed) click | Signups page or event page → click coverage / "# still needed" | Modal lists spots or items that still need filling |
+| Create → Publish | Fill create form → click Publish | Event goes live; public page accessible |
+| Create → Save as Draft | Fill create form → click Save as Draft | Draft created; "Draft" pill on dashboard card; "Signup Page" button hidden; "Publish" button shown |
+| Draft → Publish from dashboard | Click Publish on draft EventCard | Card updates; "Signup Page" button appears; public page accessible |
+| Draft → Publish from edit page | Open draft in edit → click Publish in banner | Banner disappears; event goes live |
+| Copy signup | EventCard three-dot menu → Copy signup | Draft copy created with "Copy of [title]"; lands on edit page |
+| Unsaved changes — back (create, dirty) | Type in create form → click ← Back to Dashboard | Modal shows Publish / Save as Draft / Discard |
+| Unsaved changes — back (edit, dirty, published) | Edit a published event → click ← Back to signups | Modal shows Save Changes / Discard |
+| Unsaved changes — back (edit, dirty, draft) | Edit a draft → click ← Back to signups | Modal shows Save / Discard |
+| Unsaved changes — back (pristine) | Click back without making changes | Navigates immediately; no modal |
+| Organizer add signup | View My Signups → empty row → + Add | AddSignupModal opens pre-selected to that slot |
+| Organizer delete signup | View My Signups → filled row → trash icon → confirm Remove | Signup soft-deleted; row becomes empty |
+| Direct URL to draft | Navigate to /event/[draft-id] while not signed in | 404 — draft not visible to public |
 
 ### Volunteer: Sign up & cancel
 

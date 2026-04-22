@@ -8,8 +8,11 @@
     "verify": "npm run lint && npm run build",
     "start": "next start",
     "test": "jest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "lint": "next lint",
     "repair-slots": "dotenv -e .env.local -- tsx scripts/repair-slot-times.ts",
+    "setup-local": "dotenv -e .env.local -- tsx scripts/setup-local-user.ts",
     "seed-demo": "dotenv -e .env.local -- tsx scripts/seed-demo-events.ts",
     "delete-falcons-events": "dotenv -e .env.local -- tsx scripts/delete-falcons-events.ts"
   },
@@ -33,6 +36,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/typography": "^0.5.19",
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
