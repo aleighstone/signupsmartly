@@ -11,6 +11,10 @@ import type { Event, Slot, Signup } from '@/types/database';
 
 const BATCH_SIZE = 50;
 
+export async function GET(request: Request) {
+  return POST(request);
+}
+
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('authorization') || '';
