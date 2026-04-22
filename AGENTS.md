@@ -43,6 +43,29 @@ The app stores two shapes of values:
 - **Bracket segments in paths are globs.** In zsh, a path like `app/dashboard/event/[id]/edit/EditEventForm.tsx` treats `[id]` as a character class; if it doesn’t match files, the shell errors **`zsh: no matches found`** before `git` runs — nothing gets staged and `git push` may look “up to date” with no deploy.
 - **Fix:** Quote the path (`git add 'app/dashboard/event/[id]/edit/EditEventForm.tsx'`), escape the brackets, use **`git add -u`** / **`git add .`** from the repo root, or **`noglob git add ...`** when listing paths literally.
 
+## Running Playwright tests
+
+Before giving any `npm run test:e2e` command, always remind the user to have both of these running first:
+1. `supabase start` (Terminal 1)
+2. `npm run dev` (Terminal 2)
+
+Then run tests in a third terminal. Never give the test command without this reminder.
+
+## Production database migrations (Supabase SQL Editor)
+
+**Typical workflow:** schema changes for **production** are applied in the **Supabase Dashboard → SQL Editor**, not via `supabase db push` to the linked remote.
+
+**Why:** the project’s `schema_migrations` history on the hosted project can be **out of sync** with the files under `supabase/migrations/` (older changes may have been applied manually or before migration tracking). A bulk CLI push can try to replay migrations that are already live and fail or cause confusion.
+
+**Going forward — for agents and humans:**
+
+1. **Still add a migration file** in `supabase/migrations/` for every schema change (timestamp prefix, descriptive name). Commit it with the app code so the repo stays the **source of truth** for *what* changed, and local `supabase db reset` / teammates can replay history when needed.
+2. **Production:** open that new `.sql` file, copy its contents, run in **Supabase → SQL Editor** on the **production** project, and confirm success (no errors).
+3. **Do not** tell the user to run `supabase db push` against **production** unless they have explicitly verified migration history matches and want to use the CLI for prod (unusual here).
+4. **Optional check after running SQL:** confirm the change (e.g. new column, constraint, or enum values) in **Table Editor** or with a quick `SELECT` / `\d`-style inspection in SQL Editor.
+
+**Local:** continue using `supabase db reset`, `supabase migration up`, or seed scripts as documented elsewhere in this file; local CLI history may differ from hosted prod—that’s expected with this workflow.
+
 ## Local development environment
 
 - **Local Supabase is running** via the Supabase CLI and Docker Desktop. Do not hardcode `https://www.signupsmartly.com` or any Supabase production URL in scripts or seed files — always read from `process.env.NEXT_PUBLIC_SUPABASE_URL` and `process.env.NEXT_PUBLIC_APP_URL`.
