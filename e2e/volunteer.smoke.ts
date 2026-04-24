@@ -126,4 +126,16 @@ test.describe('Slot card visual hierarchy', () => {
       /January|February|March|April|May|June|July|August|September|October|November|December/i
     );
   });
+
+  test('multi-date event: first future slot is in viewport on load', async ({ page }) => {
+    const multiDateEventId = process.env.E2E_TEST_MULTI_DATE_EVENT_ID;
+    if (!multiDateEventId) {
+      test.skip(true, 'E2E_TEST_MULTI_DATE_EVENT_ID not set — skipping auto-scroll test');
+      return;
+    }
+    await page.goto(`/event/${multiDateEventId}`);
+    // The anchor slot should be scrolled into view on load
+    const anchor = page.locator('[data-today-anchor="true"]').first();
+    await expect(anchor).toBeInViewport({ ratio: 0.5 });
+  });
 });

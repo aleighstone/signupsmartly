@@ -2,6 +2,7 @@
 
 import { usePostHog } from '@posthog/react';
 import { Zap, Check } from 'lucide-react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { ScheduledSlotEventDateFallback } from '@/lib/calendar';
 import {
   formatScheduledSlotParts,
@@ -241,6 +242,21 @@ export function SlotList({
   const allFilledText = isSimple
     ? 'All items are filled. Thank you!'
     : 'All roles are filled. Thank you!';
+  const todayAnchorRef = useRef<HTMLLIElement>(null);
+  const anchorSlotId = useMemo(() => {
+    if (isSingleDay || isSimple) return null;
+    const now = new Date().toISOString();
+    const firstFutureOpen = openSlots.find((s) => s.start_time && s.start_time >= now);
+    if (firstFutureOpen) return firstFutureOpen.id;
+    const firstFutureFilled = filledSlots.find((s) => s.start_time && s.start_time >= now);
+    return firstFutureFilled?.id ?? null;
+  }, [isSingleDay, isSimple, openSlots, filledSlots]);
+
+  useEffect(() => {
+    if (!todayAnchorRef.current) return;
+    todayAnchorRef.current.scrollIntoView({ behavior: 'instant', block: 'start' });
+    window.scrollBy({ top: -88, behavior: 'instant' });
+  }, []);
 
   const handleOpenSignups = (slot: SlotWithSignups) => {
     if (posthog) {
@@ -284,7 +300,11 @@ export function SlotList({
               const filled = slot.signups.length;
               const capacity = slot.capacity;
               return (
-                <li key={slot.id}>
+                <li
+                  key={slot.id}
+                  ref={slot.id === anchorSlotId ? todayAnchorRef : null}
+                  data-today-anchor={slot.id === anchorSlotId ? 'true' : undefined}
+                >
                   <SlotCard
                     slot={slot}
                     remaining={remaining}
@@ -341,6 +361,8 @@ export function SlotList({
               return (
                 <li
                   key={slot.id}
+                  ref={slot.id === anchorSlotId ? todayAnchorRef : null}
+                  data-today-anchor={slot.id === anchorSlotId ? 'true' : undefined}
                   className="rounded-xl border border-charcoal/10 bg-surface/60 px-4 py-3 shadow-soft opacity-60"
                 >
                   {isSimple ? (
