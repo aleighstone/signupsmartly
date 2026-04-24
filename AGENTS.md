@@ -71,6 +71,8 @@ Before giving any `npm run test:e2e` command, always remind the user to have bot
 
 Then run tests in a third terminal. Never give the test command without this reminder.
 
+When a new or changed test requires a new `.env.local` variable, make that **very obvious** in the final instructions and testing notes. Include a short section such as `Required local env var` with the exact variable name, what value it needs, and where to get it. Do not bury this only in prose, build output, or deploy commands.
+
 ## Production database migrations (Supabase SQL Editor)
 
 **Typical workflow:** schema changes for **production** are applied in the **Supabase Dashboard → SQL Editor**, not via `supabase db push` to the linked remote.

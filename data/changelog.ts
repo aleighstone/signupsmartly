@@ -14,6 +14,15 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: 'April 24, 2026',
+    changes: [
+      {
+        type: 'new',
+        text: '**Jump to future spots**: Multi-day signups now include a quick “Go to future spots” link, so volunteers can skip past earlier dates and get straight to the upcoming needs without losing access to past spots.',
+      },
+    ],
+  },
+  {
     date: 'April 22, 2026',
     changes: [
       {

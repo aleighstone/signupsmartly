@@ -16,13 +16,15 @@
 | Style guide: typography updated to reflect display/heading split | `public/styleguide/index.html` | deployed |
 | EventHeader: date/location match slot card time/name styles (charcoal, not muted) | `components/EventHeader.tsx` | deployed |
 | Visual hierarchy spec written for Cursor | `specs/signup-page-visual-hierarchy-spec.md` | committed |
+| Signup page visual hierarchy: date/time hero layout for single vs multi-date events | `lib/calendar.ts`, `components/SlotList.tsx` | deployed |
+| Multi-day signup shortcut: “Go to future spots” link | `components/SlotList.tsx`, `e2e/volunteer.smoke.ts`, `data/changelog.ts` | deployed |
 
 ### Backlog
 
 | Item | Notes |
 |---|---|
-| Implement visual hierarchy spec | Spec at `specs/signup-page-visual-hierarchy-spec.md` — hand to Cursor |
-| Set `E2E_TEST_MULTI_DATE_EVENT_ID` in `.env.local` | Use Baseball Snack Duty UUID from seed output |
+| ~~Implement visual hierarchy spec~~ | shipped |
+| ~~Set `E2E_TEST_MULTI_DATE_EVENT_ID` in `.env.local`~~ | Done; production test event ID available for preview/prod testing |
 | Publish a draft from dashboard — E2E test | Publish button exists, no test that verifies it goes live |
 
 ### Lessons
