@@ -2,7 +2,7 @@
 
 import { usePostHog } from '@posthog/react';
 import { Zap, Check } from 'lucide-react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import type { ScheduledSlotEventDateFallback } from '@/lib/calendar';
 import {
   formatScheduledSlotParts,
@@ -252,12 +252,6 @@ export function SlotList({
     return firstFutureFilled?.id ?? null;
   }, [isSingleDay, isSimple, openSlots, filledSlots]);
 
-  useEffect(() => {
-    if (!todayAnchorRef.current) return;
-    todayAnchorRef.current.scrollIntoView({ behavior: 'instant', block: 'start' });
-    window.scrollBy({ top: -88, behavior: 'instant' });
-  }, []);
-
   const handleOpenSignups = (slot: SlotWithSignups) => {
     if (posthog) {
       posthog.capture('public_signups_modal_opened', {
@@ -268,6 +262,10 @@ export function SlotList({
     onOpenSignups(slot);
   };
 
+  const handleGoToFutureSpots = () => {
+    todayAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const sectionIconClass = volunteerPageThemed ? '' : 'text-sage';
   const sectionIconStyle = volunteerPageThemed
     ? { color: 'var(--theme-primary)' }
@@ -276,19 +274,33 @@ export function SlotList({
   return (
     <div className="space-y-8">
       <section>
-        <h2
-          className="mb-4 flex items-center gap-2 text-base font-semibold uppercase tracking-wide text-charcoal/50 font-body"
-          style={volunteerPageThemed ? { fontFamily: 'var(--theme-font)' } : undefined}
-        >
-          <Zap
-            size={14}
-            strokeWidth={2.5}
-            className={sectionIconClass}
-            style={sectionIconStyle}
-            aria-hidden
-          />
-          Still Needed
-        </h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2
+            className="flex items-center gap-2 text-base font-semibold uppercase tracking-wide text-charcoal/50 font-body"
+            style={volunteerPageThemed ? { fontFamily: 'var(--theme-font)' } : undefined}
+          >
+            <Zap
+              size={14}
+              strokeWidth={2.5}
+              className={sectionIconClass}
+              style={sectionIconStyle}
+              aria-hidden
+            />
+            Still Needed
+          </h2>
+          {anchorSlotId ? (
+            <button
+              type="button"
+              onClick={handleGoToFutureSpots}
+              className={`shrink-0 rounded text-sm font-semibold underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-sage/30 font-body ${
+                volunteerPageThemed ? '' : 'text-sage hover:text-sage-hover'
+              }`}
+              style={volunteerPageThemed ? { color: 'var(--theme-primary)' } : undefined}
+            >
+              Go to future spots
+            </button>
+          ) : null}
+        </div>
         {openSlots.length === 0 ? (
           <p className="rounded-xl border border-dashed border-charcoal/20 py-8 text-center text-muted font-body">
             {allFilledText}
@@ -304,6 +316,7 @@ export function SlotList({
                   key={slot.id}
                   ref={slot.id === anchorSlotId ? todayAnchorRef : null}
                   data-today-anchor={slot.id === anchorSlotId ? 'true' : undefined}
+                  className={slot.id === anchorSlotId ? 'scroll-mt-24' : undefined}
                 >
                   <SlotCard
                     slot={slot}
@@ -363,7 +376,9 @@ export function SlotList({
                   key={slot.id}
                   ref={slot.id === anchorSlotId ? todayAnchorRef : null}
                   data-today-anchor={slot.id === anchorSlotId ? 'true' : undefined}
-                  className="rounded-xl border border-charcoal/10 bg-surface/60 px-4 py-3 shadow-soft opacity-60"
+                  className={`rounded-xl border border-charcoal/10 bg-surface/60 px-4 py-3 shadow-soft opacity-60 ${
+                    slot.id === anchorSlotId ? 'scroll-mt-24' : ''
+                  }`}
                 >
                   {isSimple ? (
                     <p className="font-medium text-charcoal font-body">

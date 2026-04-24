@@ -127,14 +127,15 @@ test.describe('Slot card visual hierarchy', () => {
     );
   });
 
-  test('multi-date event: first future slot is in viewport on load', async ({ page }) => {
+  test('multi-date event: go to future spots link scrolls future slot into viewport', async ({ page }) => {
     const multiDateEventId = process.env.E2E_TEST_MULTI_DATE_EVENT_ID;
     if (!multiDateEventId) {
-      test.skip(true, 'E2E_TEST_MULTI_DATE_EVENT_ID not set — skipping auto-scroll test');
+      test.skip(true, 'E2E_TEST_MULTI_DATE_EVENT_ID not set — skipping future spots link test');
       return;
     }
     await page.goto(`/event/${multiDateEventId}`);
-    // The anchor slot should be scrolled into view on load
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.getByRole('button', { name: /go to future spots/i }).click();
     const anchor = page.locator('[data-today-anchor="true"]').first();
     await expect(anchor).toBeInViewport({ ratio: 0.5 });
   });
