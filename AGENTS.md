@@ -7,7 +7,7 @@
 ## Front-end standards
 
 - Act as a **professional front-end engineer** on all UI work.
-- Always respect the **design system**: colors (charcoal, muted, sage, coral, surface, sand), typography (font-heading, font-body), spacing (consistent padding, gaps), borders (charcoal/10, charcoal/20), shadows (shadow-soft, shadow-soft-md).
+- Always respect the **design system**: colors (charcoal, muted, sage, coral, surface, sand), typography (font-display=Quicksand for logo/hero h1 only; font-heading=Inter for all UI headings h2–h6; font-body=Inter), spacing (consistent padding, gaps), borders (charcoal/10, charcoal/20), shadows (shadow-soft, shadow-soft-md).
 - Ensure **A+ UI and UX**: consistent sizing, alignment, focus states, and clear visual hierarchy. Form fields, buttons, and interactive elements should feel cohesive and polished.
 
 ## Date and time display (mandatory)
@@ -47,6 +47,21 @@ The app stores two shapes of values:
 
 - **Bracket segments in paths are globs.** In zsh, a path like `app/dashboard/event/[id]/edit/EditEventForm.tsx` treats `[id]` as a character class; if it doesn’t match files, the shell errors **`zsh: no matches found`** before `git` runs — nothing gets staged and `git push` may look “up to date” with no deploy.
 - **Fix:** Quote the path (`git add 'app/dashboard/event/[id]/edit/EditEventForm.tsx'`), escape the brackets, use **`git add -u`** / **`git add .`** from the repo root, or **`noglob git add ...`** when listing paths literally.
+
+## Local dev reset (supabase db reset)
+
+`supabase db reset` wipes `auth.users`. **Never seed auth users via raw SQL** — direct inserts into `auth.users` cause "Database error querying schema" on login because Supabase auth triggers require all fields to be set correctly.
+
+Always use `supabase.auth.admin.createUser` instead. The correct reset workflow is:
+
+```
+supabase db reset
+npm run setup-local    # creates auth user via admin API + public schema rows
+npm run seed-demo      # looks up organizer UUID by email dynamically; prints event IDs
+# copy the 3 printed IDs into .env.local
+```
+
+`setup-local-user.ts` handles auth user creation. `seed-demo-events.ts` looks up the organizer UUID by email — no hardcoded UUIDs anywhere. Do not reintroduce them.
 
 ## Running Playwright tests
 

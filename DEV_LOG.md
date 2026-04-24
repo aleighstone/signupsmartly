@@ -2,6 +2,44 @@
 
 ---
 
+## 2026-04-24
+
+### Shipped
+
+| What | File(s) | Status |
+|---|---|---|
+| Design system: Inter for headings, Quicksand display-only, Lucide icons | `app/globals.css`, `components/AppNav.tsx`, `components/EventCard.tsx`, `components/CoverageMeter.tsx`, `components/SlotList.tsx` | deployed |
+| Seed script: relative dates, stable draft event, prints env IDs at end | `scripts/seed-demo-events.ts` | deployed |
+| Local dev reset workflow: admin API auth user creation (no hardcoded UUID) | `scripts/setup-local-user.ts` | deployed |
+| New cleanup script: deletes Playwright orphan draft events | `scripts/cleanup-test-data.ts` | deployed |
+| Playwright fix: strict mode violation on "Draft" text in draft card test | `e2e/organizer.smoke.ts` | deployed |
+| Style guide: typography updated to reflect display/heading split | `public/styleguide/index.html` | deployed |
+| EventHeader: date/location match slot card time/name styles (charcoal, not muted) | `components/EventHeader.tsx` | deployed |
+| Visual hierarchy spec written for Cursor | `specs/signup-page-visual-hierarchy-spec.md` | committed |
+
+### Backlog
+
+| Item | Notes |
+|---|---|
+| Implement visual hierarchy spec | Spec at `specs/signup-page-visual-hierarchy-spec.md` — hand to Cursor |
+| Set `E2E_TEST_MULTI_DATE_EVENT_ID` in `.env.local` | Use Baseball Snack Duty UUID from seed output |
+| Publish a draft from dashboard — E2E test | Publish button exists, no test that verifies it goes live |
+
+### Lessons
+
+| What happened | Fix / note |
+|---|---|
+| `supabase db reset` wipes `auth.users` — login broke after reset | Use `supabase.auth.admin.createUser` in setup-local-user.ts; never seed auth via raw SQL |
+| Direct `auth.users` SQL insert caused "Database error querying schema" | Supabase auth triggers need all fields set correctly — always use the admin API |
+| Seed script had hardcoded UUIDs that broke after reset | Look up organizer UUID dynamically by email at seed time; no hardcoded IDs needed |
+| `getByText('Draft')` matched event title heading AND pill badge | Use `{ exact: true }` when the target text appears in longer strings nearby |
+
+### Resume here
+
+> Next session: hand `specs/signup-page-visual-hierarchy-spec.md` to Cursor. After it ships, run `npm run test:e2e` (remember: supabase start + npm run dev first). Then update What's New.
+
+---
+
 ## 2026-04-22
 
 ### Shipped
