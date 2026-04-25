@@ -20,6 +20,10 @@ export const changelog: Release[] = [
         type: 'new',
         text: '**Jump to future spots**: Multi-day signups now include a quick “Go to future spots” link, so volunteers can skip past earlier dates and get straight to the upcoming needs without losing access to past spots.',
       },
+      {
+        type: 'new',
+        text: '**Archive signups**: Keep your dashboard tidy by archiving completed or retired signups. Archived signups move out of the Active view, can be restored anytime, and their public signup links are no longer accessible.',
+      },
     ],
   },
   {
