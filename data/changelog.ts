@@ -24,6 +24,14 @@ export const changelog: Release[] = [
         type: 'new',
         text: '**Archive signups**: Keep your dashboard tidy by archiving completed or retired signups. Archived signups move out of the Active view, can be restored anytime, and their public signup links are no longer accessible.',
       },
+      {
+        type: 'new',
+        text: '**Dashboard shortcut on signup pages**: When you’re signed in, public signup pages now show a quick “My Dashboard” link so you can get back to managing your signups faster.',
+      },
+      {
+        type: 'improved',
+        text: '**Faster volunteer signups**: SignupSmartly now remembers the last name and email a volunteer used on the same device, so repeat signups can be filled in faster.',
+      },
     ],
   },
   {

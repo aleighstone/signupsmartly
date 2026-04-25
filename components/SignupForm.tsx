@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -82,6 +82,7 @@ export function SignupForm({
   const {
     register,
     handleSubmit,
+    reset,
     watch,
     formState: { errors },
   } = useForm<SignupFormData>({
@@ -95,10 +96,28 @@ export function SignupForm({
     },
   });
 
+  useEffect(() => {
+    const storedName = localStorage.getItem('ss_volunteer_name') ?? '';
+    const storedEmail = localStorage.getItem('ss_volunteer_email') ?? '';
+    if (storedName || storedEmail) {
+      reset((prev) => ({
+        ...prev,
+        name: storedName || prev.name,
+        email: storedEmail || prev.email,
+      }));
+    }
+  }, [reset]);
+
+  const wrappedOnSubmit = async (data: SignupFormData) => {
+    localStorage.setItem('ss_volunteer_name', data.name);
+    localStorage.setItem('ss_volunteer_email', data.email);
+    await onSubmit(data);
+  };
+
   const reminderOptIn = watch('reminder_opt_in');
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(wrappedOnSubmit)} className="space-y-4">
       {error && (
         <p className="rounded-xl bg-coral p-3 text-sm text-white font-body">
           {error}

@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import type { Metadata } from 'next';
 import { getEventWithSlots, getEventCoverage } from '@/lib/db';
 import { getOrgBySlug } from '@/lib/org-branding';
+import { createClient } from '@/lib/supabase-server';
 import { buildVolunteerFacingThemeHead } from '@/data/themes';
 
 export const dynamic = 'force-dynamic';
@@ -48,6 +49,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function EventPage({ params }: PageProps) {
   const { id } = await params;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isOrganizer = !!user;
   const eventData = await getEventWithSlots(id);
 
   if (!eventData) notFound();
@@ -71,6 +77,16 @@ export default async function EventPage({ params }: PageProps) {
       <link href={fontsUrl} rel="stylesheet" />
       <style dangerouslySetInnerHTML={{ __html: themeStyleCss }} />
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+        {isOrganizer && (
+          <div className="mb-4">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-charcoal transition-colors font-body"
+            >
+              <span aria-hidden>←</span> My Dashboard
+            </Link>
+          </div>
+        )}
         {org && (
           <div className="mb-6">
             {isFalcons ? (
