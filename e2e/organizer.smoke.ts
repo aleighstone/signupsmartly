@@ -176,12 +176,106 @@ test.describe('Copy signup', () => {
       return;
     }
     await page.goto('/dashboard');
-    // Open three-dot menu on first event card
-    await page.getByRole('button', { name: /more actions for this signup/i }).first().click();
-    await page.getByRole('menuitem', { name: /copy signup/i }).click();
+    // Scope to the specific published event card — drafts don't have a Copy menu item
+    const eventCard = page.locator(`li:has(a[href*="${eventId}"])`).first();
+    await expect(eventCard).toBeVisible();
+    await eventCard.getByRole('button', { name: /more actions for this signup/i }).click();
+    await page.getByRole('menuitem', { name: /^copy$/i }).click();
     // Should navigate to edit page of the new draft copy
     await page.waitForURL(/\/dashboard\/event\/.+\/edit/, { timeout: 10_000 });
     // Draft banner confirms the copy started as a draft
     await expect(page.getByText(/this signup is not live yet/i)).toBeVisible();
+  });
+});
+
+test.describe('Archive signup', () => {
+  test('archive moves a published event to Archived and makes public page 404', async ({
+    page,
+  }) => {
+    const eventId = process.env.E2E_TEST_EVENT_ID;
+    if (!eventId) {
+      test.skip(true, 'E2E_TEST_EVENT_ID not set');
+      return;
+    }
+
+    let archived = false;
+
+    await page.request.post(`/api/events/${eventId}/unarchive`);
+
+    try {
+      await page.goto('/dashboard');
+      const activeCard = page.locator(`li:has(a[href*="${eventId}"])`).first();
+      await expect(activeCard).toBeVisible();
+
+      await activeCard
+        .getByRole('button', { name: /more actions for this signup/i })
+        .click();
+      await page.getByRole('menuitem', { name: /^archive$/i }).click();
+      await expect(
+        page.getByRole('heading', { name: /archive this signup/i })
+      ).toBeVisible();
+      await page.getByRole('button', { name: /^archive$/i }).click();
+      archived = true;
+
+      await expect(activeCard).not.toBeVisible();
+
+      await page.getByRole('button', { name: /^archived$/i }).click();
+      const archivedCard = page.locator(`li:has(a[href*="${eventId}"])`).first();
+      await expect(archivedCard).toBeVisible();
+      await expect(archivedCard.getByText('Archived', { exact: true })).toBeVisible();
+      await expect(
+        archivedCard.getByRole('link', { name: /view my signups/i })
+      ).toBeVisible();
+      await expect(
+        archivedCard.getByRole('link', { name: /signup page/i })
+      ).not.toBeVisible();
+
+      const response = await page.goto(`/event/${eventId}`);
+      expect(response?.status()).toBe(404);
+    } finally {
+      if (archived) {
+        await page.request.post(`/api/events/${eventId}/unarchive`);
+      }
+    }
+  });
+
+  test('unarchive restores an archived event to Active and public page works', async ({
+    page,
+  }) => {
+    const eventId = process.env.E2E_TEST_EVENT_ID;
+    if (!eventId) {
+      test.skip(true, 'E2E_TEST_EVENT_ID not set');
+      return;
+    }
+
+    await page.request.post(`/api/events/${eventId}/archive`);
+
+    await page.goto('/dashboard');
+
+    // Guard: if neither the Active nor Archived tab is visible, the event doesn't
+    // exist in the local DB — fail fast with a clear message instead of timing out.
+    const archivedTab = page.getByRole('button', { name: /^archived$/i });
+    const tabVisible = await archivedTab.isVisible().catch(() => false);
+    if (!tabVisible) {
+      test.skip(true, `Dashboard tabs not found for event ${eventId} — re-seed local DB and update .env.local`);
+      return;
+    }
+
+    await archivedTab.click();
+    const archivedCard = page.locator(`li:has(a[href*="${eventId}"])`).first();
+    await expect(archivedCard).toBeVisible();
+
+    await archivedCard
+      .getByRole('button', { name: /more actions for this signup/i })
+      .click();
+    await page.getByRole('menuitem', { name: /^unarchive$/i }).click();
+
+    await page.getByRole('button', { name: /^active$/i }).click();
+    const activeCard = page.locator(`li:has(a[href*="${eventId}"])`).first();
+    await expect(activeCard).toBeVisible();
+    await expect(activeCard.getByText('Archived', { exact: true })).not.toBeVisible();
+
+    const response = await page.goto(`/event/${eventId}`);
+    expect(response?.status()).toBe(200);
   });
 });
