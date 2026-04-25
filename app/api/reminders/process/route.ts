@@ -79,11 +79,17 @@ export async function POST(request: Request) {
         }
 
         const event = slot.event as Event & {
+          archived: boolean;
           organization?: { timezone?: string | null } | null;
         };
 
         // Edge: simple list without date → skip and tombstone
         if (event.signup_type === 'simple' && !event.start_date) {
+          await markReminderSent(signup.id);
+          continue;
+        }
+
+        if (event.archived) {
           await markReminderSent(signup.id);
           continue;
         }
@@ -405,6 +411,7 @@ async function runFounderNewEventsDigest(now: Date): Promise<{
     `
     )
     .eq('published', true)
+    .eq('archived', false)
     .gte('created_at', twentyFourHoursAgo.toISOString())
     .not('created_by', 'is', null)
     .order('created_at', { ascending: false });

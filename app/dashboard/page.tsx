@@ -5,10 +5,12 @@ import { TrackDashboardView } from '@/app/providers/PostHogTracker';
 import { TrackMetaCompleteRegistration } from '@/app/providers/MetaPixelTracker';
 import { getEventsForUser, getEventWithSlotsForDashboard, getEventCoverage, hasEventWithVolunteerSignup, getOrgSlugForUser } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
-import { EventCard } from '@/components/EventCard';
+import { DashboardEventList } from '@/components/DashboardEventList';
+import type { EventCardData } from '@/components/EventCard';
 import { NpsBanner } from '@/components/NpsBanner';
 import { formatEventDateRange } from '@/lib/calendar';
 import { serviceSupabase } from '@/lib/supabase-service';
+import type { Event } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +32,8 @@ export default async function DashboardPage() {
     data: { user: authUser },
   } = await supabase.auth.getUser();
 
-  let events: Awaited<ReturnType<typeof getEventsForUser>> = [];
+  let activeEvents: Awaited<ReturnType<typeof getEventsForUser>> = [];
+  let archivedEvents: Awaited<ReturnType<typeof getEventsForUser>> = [];
   let userId: string | null = null;
   let ourUser: { id: string; nps_submitted_at: string | null; nps_dismissed_at: string | null } | null = null;
 
@@ -49,7 +52,10 @@ export default async function DashboardPage() {
       ourUser = { id: userId, nps_submitted_at: null, nps_dismissed_at: null };
     }
 
-    events = await getEventsForUser(userId);
+    [activeEvents, archivedEvents] = await Promise.all([
+      getEventsForUser(userId, { archived: false }),
+      getEventsForUser(userId, { archived: true }),
+    ]);
   }
 
   const orgSlug = userId ? await getOrgSlugForUser(userId) : null;
@@ -70,24 +76,30 @@ export default async function DashboardPage() {
       hasVolunteerSignup
     );
 
-  const eventCards = await Promise.all(
-    events.map(async (event) => {
+  const buildEventCards = async (
+    events: Awaited<ReturnType<typeof getEventsForUser>>
+  ): Promise<EventCardData[]> =>
+    Promise.all(events.map(async (event) => {
       const eventWithSlots = await getEventWithSlotsForDashboard(event.id);
       const coverage = eventWithSlots
         ? getEventCoverage(eventWithSlots)
         : { filled: 0, total: 0, percentage: 0 };
       return {
-        event,
+        event: event as Event & { archived: boolean },
         coverage,
         dateLabel: formatEventDateRange(event.start_date, event.end_date),
+        signupPageUrl: eventUrl(event.id),
       };
-    })
-  );
+    }));
+  const [activeCards, archivedCards] = await Promise.all([
+    buildEventCards(activeEvents),
+    buildEventCards(archivedEvents),
+  ]);
 
   return (
     <AppLayout>
       <TrackMetaCompleteRegistration userId={authUser && userId ? userId : null} />
-      <TrackDashboardView eventCount={events.length} />
+      <TrackDashboardView eventCount={activeEvents.length} />
       <h1 className="text-2xl font-semibold text-charcoal font-heading">Your Signups</h1>
 
       {!authUser ? (
@@ -104,7 +116,7 @@ export default async function DashboardPage() {
             </Link>
           </div>
         </div>
-      ) : events.length === 0 ? (
+      ) : activeEvents.length === 0 && archivedEvents.length === 0 ? (
         <div className="mt-8 rounded-xl border border-dashed border-charcoal/20 bg-surface p-8 text-center shadow-soft">
           <p className="text-muted font-body">Nothing to see here.</p>
           <Link href="/create-event" className="mt-4 btn-primary">
@@ -112,17 +124,9 @@ export default async function DashboardPage() {
           </Link>
         </div>
       ) : (
-        <ul className="mt-6 space-y-4">
-          {eventCards.map(({ event, coverage, dateLabel }) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              dateLabel={dateLabel}
-              coverage={coverage}
-              signupPageUrl={eventUrl(event.id)}
-            />
-          ))}
-        </ul>
+        <div className="mt-6">
+          <DashboardEventList activeCards={activeCards} archivedCards={archivedCards} />
+        </div>
       )}
 
       {showNps && (

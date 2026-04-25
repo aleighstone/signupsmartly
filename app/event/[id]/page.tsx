@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { id } = await params;
   const eventData = await getEventWithSlots(id);
 
-  if (!eventData) {
+  if (!eventData || (eventData as typeof eventData & { archived: boolean }).archived) {
     return {
       title: 'SignupSmartly',
     };
@@ -51,6 +51,7 @@ export default async function EventPage({ params }: PageProps) {
   const eventData = await getEventWithSlots(id);
 
   if (!eventData) notFound();
+  if ((eventData as typeof eventData & { archived: boolean }).archived) notFound();
 
   const slug = (await headers()).get('x-org-slug');
   const org = slug ? await getOrgBySlug(slug) : null;

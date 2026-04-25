@@ -20,9 +20,17 @@ type EventCardProps = {
     end_date: string | null;
     signup_type: 'scheduled' | 'simple';
     published: boolean;
+    archived: boolean;
   };
   dateLabel: string;
   coverage: { filled: number; total: number; percentage: number };
+  signupPageUrl: string;
+};
+
+export type EventCardData = {
+  event: EventCardProps['event'];
+  dateLabel: string;
+  coverage: EventCardProps['coverage'];
   signupPageUrl: string;
 };
 
@@ -31,6 +39,8 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -79,6 +89,32 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
     }
   };
 
+  const handleArchive = async () => {
+    setIsArchiving(true);
+    try {
+      const res = await fetch(`/api/events/${event.id}/archive`, { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to archive');
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setIsArchiving(false);
+    }
+  };
+
+  const handleUnarchive = async () => {
+    setIsArchiving(true);
+    try {
+      const res = await fetch(`/api/events/${event.id}/unarchive`, { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to unarchive');
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setIsArchiving(false);
+    }
+  };
+
   return (
     <li className="rounded-xl border border-charcoal/10 bg-surface p-5 shadow-soft sm:p-6">
       <div className="min-w-0">
@@ -89,6 +125,11 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
               {!event.published && (
                 <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 font-body">
                   Draft
+                </span>
+              )}
+              {event.archived && (
+                <span className="inline-flex items-center rounded-full bg-charcoal/10 px-2.5 py-0.5 text-xs font-medium text-charcoal/60 font-body">
+                  Archived
                 </span>
               )}
             </div>
@@ -112,36 +153,66 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
                 role="menu"
                 className="absolute right-0 z-20 mt-2 w-48 min-w-[12rem] rounded-xl border border-charcoal/15 bg-surface py-1 shadow-soft-md"
               >
-                {!event.published ? (
+                {event.archived ? (
                   <button
                     type="button"
                     role="menuitem"
                     className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-charcoal hover:bg-charcoal/5 font-body"
                     onClick={() => {
                       setMenuOpen(false);
-                      void handlePublish();
+                      void handleUnarchive();
                     }}
-                    disabled={isPublishing}
+                    disabled={isArchiving}
                   >
-                    {isPublishing ? 'Publishing…' : 'Publish'}
+                    {isArchiving ? 'Unarchiving…' : 'Unarchive'}
                   </button>
-                ) : null}
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-charcoal hover:bg-charcoal/5 font-body"
-                  onClick={() => void handleCopy()}
-                >
-                  Copy signup
-                </button>
-                <Link
-                  href={`/dashboard/event/${event.id}/edit`}
-                  role="menuitem"
-                  className="block rounded-lg px-3 py-2.5 text-sm text-charcoal hover:bg-charcoal/5 font-body"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Edit signup
-                </Link>
+                ) : (
+                  <>
+                    {!event.published ? (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-charcoal hover:bg-charcoal/5 font-body"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          void handlePublish();
+                        }}
+                        disabled={isPublishing}
+                      >
+                        {isPublishing ? 'Publishing…' : 'Publish'}
+                      </button>
+                    ) : null}
+                    <Link
+                      href={`/dashboard/event/${event.id}/edit`}
+                      role="menuitem"
+                      className="block rounded-lg px-3 py-2.5 text-sm text-charcoal hover:bg-charcoal/5 font-body"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Edit
+                    </Link>
+                    {event.published ? (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-charcoal hover:bg-charcoal/5 font-body"
+                        onClick={() => void handleCopy()}
+                      >
+                        Copy
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-coral hover:bg-coral/5 font-body"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setConfirmArchiveOpen(true);
+                      }}
+                    >
+                      Archive
+                    </button>
+                  </>
+                )}
               </div>
             ) : null}
           </div>
@@ -158,7 +229,13 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
         </div>
       </div>
 
-      {!event.published ? (
+      {event.archived ? (
+        <div className={CARD_ACTION_ROW}>
+          <Link href={`/dashboard/event/${event.id}/signups`} className="btn-primary text-center">
+            View My Signups
+          </Link>
+        </div>
+      ) : !event.published ? (
         <div className={CARD_ACTION_ROW}>
           <div className={CARD_ACTION_GRID}>
             <Link href={`/dashboard/event/${event.id}/signups`} className="btn-primary w-full text-center">
@@ -188,6 +265,38 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
             >
               Signup Page
             </a>
+          </div>
+        </div>
+      )}
+      {confirmArchiveOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-soft-md">
+            <h2 className="text-base font-semibold text-charcoal font-heading">
+              Archive this signup?
+            </h2>
+            <p className="mt-2 text-sm text-muted font-body">
+              This will make it inaccessible for anyone who has the link.
+            </p>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setConfirmArchiveOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-primary bg-coral border-coral hover:bg-coral/90"
+                onClick={() => {
+                  setConfirmArchiveOpen(false);
+                  void handleArchive();
+                }}
+                disabled={isArchiving}
+              >
+                {isArchiving ? 'Archiving…' : 'Archive'}
+              </button>
+            </div>
           </div>
         </div>
       )}

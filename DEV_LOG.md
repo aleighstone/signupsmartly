@@ -18,6 +18,7 @@
 | Visual hierarchy spec written for Cursor | `specs/signup-page-visual-hierarchy-spec.md` | committed |
 | Signup page visual hierarchy: date/time hero layout for single vs multi-date events | `lib/calendar.ts`, `components/SlotList.tsx` | deployed |
 | Multi-day signup shortcut: “Go to future spots” link | `components/SlotList.tsx`, `e2e/volunteer.smoke.ts`, `data/changelog.ts` | deployed |
+| Archive feature: dashboard Active/Archived tabs, archive/unarchive API, public 404 guard, reminder skip | `components/EventCard.tsx`, `components/DashboardEventList.tsx`, `app/dashboard/page.tsx`, `app/api/events/[id]/archive/route.ts`, `app/api/events/[id]/unarchive/route.ts`, `app/event/[id]/page.tsx`, `app/api/reminders/process/route.ts`, `lib/db.ts`, `supabase/migrations/20260424173000_add_event_archived.sql` | built; pending SQL + deploy |
 
 ### Backlog
 
@@ -25,6 +26,7 @@
 |---|---|
 | ~~Implement visual hierarchy spec~~ | shipped |
 | ~~Set `E2E_TEST_MULTI_DATE_EVENT_ID` in `.env.local`~~ | Done; production test event ID available for preview/prod testing |
+| Apply archive migration to production | Run `supabase/migrations/20260424173000_add_event_archived.sql` in Supabase SQL Editor before deploying archive code |
 | Publish a draft from dashboard — E2E test | Publish button exists, no test that verifies it goes live |
 
 ### Lessons

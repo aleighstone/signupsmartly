@@ -181,7 +181,10 @@ export async function cancelSignup(signupId: string) {
   if (error) throw error;
 }
 
-export async function getEventsForUser(userId: string) {
+export async function getEventsForUser(
+  userId: string,
+  { archived = false }: { archived?: boolean } = {}
+) {
   const { data: memberships, error: memError } = await supabase
     .from('organization_members')
     .select('organization_id')
@@ -197,6 +200,7 @@ export async function getEventsForUser(userId: string) {
     .from('events')
     .select('*')
     .in('organization_id', orgIds)
+    .eq('archived', archived)
     .order('created_at', { ascending: false });
 
   if (error) return [];
