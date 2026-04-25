@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { headers } from 'next/headers';
+import type { Metadata } from 'next';
 import { getEventWithSlots, getEventCoverage } from '@/lib/db';
 import { getOrgBySlug } from '@/lib/org-branding';
 import { buildVolunteerFacingThemeHead } from '@/data/themes';
@@ -13,6 +14,36 @@ import { EventPageClient } from './EventPageClient';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const eventData = await getEventWithSlots(id);
+
+  if (!eventData) {
+    return {
+      title: 'SignupSmartly',
+    };
+  }
+
+  const description = eventData.description
+    ? eventData.description.slice(0, 160).replace(/\n/g, ' ')
+    : 'Sign up for a volunteer spot.';
+
+  return {
+    title: `${eventData.title} — SignupSmartly`,
+    description,
+    openGraph: {
+      title: eventData.title,
+      description,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title: eventData.title,
+      description,
+    },
+  };
 }
 
 export default async function EventPage({ params }: PageProps) {

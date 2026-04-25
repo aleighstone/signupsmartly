@@ -1,8 +1,24 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { Logo } from '@/components/Logo';
 import { ChangelogEntryText } from '@/components/ChangelogEntryText';
 import { changelog } from '@/data/changelog';
 import type { ChangeType } from '@/data/changelog';
+
+export const metadata: Metadata = {
+  title: "What's New — SignupSmartly",
+  description: 'New features, improvements, and fixes in SignupSmartly.',
+  openGraph: {
+    title: "What's New — SignupSmartly",
+    description: 'New features, improvements, and fixes in SignupSmartly.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: "What's New — SignupSmartly",
+    description: 'New features, improvements, and fixes in SignupSmartly.',
+  },
+};
 
 function ChangeTag({ type }: { type: ChangeType }) {
   const styles: Record<ChangeType, string> = {
