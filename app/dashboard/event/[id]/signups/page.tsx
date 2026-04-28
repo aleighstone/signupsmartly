@@ -142,7 +142,7 @@ export default async function SignupsPage({ params }: PageProps) {
       <div data-no-print className="mb-6">
         <Link
           href="/dashboard"
-          className="text-sm text-muted hover:text-charcoal transition-colors"
+          className="text-sm text-muted hover:text-charcoal transition-colors font-body"
         >
           ← Back to Dashboard
         </Link>

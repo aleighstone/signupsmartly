@@ -65,7 +65,7 @@ export default async function RosterPage({ params }: PageProps) {
       <div className="mb-6">
         <Link
           href="/dashboard"
-          className="text-sm text-neutral-500 hover:text-neutral-700"
+          className="text-sm text-muted hover:text-charcoal transition-colors font-body"
         >
           ← Back to Dashboard
         </Link>

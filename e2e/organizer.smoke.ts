@@ -139,6 +139,41 @@ test.describe('Edit signup page', () => {
     await expect(page).toHaveURL(/edit/);
     await expect(page.getByRole('dialog')).not.toBeVisible();
   });
+
+  test('saving edits updates existing signup without creating duplicates', async ({ page }) => {
+    const eventId = process.env.E2E_TEST_EVENT_ID;
+    if (!eventId) {
+      test.skip(true, 'E2E_TEST_EVENT_ID not set');
+      return;
+    }
+
+    await page.goto('/dashboard');
+    const dashboardCardsBefore = await page.locator('main ul').first().locator('li').count();
+
+    await page.goto(`/dashboard/event/${eventId}/edit`);
+    const titleInput = page.getByLabel(/title/i).first();
+    const originalTitle = (await titleInput.inputValue()).trim();
+    const editedTitle = `${originalTitle} (Playwright edit)`;
+
+    await titleInput.fill(editedTitle);
+    await page.getByRole('button', { name: /^save$/i }).click();
+    await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), {
+      timeout: 15_000,
+    });
+
+    await page.goto('/dashboard');
+    const dashboardCardsAfterSave = await page.locator('main ul').first().locator('li').count();
+    expect(dashboardCardsAfterSave).toBe(dashboardCardsBefore);
+    await expect(page.locator(`li:has(a[href*="${eventId}"])`)).toHaveCount(1);
+
+    // Cleanup so the shared seeded event title remains unchanged for other tests.
+    await page.goto(`/dashboard/event/${eventId}/edit`);
+    await page.getByLabel(/title/i).first().fill(originalTitle);
+    await page.getByRole('button', { name: /^save$/i }).click();
+    await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), {
+      timeout: 15_000,
+    });
+  });
 });
 
 test.describe('Draft event', () => {

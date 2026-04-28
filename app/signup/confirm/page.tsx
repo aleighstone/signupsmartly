@@ -92,20 +92,22 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href={fontsUrl} rel="stylesheet" />
       <style dangerouslySetInnerHTML={{ __html: themeStyleCss }} />
-      <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4 relative">
+      <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4">
       <TrackSignupSubmitted
         signupType={isSimple ? 'simple' : 'scheduled'}
         hasComment={hasComment}
       />
-      {eventId && (
-        <Link
-          href={`/event/${eventId}`}
-          className="absolute top-4 left-4 text-sm text-muted hover:text-charcoal transition-colors font-body"
-        >
-          ← Back to Event Page
-        </Link>
-      )}
       <div className="w-full max-w-md text-center space-y-6">
+        {eventId && (
+          <div className="text-left">
+            <Link
+              href={`/event/${eventId}`}
+              className="text-sm text-muted hover:text-charcoal transition-colors font-body"
+            >
+              ← Back to Event Page
+            </Link>
+          </div>
+        )}
         <h1
           className="text-2xl font-semibold text-charcoal"
           style={{ fontFamily: 'var(--theme-font)' }}

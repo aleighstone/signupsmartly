@@ -707,6 +707,7 @@ export function CreateEventForm({
             ← Back to Dashboard
           </button>
         </div>
+        <h1 className="text-2xl font-semibold text-charcoal font-heading">Create Signup</h1>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-charcoal font-body">
             I want to
@@ -788,7 +789,7 @@ export function CreateEventForm({
                 </div>
                 <div>
                   <label
-                    htmlFor="signupsmartly-event-desc"
+                    htmlFor="signupsmartly-event-desc-scheduled"
                     className="block text-sm font-medium text-charcoal mb-1 font-body"
                   >
                     Description
@@ -798,9 +799,10 @@ export function CreateEventForm({
                     name="description"
                     render={({ field }) => (
                       <MarkdownEditor
+                        key="scheduled-description-editor"
                         ref={field.ref}
-                        id="signupsmartly-event-desc"
-                        name="signupsmartly-event-description"
+                        id="signupsmartly-event-desc-scheduled"
+                        name="signupsmartly-event-description-scheduled"
                         value={typeof field.value === 'string' ? field.value : ''}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
@@ -1070,7 +1072,7 @@ export function CreateEventForm({
                 </div>
                 <div>
                   <label
-                    htmlFor="signupsmartly-event-desc"
+                    htmlFor="signupsmartly-event-desc-simple"
                     className="block text-sm font-medium text-charcoal mb-1 font-body"
                   >
                     Description
@@ -1080,9 +1082,10 @@ export function CreateEventForm({
                     name="description"
                     render={({ field }) => (
                       <MarkdownEditor
+                        key="simple-description-editor"
                         ref={field.ref}
-                        id="signupsmartly-event-desc"
-                        name="signupsmartly-event-description"
+                        id="signupsmartly-event-desc-simple"
+                        name="signupsmartly-event-description-simple"
                         value={typeof field.value === 'string' ? field.value : ''}
                         onChange={field.onChange}
                         onBlur={field.onBlur}

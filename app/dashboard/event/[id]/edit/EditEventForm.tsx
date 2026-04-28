@@ -449,7 +449,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
           onClick={handleBackClick}
           className="text-sm text-muted hover:text-charcoal transition-colors font-body"
         >
-          ← Back to signups
+          ← Back to Signups
         </button>
       </div>
 
