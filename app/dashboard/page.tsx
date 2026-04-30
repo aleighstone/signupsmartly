@@ -8,7 +8,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { DashboardEventList } from '@/components/DashboardEventList';
 import type { EventCardData } from '@/components/DashboardEventList';
 import { NpsBanner } from '@/components/NpsBanner';
-import { formatEventDateRange } from '@/lib/calendar';
+import { formatEventDateRangeCompact } from '@/lib/calendar';
 import { serviceSupabase } from '@/lib/supabase-service';
 import type { Event } from '@/types/database';
 
@@ -87,7 +87,7 @@ export default async function DashboardPage() {
       return {
         event: event as Event & { archived: boolean },
         coverage,
-        dateLabel: formatEventDateRange(event.start_date, event.end_date),
+        dateLabel: formatEventDateRangeCompact(event.start_date, event.end_date),
         signupPageUrl: eventUrl(event.id),
       };
     }));

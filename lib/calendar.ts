@@ -97,6 +97,39 @@ export function formatEventDateRange(
 }
 
 /**
+ * Compact event date range for dense UI surfaces (e.g. dashboard list rows).
+ * - No weekday
+ * - Short month names (Apr, May, ...)
+ * - Single date: "Apr 28, 2026"
+ * - Range: "Apr 28 – May 2, 2026" (or "Apr 28–30, 2026" within same month)
+ */
+export function formatEventDateRangeCompact(
+  startDate: string | null,
+  endDate: string | null
+): string {
+  if (!startDate) return '';
+  const start = parseYMD(startDate);
+  if (!start) return '';
+
+  const singleDate = `${MONTHS_SHORT[start.m - 1]} ${start.d}, ${start.y}`;
+  if (!endDate) return singleDate;
+
+  const end = parseYMD(endDate);
+  if (!end) return singleDate;
+  if (start.y === end.y && start.m === end.m && start.d === end.d) return singleDate;
+
+  if (start.y === end.y && start.m === end.m) {
+    return `${MONTHS_SHORT[start.m - 1]} ${start.d}–${end.d}, ${end.y}`;
+  }
+
+  if (start.y === end.y) {
+    return `${MONTHS_SHORT[start.m - 1]} ${start.d} – ${MONTHS_SHORT[end.m - 1]} ${end.d}, ${end.y}`;
+  }
+
+  return `${MONTHS_SHORT[start.m - 1]} ${start.d}, ${start.y} – ${MONTHS_SHORT[end.m - 1]} ${end.d}, ${end.y}`;
+}
+
+/**
  * Format a time range. Slot times are stored as literal values (no timezone conversion):
  * organizer enters 7:30, we store and display 7:30. Always use 'UTC' so display matches
  * storage exactly. When endTime is null, shows only start time (no range).
