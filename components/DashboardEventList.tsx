@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpDown, ExternalLink, Eye, MoreVertical } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, ExternalLink, MoreVertical, Pencil } from 'lucide-react';
 
 export type EventCardData = {
   event: {
@@ -112,11 +112,13 @@ function MoreMenu({ card }: { card: EventCardData }) {
     }
   };
 
-  const handleUnarchive = async () => {
+  const handleDelete = async () => {
+    const ok = window.confirm('Delete this signup permanently? This cannot be undone.');
+    if (!ok) return;
     setBusy(true);
     try {
-      const res = await fetch(`/api/events/${event.id}/unarchive`, { method: 'POST' });
-      if (!res.ok) throw new Error('Failed to unarchive');
+      const res = await fetch(`/api/events/${event.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
       setOpen(false);
       router.refresh();
     } catch (err) {
@@ -144,57 +146,60 @@ function MoreMenu({ card }: { card: EventCardData }) {
           role="menu"
           className="absolute right-0 z-50 mt-2 min-w-[180px] rounded-xl border border-charcoal/10 bg-surface py-1 shadow-soft-md"
         >
-          {event.archived ? (
+          {!event.published ? (
             <button
               type="button"
               role="menuitem"
               className="block w-full px-3.5 py-2.5 text-left text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
-              onClick={() => void handleUnarchive()}
+              onClick={() => void handlePublish()}
               disabled={busy}
             >
-              {busy ? 'Unarchiving…' : 'Unarchive'}
+              {busy ? 'Publishing...' : 'Publish'}
             </button>
-          ) : (
-            <>
-              {!event.published ? (
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="block w-full px-3.5 py-2.5 text-left text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
-                  onClick={() => void handlePublish()}
-                  disabled={busy}
-                >
-                  {busy ? 'Publishing…' : 'Publish'}
-                </button>
-              ) : null}
-              <Link
-                href={`/dashboard/event/${event.id}/edit`}
-                role="menuitem"
-                className="block px-3.5 py-2.5 text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
-                onClick={() => setOpen(false)}
-              >
-                Edit signup
-              </Link>
-              <button
-                type="button"
-                role="menuitem"
-                className="block w-full px-3.5 py-2.5 text-left text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
-                onClick={() => void handleCopy()}
-                disabled={busy}
-              >
-                Copy signup
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                className="block w-full px-3.5 py-2.5 text-left text-sm font-medium text-coral hover:bg-charcoal/5 font-body"
-                onClick={() => void handleArchive()}
-                disabled={busy}
-              >
-                {busy ? 'Archiving…' : 'Archive'}
-              </button>
-            </>
-          )}
+          ) : null}
+          <Link
+            href={`/dashboard/event/${event.id}/edit`}
+            role="menuitem"
+            className="block px-3.5 py-2.5 text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
+            onClick={() => setOpen(false)}
+          >
+            Edit signup
+          </Link>
+          <button
+            type="button"
+            role="menuitem"
+            className="block w-full px-3.5 py-2.5 text-left text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
+            onClick={() => void handleCopy()}
+            disabled={busy}
+          >
+            Copy signup
+          </button>
+          <Link
+            href={`/dashboard/event/${event.id}/signups`}
+            role="menuitem"
+            className="block px-3.5 py-2.5 text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
+            onClick={() => setOpen(false)}
+          >
+            View my signups
+          </Link>
+          <button
+            type="button"
+            role="menuitem"
+            className="block w-full px-3.5 py-2.5 text-left text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
+            onClick={() => void handleArchive()}
+            disabled={busy}
+          >
+            {busy ? 'Archiving...' : 'Archive'}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="block w-full px-3.5 py-2.5 text-left text-sm font-medium text-coral hover:bg-charcoal/5 font-body"
+            onClick={() => void handleDelete()}
+            disabled={busy}
+          >
+            {busy ? 'Deleting...' : 'Delete'}
+          </button>
         </div>
       ) : null}
     </div>
@@ -352,7 +357,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
             </div>
 
             {sortedCards.map((card) => {
-              const isSignupPageEnabled = !card.event.archived && card.event.published;
+              const isSignupPageEnabled = card.event.published;
               return (
                 <div
                   key={card.event.id}
@@ -360,9 +365,12 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                 >
                   <div className="basis-[280px] shrink-0 grow-0 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="overflow-hidden text-sm font-semibold text-charcoal font-heading [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                      <Link
+                        href={`/dashboard/event/${card.event.id}/signups`}
+                        className="overflow-hidden text-sm font-semibold leading-[1.4] text-charcoal no-underline underline-offset-2 hover:underline font-heading [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
+                      >
                         {card.event.title}
-                      </span>
+                      </Link>
                       {!card.event.published ? (
                         <span className="inline-flex shrink-0 items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280] font-body">
                           Draft
@@ -393,14 +401,6 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                   </div>
                   <div className="w-[122px]">
                     <div className="flex items-center gap-1.5">
-                      <Link
-                        href={`/dashboard/event/${card.event.id}/signups`}
-                        title="View My Signups"
-                        aria-label="View My Signups"
-                        className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-charcoal/20 bg-sage text-white"
-                      >
-                        <Eye size={15} />
-                      </Link>
                       {isSignupPageEnabled ? (
                         <a
                           href={card.signupPageUrl}
@@ -416,13 +416,21 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                         <button
                           type="button"
                           disabled
-                          title={card.event.archived ? 'Archived signup' : 'Not yet published'}
-                          aria-label={card.event.archived ? 'Archived signup' : 'Not yet published'}
+                          title="Not yet published"
+                          aria-label="Not yet published"
                           className="inline-flex h-[34px] w-[34px] cursor-not-allowed items-center justify-center rounded-[8px] border border-charcoal/[0.08] bg-charcoal/[0.03] text-charcoal/[0.25]"
                         >
                           <ExternalLink size={14} />
                         </button>
                       )}
+                      <Link
+                        href={`/dashboard/event/${card.event.id}/edit`}
+                        title="Edit signup"
+                        aria-label="Edit signup"
+                        className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-charcoal/20 bg-surface text-charcoal"
+                      >
+                        <Pencil size={14} />
+                      </Link>
                       <MoreMenu card={card} />
                     </div>
                   </div>
@@ -433,7 +441,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
 
           <ul className="space-y-3 md:hidden">
             {sortedCards.map((card) => {
-              const isSignupPageEnabled = !card.event.archived && card.event.published;
+              const isSignupPageEnabled = card.event.published;
               return (
                 <li
                   key={card.event.id}
@@ -442,9 +450,12 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                   <div className="mb-2.5 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <h2 className="overflow-hidden text-[15px] font-semibold text-charcoal font-heading [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                        <Link
+                          href={`/dashboard/event/${card.event.id}/signups`}
+                          className="overflow-hidden text-[15px] font-semibold leading-[1.4] text-charcoal no-underline underline-offset-2 hover:underline font-heading [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
+                        >
                           {card.event.title}
-                        </h2>
+                        </Link>
                         {!card.event.published ? (
                           <span className="inline-flex items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280] font-body">
                             Draft
@@ -497,11 +508,19 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                         type="button"
                         disabled
                         className="inline-flex min-h-[40px] w-full cursor-not-allowed items-center justify-center rounded-[10px] border-2 border-charcoal bg-transparent px-[14px] py-2 text-[13px] font-medium text-charcoal opacity-50 font-body"
-                        title={card.event.archived ? 'Archived signup' : 'Not yet published'}
+                        title="Not yet published"
                       >
                         Signup Page
                       </button>
                     )}
+                    <Link
+                      href={`/dashboard/event/${card.event.id}/edit`}
+                      aria-label="Edit signup"
+                      title="Edit signup"
+                      className="inline-flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-[8px] border border-charcoal/20 bg-surface text-charcoal"
+                    >
+                      <Pencil size={14} />
+                    </Link>
                   </div>
                 </li>
               );

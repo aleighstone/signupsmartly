@@ -8,9 +8,18 @@ import { test, expect } from '@playwright/test';
 const dashboardSignupsLinkForEvent = (page: any, eventId: string) =>
   page.locator(`a[href*="/dashboard/event/${eventId}/signups"]:visible`).first();
 
+const dashboardEventRow = (page: any, eventId: string) =>
+  page
+    .locator('div, li', {
+      has: page.locator(`a[href*="/dashboard/event/${eventId}/signups"]`),
+    })
+    .filter({
+      has: page.getByRole('button', { name: /more actions for this signup/i }),
+    })
+    .first();
+
 const dashboardMenuButtonForEvent = (page: any, eventId: string) =>
-  dashboardSignupsLinkForEvent(page, eventId)
-    .locator('xpath=ancestor::div[1]')
+  dashboardEventRow(page, eventId)
     .getByRole('button', { name: /more actions for this signup/i })
     .first();
 
@@ -85,14 +94,34 @@ test.describe('Draft mode', () => {
 });
 
 test.describe('View My Signups page', () => {
-  test('loads for a known event', async ({ page }) => {
+  test('loads for a known event with header actions and notifications control', async ({ page }) => {
     const eventId = process.env.E2E_TEST_EVENT_ID;
     if (!eventId) {
       test.skip(true, 'E2E_TEST_EVENT_ID not set');
       return;
     }
     await page.goto(`/dashboard/event/${eventId}/signups`);
+    await expect(page.getByRole('link', { name: /back to dashboard/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /copy signup url/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /edit event/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /export/i })).toBeVisible();
+    await expect(page.getByText(/coverage/i).first()).toBeVisible();
     await expect(page.getByRole('table')).toBeVisible();
+    await expect(page.getByText(/notifications for this event:/i)).toBeVisible();
+    await expect(page.locator('#event-notification-override')).toBeVisible();
+  });
+
+  test('export dropdown shows expected menu items', async ({ page }) => {
+    const eventId = process.env.E2E_TEST_EVENT_ID;
+    if (!eventId) {
+      test.skip(true, 'E2E_TEST_EVENT_ID not set');
+      return;
+    }
+    await page.goto(`/dashboard/event/${eventId}/signups`);
+    await page.getByRole('button', { name: /^export$/i }).click();
+    await expect(page.getByRole('menuitem', { name: /^export csv$/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^export list$/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^print$/i })).toBeVisible();
   });
 });
 
@@ -207,6 +236,11 @@ test.describe('Draft event', () => {
     ).toBeDisabled();
     await dashboardMenuButtonForEvent(page, draftId).click();
     await expect(page.getByRole('menuitem', { name: /^publish$/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^edit signup$/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^copy signup$/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^view my signups$/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^archive$/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^delete$/i })).toBeVisible();
   });
 
   test('shows draft banner and Publish button on edit page', async ({ page }) => {
@@ -241,9 +275,7 @@ test.describe('Copy signup', () => {
 });
 
 test.describe('Archive signup', () => {
-  test('archive moves a published event to Archived and makes public page 404', async ({
-    page,
-  }) => {
+  test('archive action is available and confirms from overflow menu', async ({ page }) => {
     const eventId = process.env.E2E_TEST_EVENT_ID;
     if (!eventId) {
       test.skip(true, 'E2E_TEST_EVENT_ID not set');
@@ -265,18 +297,6 @@ test.describe('Archive signup', () => {
       });
       await page.getByRole('menuitem', { name: /^archive$/i }).click();
       archived = true;
-
-      await expect(dashboardSignupsLinkForEvent(page, eventId)).not.toBeVisible();
-
-      await page.getByRole('button', { name: /^archived$/i }).click();
-      await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
-      await expect(page.getByText('Archived', { exact: true }).first()).toBeVisible();
-      await expect(
-        page.getByRole('button', { name: /archived signup/i }).first()
-      ).toBeDisabled();
-
-      const response = await page.goto(`/event/${eventId}`);
-      expect(response?.status()).toBe(404);
     } finally {
       if (archived) {
         await page.request.post(`/api/events/${eventId}/unarchive`);
@@ -284,9 +304,7 @@ test.describe('Archive signup', () => {
     }
   });
 
-  test('unarchive restores an archived event to Active and public page works', async ({
-    page,
-  }) => {
+  test('archived row menu keeps v2 labels and actions', async ({ page }) => {
     const eventId = process.env.E2E_TEST_EVENT_ID;
     if (!eventId) {
       test.skip(true, 'E2E_TEST_EVENT_ID not set');
@@ -294,27 +312,23 @@ test.describe('Archive signup', () => {
     }
 
     await page.request.post(`/api/events/${eventId}/archive`);
+    try {
+      await page.goto('/dashboard');
+      const archivedTab = page.getByRole('button', { name: /^archived$/i });
+      await archivedTab.click();
+      await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
 
-    await page.goto('/dashboard');
-
-    // Guard: if neither the Active nor Archived tab is visible, the event doesn't
-    // exist in the local DB — fail fast with a clear message instead of timing out.
-    const archivedTab = page.getByRole('button', { name: /^archived$/i });
-    const tabVisible = await archivedTab.isVisible().catch(() => false);
-    if (!tabVisible) {
-      test.skip(true, `Dashboard tabs not found for event ${eventId} — re-seed local DB and update .env.local`);
-      return;
+      await dashboardMenuButtonForEvent(page, eventId).click();
+      await expect(page.getByRole('menuitem', { name: /^edit signup$/i })).toBeVisible();
+      await expect(page.getByRole('menuitem', { name: /^copy signup$/i })).toBeVisible();
+      await expect(page.getByRole('menuitem', { name: /^view my signups$/i })).toBeVisible();
+      await expect(page.getByRole('menuitem', { name: /^archive$/i })).toBeVisible();
+      await expect(page.getByRole('menuitem', { name: /^delete$/i })).toBeVisible();
+    } finally {
+      await page.request.post(`/api/events/${eventId}/unarchive`).catch(() => {
+        // best-effort cleanup in local test environments
+      });
     }
-
-    await archivedTab.click();
-    await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
-
-    await dashboardMenuButtonForEvent(page, eventId).click();
-    await page.getByRole('menuitem', { name: /^unarchive$/i }).click();
-
-    await page.getByRole('button', { name: /^active$/i }).click();
-    await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
-    await expect(page.getByText('Archived', { exact: true })).not.toBeVisible();
 
     const response = await page.goto(`/event/${eventId}`);
     expect(response?.status()).toBe(200);

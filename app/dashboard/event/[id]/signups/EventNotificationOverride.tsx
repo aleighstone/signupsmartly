@@ -15,18 +15,17 @@ export function EventNotificationOverride({
   eventOverride,
   globalPreference,
 }: Props) {
+  const normalizeForUi = (pref: NotificationPreference): NotificationPreference =>
+    pref === 'weekly' ? 'daily' : pref;
   const [value, setValue] = useState<NotificationPreference>(
-    eventOverride ?? globalPreference
+    normalizeForUi(eventOverride ?? globalPreference)
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   async function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const raw = e.target.value;
-    const selected = raw as NotificationPreference;
-    // If the selected value matches the global preference, clear the override (null in DB).
-    const nextOverride =
-      selected === globalPreference ? null : (selected as NotificationPreference);
+    const selected = e.target.value as NotificationPreference;
+    const nextOverride = selected === globalPreference ? null : selected;
 
     setValue(selected);
     setSaving(true);
@@ -46,14 +45,14 @@ export function EventNotificationOverride({
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {
-      setValue(eventOverride ?? globalPreference);
+      setValue(normalizeForUi(eventOverride ?? globalPreference));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2.5">
       <label
         htmlFor="event-notification-override"
         className="text-sm font-medium text-charcoal font-body"
@@ -65,16 +64,13 @@ export function EventNotificationOverride({
         value={value}
         onChange={handleChange}
         disabled={saving}
-        className="rounded-lg border border-charcoal/20 px-3 py-1.5 text-sm font-body text-charcoal bg-surface focus:ring-2 focus:ring-sage/30 focus:border-sage disabled:opacity-60"
+        className="min-h-9 rounded-[10px] border border-charcoal/20 bg-surface px-3 pr-7 text-[13px] text-charcoal font-body focus:border-sage focus:ring-2 focus:ring-sage/30 disabled:opacity-60"
       >
-        <option value="instant">Instantly</option>
         <option value="daily">Daily digest</option>
-        <option value="weekly">Weekly digest</option>
-        <option value="never">Never</option>
+        <option value="instant">Instant</option>
+        <option value="never">None</option>
       </select>
-      {saved && (
-        <span className="text-sm text-sage font-body">Saved</span>
-      )}
+      {saved ? <span className="text-sm text-sage font-body">Saved</span> : null}
     </div>
   );
 }

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePostHog } from '@posthog/react';
 import { format } from 'date-fns';
+import { ChevronDown, Copy, Pencil } from 'lucide-react';
 import type { EventWithSlots, Slot } from '@/types/database';
 import { formatTimeRange } from '@/lib/calendar';
 import { formatCommentForExport } from '@/lib/slot-comment';
@@ -25,8 +26,8 @@ interface SignupsActionsProps {
   signupPageUrl: string;
 }
 
-const buttonClass =
-  'rounded-xl border-2 border-charcoal px-4 py-2 text-sm font-medium text-charcoal hover:bg-charcoal/5 transition-colors font-body';
+const secondaryButtonClass =
+  'inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-[10px] border-2 border-charcoal bg-transparent px-[18px] py-[9px] text-sm font-medium text-charcoal transition-colors hover:bg-charcoal/5 font-body';
 
 function formatSlotDateTime(slot: Slot): string {
   if (!slot.start_time) return '';
@@ -52,7 +53,9 @@ function buildExportListText(event: EventWithSlots, isSimple: boolean): string {
     if (sameDay) {
       lines.push(format(toLocalDate(startDatePart), 'EEEE, MMMM d, yyyy'));
     } else {
-      lines.push(`${format(toLocalDate(startDatePart), 'MMMM d, yyyy')} – ${format(toLocalDate(endDatePart!), 'MMMM d, yyyy')}`);
+      lines.push(
+        `${format(toLocalDate(startDatePart), 'MMMM d, yyyy')} – ${format(toLocalDate(endDatePart!), 'MMMM d, yyyy')}`
+      );
     }
   }
 
@@ -92,9 +95,7 @@ function buildExportListText(event: EventWithSlots, isSimple: boolean): string {
     for (let i = 1; i <= slot.capacity; i++) {
       const signup = slot.signups[i - 1];
       const namePart = `${i}. ${signup?.name ?? ''}`;
-      const note = signup
-        ? formatCommentForExport(slot.comment_label, signup.comment)
-        : '';
+      const note = signup ? formatCommentForExport(slot.comment_label, signup.comment) : '';
       lines.push(note ? `${namePart} — ${note}` : namePart);
     }
 
@@ -112,21 +113,15 @@ export function SignupsActions({
   signupPageUrl,
 }: SignupsActionsProps) {
   const posthog = usePostHog();
-  const [showCopyModal, setShowCopyModal] = useState(false);
-  const [showExportListModal, setShowExportListModal] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [listCopied, setListCopied] = useState(false);
+  const [showCopyToast, setShowCopyToast] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!copied && !listCopied) return;
-    const t = setTimeout(() => {
-      setCopied(false);
-      setListCopied(false);
-    }, 2000);
+    if (!showCopyToast) return;
+    const t = setTimeout(() => setShowCopyToast(false), 2200);
     return () => clearTimeout(t);
-  }, [copied, listCopied]);
+  }, [showCopyToast]);
 
   useEffect(() => {
     if (!showExportDropdown) return;
@@ -139,7 +134,7 @@ export function SignupsActions({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showExportDropdown]);
 
-   const csvHeaders = isSimple
+  const csvHeaders = isSimple
     ? ['Item', 'Name', 'Email', 'Comment', 'Signup Timestamp', 'Source']
     : ['Spot', 'Date & Time', 'Name', 'Email', 'Comment', 'Signup Timestamp', 'Source'];
 
@@ -147,31 +142,17 @@ export function SignupsActions({
     const commentCell = formatCommentForExport(r.comment_label, r.comment);
     return isSimple
       ? [r.role, r.name, r.email, commentCell, r.createdAt, r.source]
-      : [
-          r.role,
-          r.dateAndTime || '',
-          r.name,
-          r.email,
-          commentCell,
-          r.createdAt,
-          r.source,
-        ];
+      : [r.role, r.dateAndTime || '', r.name, r.email, commentCell, r.createdAt, r.source];
   });
 
   const csvContent = [csvHeaders, ...csvRows]
     .map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
     .join('\n');
-
   const exportListText = buildExportListText(event, isSimple);
 
   const exportCsv = () => {
     setShowExportDropdown(false);
-    if (posthog) {
-      posthog.capture('csv_exported', {
-        signup_type: event.signup_type,
-        total_signups: rows.length,
-      });
-    }
+    posthog?.capture('csv_exported', { signup_type: event.signup_type, total_signups: rows.length });
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -181,41 +162,28 @@ export function SignupsActions({
     URL.revokeObjectURL(url);
   };
 
-  const openExportListModal = () => {
+  const exportList = () => {
     setShowExportDropdown(false);
-    setShowExportListModal(true);
-    if (posthog) {
-      posthog.capture('export_list_opened', { event_id: eventId });
-    }
+    posthog?.capture('export_list_opened', { event_id: eventId });
+    const blob = new Blob([exportListText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${event.title.replace(/\s+/g, '-')}-signups-list.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
-
-  const handleCopyList = async () => {
-    await navigator.clipboard.writeText(exportListText);
-    setListCopied(true);
-    if (posthog) {
-      posthog.capture('export_list_copied', { event_id: eventId });
-    }
-  };
-
-  const signupUrl = signupPageUrl;
 
   const handleCopy = async () => {
-    if (!signupUrl) return;
-    await navigator.clipboard.writeText(signupUrl);
-    setCopied(true);
-    if (posthog) {
-      posthog.capture('signup_link_copied', { event_id: eventId });
-    }
+    if (!signupPageUrl) return;
+    await navigator.clipboard.writeText(signupPageUrl);
+    setShowCopyToast(true);
+    posthog?.capture('signup_link_copied', { event_id: eventId });
   };
 
   const handlePrint = () => {
     setShowExportDropdown(false);
-    if (posthog) {
-      posthog.capture('signups_printed', {
-        event_id: eventId,
-        total_signups: rows.length,
-      });
-    }
+    posthog?.capture('signups_printed', { event_id: eventId, total_signups: rows.length });
     window.print();
   };
 
@@ -228,196 +196,86 @@ export function SignupsActions({
   header,
   nav,
   [data-no-print],
-  .nps-btn {
-    display: none !important;
-  }
-  * {
-    box-shadow: none !important;
-    background-color: transparent !important;
-  }
-  body {
-    font-size: 12pt;
-  }
-  tr {
-    page-break-inside: avoid;
-  }
+  .nps-btn { display: none !important; }
+  * { box-shadow: none !important; background-color: transparent !important; }
+  body { font-size: 12pt; }
+  tr { page-break-inside: avoid; }
 }
 `,
         }}
       />
-      <div data-no-print className="flex flex-col gap-2">
+
+      <div data-no-print className="flex flex-row flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => setShowCopyModal(true)}
-          className={buttonClass}
+          onClick={() => void handleCopy()}
+          className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-[10px] border-2 border-transparent bg-sage px-[18px] py-[9px] text-sm font-semibold text-white transition-colors hover:bg-sage-hover font-body"
         >
+          <Copy className="h-3.5 w-3.5" aria-hidden />
           Copy Signup URL
         </button>
-        <Link href={`/dashboard/event/${eventId}/edit`} className={buttonClass + ' text-center no-underline'}>
+
+        <Link href={`/dashboard/event/${eventId}/edit`} className={secondaryButtonClass + ' no-underline'}>
+          <Pencil className="h-3.5 w-3.5" aria-hidden />
           Edit Event
         </Link>
+
         <div className="relative" ref={exportDropdownRef}>
           <button
             type="button"
             onClick={() => setShowExportDropdown((v) => !v)}
-            className={buttonClass + ' w-full flex items-center justify-center gap-2'}
+            className={secondaryButtonClass}
             aria-expanded={showExportDropdown}
-            aria-haspopup="true"
+            aria-haspopup="menu"
           >
             Export
-            <svg
-              className={`shrink-0 text-muted transition-transform duration-200 ${
-                showExportDropdown ? 'rotate-180' : ''
-              }`}
-              width={16}
-              height={16}
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden
-            >
-              <path
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+            <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
           </button>
-          {showExportDropdown && (
-            <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-xl border border-charcoal/10 bg-surface py-1 shadow-soft-md">
+          {showExportDropdown ? (
+            <div
+              role="menu"
+              className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[180px] rounded-xl border border-charcoal/10 bg-surface py-1 shadow-soft-md"
+            >
               <button
                 type="button"
+                role="menuitem"
                 onClick={exportCsv}
-                className="block w-full px-4 py-2 text-left text-sm text-charcoal hover:bg-charcoal/5 font-body"
+                className="block w-full px-[14px] py-[10px] text-left text-[13px] font-medium text-charcoal hover:bg-charcoal/5 font-body"
               >
                 Export CSV
               </button>
               <button
                 type="button"
-                onClick={openExportListModal}
-                className="block w-full px-4 py-2 text-left text-sm text-charcoal hover:bg-charcoal/5 font-body"
+                role="menuitem"
+                onClick={exportList}
+                className="block w-full px-[14px] py-[10px] text-left text-[13px] font-medium text-charcoal hover:bg-charcoal/5 font-body"
               >
                 Export List
               </button>
               <button
                 type="button"
+                role="menuitem"
                 onClick={handlePrint}
-                className="block w-full px-4 py-2 text-left text-sm text-charcoal hover:bg-charcoal/5 font-body"
+                className="block w-full px-[14px] py-[10px] text-left text-[13px] font-medium text-charcoal hover:bg-charcoal/5 font-body"
               >
                 Print
               </button>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
-      {showCopyModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="copy-modal-title"
-        >
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setShowCopyModal(false)}
-            aria-hidden="true"
-          />
-          <div
-            className="relative mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setShowCopyModal(false)}
-              className="absolute right-4 top-4 text-xl leading-none text-muted hover:text-charcoal"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-            <h2
-              id="copy-modal-title"
-              className="font-heading text-lg font-semibold text-charcoal"
-            >
-              Copy Signup Link
-            </h2>
-            <p className="mt-1 text-sm text-muted font-body">
-              Share this link with your volunteers.
-            </p>
-            <div className="mt-4 flex items-center gap-2">
-              <input
-                type="text"
-                readOnly
-                value={signupUrl}
-                onFocus={(e) => e.target.select()}
-                className="flex-1 select-all rounded-xl border border-charcoal/20 bg-surface px-3 py-2 text-sm text-charcoal font-body"
-              />
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white font-body hover:bg-sage/90 transition-colors"
-              >
-                {copied ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showExportListModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="export-list-modal-title"
-        >
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setShowExportListModal(false)}
-            aria-hidden="true"
-          />
-          <div
-            className="relative mx-4 w-full max-w-lg max-h-[80vh] flex flex-col rounded-2xl bg-white shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between p-4 border-b border-charcoal/10">
-              <h2
-                id="export-list-modal-title"
-                className="font-heading text-lg font-semibold text-charcoal"
-              >
-                Export List
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowExportListModal(false)}
-                className="text-xl leading-none text-muted hover:text-charcoal"
-                aria-label="Close"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto p-4">
-              <pre
-                className="whitespace-pre-wrap font-body text-sm text-charcoal bg-sand/30 rounded-xl p-4"
-                style={{ fontFamily: 'inherit' }}
-              >
-                {exportListText}
-              </pre>
-            </div>
-            <div className="p-4 border-t border-charcoal/10">
-              <button
-                type="button"
-                onClick={handleCopyList}
-                className="rounded-xl bg-sage px-4 py-2 text-sm font-medium text-white font-body hover:bg-sage/90 transition-colors"
-              >
-                {listCopied ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <div
+        className={`fixed bottom-6 left-1/2 z-[100] -translate-x-1/2 rounded-[10px] bg-charcoal px-[18px] py-[10px] text-[13px] font-medium text-white transition-all duration-200 ${
+          showCopyToast
+            ? 'pointer-events-auto translate-y-0 opacity-100'
+            : 'pointer-events-none translate-y-3 opacity-0'
+        }`}
+        role="status"
+        aria-live="polite"
+      >
+        Signup URL copied!
+      </div>
     </>
   );
 }

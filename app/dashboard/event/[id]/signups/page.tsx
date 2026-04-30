@@ -139,53 +139,63 @@ export default async function SignupsPage({ params }: PageProps) {
         totalSignups={coverage.filled}
         coveragePct={coverage.percentage}
       />
-      <div data-no-print className="mb-6">
-        <Link
-          href="/dashboard"
-          className="text-sm text-muted hover:text-charcoal transition-colors font-body"
-        >
-          ← Back to Dashboard
-        </Link>
-      </div>
-
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-charcoal font-heading">
-            {eventData.title}
-          </h1>
-          <p className="text-muted font-body">
-            {formatEventDateRange(eventData.start_date, eventData.end_date)}
-          </p>
-          <div className="mt-3 max-w-sm">
-            <CoverageWithStillNeeded
-              filled={coverage.filled}
-              total={coverage.total}
-              percentage={coverage.percentage}
-              signupType={eventData.signup_type}
-              slotsNeedingFill={slotsNeedingFill}
-            />
-          </div>
+      <div className="mx-auto w-full max-w-[1100px]">
+        <div data-no-print className="mb-5">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted transition-colors hover:text-charcoal font-body"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M19 12H5M12 5l-7 7 7 7"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Back to Dashboard
+          </Link>
         </div>
-        <SignupsActions event={eventData} rows={csvRows} isSimple={isSimple} eventId={id} signupPageUrl={signupPageUrl} />
-      </div>
 
-      <SignupsTable
-        rows={tableRows}
-        slots={eventData.slots.map((s) => ({
-          id: s.id,
-          role_name: s.role_name,
-          comment_label: s.comment_label ?? DEFAULT_COMMENT_LABEL,
-          comment_required: s.comment_required ?? false,
-        }))}
-        isSimple={isSimple}
-      />
+        <div className="mb-5 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center md:gap-6">
+          <div className="min-w-0">
+            <h1 className="mb-1 text-2xl font-bold leading-[1.2] text-charcoal font-heading">
+              {eventData.title}
+            </h1>
+            <p className="text-sm text-muted font-body">
+              {formatEventDateRange(eventData.start_date, eventData.end_date)}
+            </p>
+          </div>
+          <SignupsActions event={eventData} rows={csvRows} isSimple={isSimple} eventId={id} signupPageUrl={signupPageUrl} />
+        </div>
 
-      <div data-no-print className="mt-6 max-w-sm">
-        <EventNotificationOverride
-          eventId={id}
-          eventOverride={eventData.notification_override as NotificationPreference | null}
-          globalPreference={globalPreference}
+        <CoverageWithStillNeeded
+          filled={coverage.filled}
+          total={coverage.total}
+          percentage={coverage.percentage}
+          signupType={eventData.signup_type}
+          slotsNeedingFill={slotsNeedingFill}
         />
+
+        <SignupsTable
+          rows={tableRows}
+          slots={eventData.slots.map((s) => ({
+            id: s.id,
+            role_name: s.role_name,
+            comment_label: s.comment_label ?? DEFAULT_COMMENT_LABEL,
+            comment_required: s.comment_required ?? false,
+          }))}
+          isSimple={isSimple}
+        />
+
+        <div data-no-print className="mt-6">
+          <EventNotificationOverride
+            eventId={id}
+            eventOverride={eventData.notification_override as NotificationPreference | null}
+            globalPreference={globalPreference}
+          />
+        </div>
       </div>
     </AppLayout>
   );

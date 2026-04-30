@@ -395,3 +395,64 @@ export async function PATCH(
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { data: eventRow, error: eventError } = await serviceSupabase
+      .from('events')
+      .select('id, organization_id')
+      .eq('id', id)
+      .single();
+
+    if (eventError || !eventRow) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
+
+    const event = eventRow as { id: string; organization_id: string };
+
+    const { data: membership } = await serviceSupabase
+      .from('organization_members')
+      .select('id')
+      .eq('organization_id', event.organization_id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!membership) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const { data: slotRows } = await serviceSupabase
+      .from('slots')
+      .select('id')
+      .eq('event_id', id);
+    const slotIds = (slotRows ?? []).map((slot: { id: string }) => slot.id);
+
+    if (slotIds.length > 0) {
+      await serviceSupabase.from('signups').delete().in('slot_id', slotIds);
+    }
+    await serviceSupabase.from('slots').delete().eq('event_id', id);
+    await serviceSupabase.from('events').delete().eq('id', id);
+
+    return NextResponse.json({ id });
+  } catch (err: unknown) {
+    console.error('Delete event error:', err);
+    await reportProductionError({ error: err, request, status: 500 });
+    const message =
+      err && typeof err === 'object' && 'message' in err
+        ? String((err as { message: unknown }).message)
+        : 'Failed to delete event';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

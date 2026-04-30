@@ -2,6 +2,49 @@
 
 ---
 
+## 2026-04-30
+
+### Completed
+
+| What | File(s) | Status |
+|---|---|---|
+| Claude Design session: dashboard redesign (Option C — table layout) + View My Signups page | `dashboard-redesign/README.md`, `dashboard-redesign/README-v2.md`, `dashboard-redesign/README-view-signups.md`, `dashboard-redesign/dashboard-redesign.html`, `dashboard-redesign/view-signups.html` | specs committed; implementation in progress (Cursor) |
+| AGENTS.md: locked design decisions, label accuracy table, icon specs | `AGENTS.md` | committed |
+| Playwright test fixes: copy test scoped to correct card; unarchive test stale-DB guard | `e2e/organizer.smoke.ts` | committed |
+| Spec reconciliation: auto-scroll, archive, OG previews, visual hierarchy all updated to final shipped behavior | `specs/` | committed |
+
+### In Progress (Cursor implementing)
+
+- Dashboard table layout (desktop) + card layout (mobile)
+- Event title as link to View My Signups
+- Icon buttons: Signup Page (ExternalLink) + Edit (Pencil) + overflow ⋮
+- Overflow menu full action set: Publish / Edit signup / Copy signup / View my signups / Archive / Delete
+- Sortable Event + Date columns (sort state in localStorage)
+- Active/Archived toggle (only when archived events exist)
+- View My Signups page redesign: coverage card, signups table, export dropdown, notifications selector
+
+### Backlog
+
+| Item | Notes |
+|---|---|
+| Publish a draft from dashboard — E2E test | Publish button exists, no test that verifies it goes live |
+| Organizer breadcrumb — E2E test | No Playwright coverage yet |
+| Volunteer autofill — E2E test | No Playwright coverage yet (localStorage-only feature) |
+| Delete signup from overflow menu | New action added in redesign — needs confirmation modal + API route |
+
+### Lessons
+
+| What happened | Fix / note |
+|---|---|
+| Copy test used `.first()` on the three-dot menu — hit a draft card (no Copy item) | Scope to `li:has(a[href*="${eventId}"])` for the specific known-published event |
+| Archive test timed out on Archived tab when DB was empty | `isVisible()` guard — skips cleanly with "re-seed" message instead of 30s timeout |
+
+### Resume here
+
+> Cursor is implementing the dashboard + View My Signups redesign. Once it lands: run `npm run build`, then `npm run test:e2e` (remember: `supabase start` + `npm run dev` first). Ship, then update What's New.
+
+---
+
 ## 2026-04-24
 
 ### Shipped
@@ -142,3 +185,31 @@
 ### Backlog
 
 - Add API-level test coverage for `PATCH /api/events/[id]` to assert event row count remains unchanged on edit saves.
+
+## 2026-04-30
+
+### Completed
+
+- Implemented the dashboard v2 interaction updates from `dashboard-redesign/README-v2.md`: event title is now a clickable link to `View my signups` on desktop and mobile, with 2-line clamp and hover underline (`components/DashboardEventList.tsx`).
+- Replaced desktop action shortcuts with the new icon set and order (`Signup Page`, `Edit signup`, `More`) and added mobile edit icon action to match the prototype direction (`components/DashboardEventList.tsx`).
+- Updated overflow menu to the full v2 action set and labels in order: `Publish` (draft only), `Edit signup`, `Copy signup`, `View my signups`, `Archive`, `Delete` (`components/DashboardEventList.tsx`).
+- Added event delete API support for organizers with auth/membership checks and cleanup of related slots/signups (`app/api/events/[id]/route.ts`).
+- Verified with `npm run build` (passes; existing `img` optimization warnings unchanged).
+
+### Backlog
+
+- Run/refresh Playwright dashboard assertions for the new menu action set and icon-button behavior (`e2e/organizer.smoke.ts`).
+- Confirm final product decision on archived-row lifecycle action label (`Archive` vs `Unarchive`) now that v2 spec enforces `Archive` text.
+
+## 2026-04-30
+
+### Completed
+
+- Applied `dashboard-redesign/README-view-signups.md` updates to organizer View My Signups UI (`app/dashboard/event/[id]/signups/page.tsx`, `SignupsActions.tsx`, `SignupsTable.tsx`, `CoverageWithStillNeeded.tsx`, `EventNotificationOverride.tsx`).
+- Matched prototype behaviors from `dashboard-redesign/view-signups.html`: inline header action row, copy-to-clipboard toast, export dropdown structure, updated coverage card composition, and table row/delete styling.
+- Updated Playwright coverage scoped to View My Signups (`e2e/organizer.smoke.ts`) with assertions for back link, action buttons, export menu items, and notification control.
+- Verified with `npx playwright test e2e/organizer.smoke.ts --grep "View My Signups page"` (passes) and `npm run build` (passes).
+
+### Backlog
+
+- Consider whether weekly event notification override should remain available in product UX or stay hidden behind the simplified Daily/Instant/None control.
