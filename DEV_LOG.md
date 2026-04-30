@@ -12,35 +12,42 @@
 | Seed script: relative dates, stable draft event, prints env IDs at end | `scripts/seed-demo-events.ts` | deployed |
 | Local dev reset workflow: admin API auth user creation (no hardcoded UUID) | `scripts/setup-local-user.ts` | deployed |
 | New cleanup script: deletes Playwright orphan draft events | `scripts/cleanup-test-data.ts` | deployed |
-| Playwright fix: strict mode violation on "Draft" text in draft card test | `e2e/organizer.smoke.ts` | deployed |
+| Playwright fix: strict mode violation on “Draft” text in draft card test | `e2e/organizer.smoke.ts` | deployed |
 | Style guide: typography updated to reflect display/heading split | `public/styleguide/index.html` | deployed |
 | EventHeader: date/location match slot card time/name styles (charcoal, not muted) | `components/EventHeader.tsx` | deployed |
-| Visual hierarchy spec written for Cursor | `specs/signup-page-visual-hierarchy-spec.md` | committed |
 | Signup page visual hierarchy: date/time hero layout for single vs multi-date events | `lib/calendar.ts`, `components/SlotList.tsx` | deployed |
-| Multi-day signup shortcut: “Go to future spots” link | `components/SlotList.tsx`, `e2e/volunteer.smoke.ts`, `data/changelog.ts` | deployed |
-| Archive feature: dashboard Active/Archived tabs, archive/unarchive API, public 404 guard, reminder skip | `components/EventCard.tsx`, `components/DashboardEventList.tsx`, `app/dashboard/page.tsx`, `app/api/events/[id]/archive/route.ts`, `app/api/events/[id]/unarchive/route.ts`, `app/event/[id]/page.tsx`, `app/api/reminders/process/route.ts`, `lib/db.ts`, `supabase/migrations/20260424173000_add_event_archived.sql` | built; pending SQL + deploy |
+| “Go to future spots” link on multi-date signup pages (replaced auto-scroll after UX testing) | `components/SlotList.tsx`, `e2e/volunteer.smoke.ts`, `data/changelog.ts` | deployed |
+| Open Graph metadata: event pages + What's New | `app/event/[id]/page.tsx`, `app/whats-new/page.tsx` | deployed |
+| Archive feature: Active/Archived dashboard tabs, confirmation modal, archive/unarchive API, public 404, reminder skip | `components/EventCard.tsx`, `components/DashboardEventList.tsx`, `app/dashboard/page.tsx`, `app/api/events/[id]/archive/route.ts`, `app/api/events/[id]/unarchive/route.ts`, `app/event/[id]/page.tsx`, `app/api/reminders/process/route.ts`, `lib/db.ts`, `supabase/migrations/20260424173000_add_event_archived.sql` | deployed |
+| Organizer “← My Dashboard” breadcrumb on public event page | `app/event/[id]/page.tsx` | deployed |
+| Volunteer name/email localStorage autofill in signup form | `components/SignupForm.tsx` | deployed |
+| What's New page updated with all above features | `data/changelog.ts` | deployed |
+| Playwright: archive/unarchive lifecycle tests + stale-DB guard + copy-test scoped to correct card | `e2e/organizer.smoke.ts` | deployed |
+| Spec reconciliation: all 4 shipped specs updated to match final behavior | `specs/` | committed |
 
 ### Backlog
 
 | Item | Notes |
 |---|---|
-| ~~Implement visual hierarchy spec~~ | shipped |
-| ~~Set `E2E_TEST_MULTI_DATE_EVENT_ID` in `.env.local`~~ | Done; production test event ID available for preview/prod testing |
-| Apply archive migration to production | Run `supabase/migrations/20260424173000_add_event_archived.sql` in Supabase SQL Editor before deploying archive code |
 | Publish a draft from dashboard — E2E test | Publish button exists, no test that verifies it goes live |
+| Organizer breadcrumb — E2E test | No Playwright coverage yet |
+| Volunteer autofill — E2E test | No Playwright coverage yet (localStorage-only feature) |
 
 ### Lessons
 
 | What happened | Fix / note |
 |---|---|
 | `supabase db reset` wipes `auth.users` — login broke after reset | Use `supabase.auth.admin.createUser` in setup-local-user.ts; never seed auth via raw SQL |
-| Direct `auth.users` SQL insert caused "Database error querying schema" | Supabase auth triggers need all fields set correctly — always use the admin API |
+| Direct `auth.users` SQL insert caused “Database error querying schema” | Supabase auth triggers need all fields set correctly — always use the admin API |
 | Seed script had hardcoded UUIDs that broke after reset | Look up organizer UUID dynamically by email at seed time; no hardcoded IDs needed |
 | `getByText('Draft')` matched event title heading AND pill badge | Use `{ exact: true }` when the target text appears in longer strings nearby |
+| Copy test used `.first()` on three-dot menu — first card was a draft, no Copy item | Scope to `li:has(a[href*=”${eventId}”])` to target the specific known-published event |
+| Archive test timed out on Archived tab button when DB was empty | Added `isVisible()` guard that skips with a clear “re-seed” message instead of timing out |
+| Auto-scroll on page load hid the event header and description | Replaced `useEffect` scroll with a manual “Go to future spots” link button |
 
 ### Resume here
 
-> Next session: hand `specs/signup-page-visual-hierarchy-spec.md` to Cursor. After it ships, run `npm run test:e2e` (remember: supabase start + npm run dev first). Then update What's New.
+> All major features from today are deployed. No urgent backlog. Next session: either add E2E coverage for the organizer breadcrumb, or start a new feature.
 
 ---
 
@@ -122,3 +129,16 @@
 | Submit button clicked wrong element | Always scope to `getByRole('dialog')` before querying inside modals |
 
 ---
+
+## 2026-04-28
+
+### Completed
+
+- Added Playwright regression coverage for edit/save behavior so an edit does not create duplicate signups (`e2e/organizer.smoke.ts`).
+- Standardized breadcrumb back-link placement/styling so back links appear above headings on dashboard/create flows (`app/create-event/CreateEventForm.tsx`, `app/create-event/page.tsx`, `app/dashboard/event/[id]/edit/EditEventForm.tsx`, `app/dashboard/event/[id]/signups/page.tsx`, `app/dashboard/event/[id]/roster/page.tsx`, `app/signup/confirm/page.tsx`).
+- Fixed `/create-event` simple-mode description editor lock-up by giving scheduled/simple description editors unique IDs, names, and remount keys (`app/create-event/CreateEventForm.tsx`).
+- Verified with `npm run build` (passes).
+
+### Backlog
+
+- Add API-level test coverage for `PATCH /api/events/[id]` to assert event row count remains unchanged on edit saves.

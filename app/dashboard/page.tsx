@@ -6,7 +6,7 @@ import { TrackMetaCompleteRegistration } from '@/app/providers/MetaPixelTracker'
 import { getEventsForUser, getEventWithSlotsForDashboard, getEventCoverage, hasEventWithVolunteerSignup, getOrgSlugForUser } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
 import { DashboardEventList } from '@/components/DashboardEventList';
-import type { EventCardData } from '@/components/EventCard';
+import type { EventCardData } from '@/components/DashboardEventList';
 import { NpsBanner } from '@/components/NpsBanner';
 import { formatEventDateRange } from '@/lib/calendar';
 import { serviceSupabase } from '@/lib/supabase-service';
@@ -100,31 +100,36 @@ export default async function DashboardPage() {
     <AppLayout>
       <TrackMetaCompleteRegistration userId={authUser && userId ? userId : null} />
       <TrackDashboardView eventCount={activeEvents.length} />
-      <h1 className="text-2xl font-semibold text-charcoal font-heading">Your Signups</h1>
 
       {!authUser ? (
-        <div className="mt-8 rounded-xl border border-dashed border-charcoal/20 bg-surface p-8 text-center shadow-soft">
-          <p className="text-muted font-body">
-            Sign in to view and manage your events.
-          </p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/signup" className="btn-primary-lg">
-              Create your first event
-            </Link>
-            <Link href="/login" className="btn-secondary-lg">
-              Sign in
-            </Link>
+        <div className="space-y-6">
+          <h1 className="text-[22px] font-semibold text-charcoal font-heading">Your Signups</h1>
+          <div className="rounded-xl border border-dashed border-charcoal/20 bg-surface p-8 text-center shadow-soft">
+            <p className="text-muted font-body">
+              Sign in to view and manage your events.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              <Link href="/signup" className="btn-primary-lg">
+                Create your first event
+              </Link>
+              <Link href="/login" className="btn-secondary-lg">
+                Sign in
+              </Link>
+            </div>
           </div>
         </div>
       ) : activeEvents.length === 0 && archivedEvents.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed border-charcoal/20 bg-surface p-8 text-center shadow-soft">
-          <p className="text-muted font-body">Nothing to see here.</p>
-          <Link href="/create-event" className="mt-4 btn-primary">
-            Create your first signup
-          </Link>
+        <div className="space-y-6">
+          <h1 className="text-[22px] font-semibold text-charcoal font-heading">Your Signups</h1>
+          <div className="rounded-xl border border-dashed border-charcoal/20 bg-surface p-8 text-center shadow-soft">
+            <p className="text-muted font-body">Nothing to see here.</p>
+            <Link href="/create-event" className="mt-4 btn-primary">
+              Create your first signup
+            </Link>
+          </div>
         </div>
       ) : (
-        <div className="mt-6">
+        <div>
           <DashboardEventList activeCards={activeCards} archivedCards={archivedCards} />
         </div>
       )}

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Redesign — SignupSmartly</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="../design-canvas.jsx"></script>
+<style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body>
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+/* ── Seed data ──────────────────────────────────────── */
+const EVENTS = [
+  { id:'1', title:'Regional Track Championships', date:'May 2–3, 2025',  type:'scheduled', published:true,  filled:22, total:28, archived:false },
+  { id:'2', title:'Fall Track Meet Volunteers',   date:'Apr 28, 2025',   type:'scheduled', published:true,  filled:9,  total:19, archived:false },
+  { id:'3', title:'End-of-Season Party Snacks',   date:'May 17, 2025',   type:'simple',    published:true,  filled:3,  total:11, archived:false },
+  { id:'4', title:'Book Fair Parent Help',         date:'May 5–6, 2025',  type:'scheduled', published:false, filled:0,  total:16, archived:false },
+  { id:'5', title:'Snack Duty — Spring Season',   date:null,             type:'simple',    published:true,  filled:14, total:20, archived:false },
+  { id:'6', title:'Winter Bake Sale',             date:'Dec 12, 2024',   type:'simple',    published:true,  filled:18, total:18, archived:true  },
+  { id:'7', title:'Fall Carnival Volunteers',     date:'Oct 5, 2024',    type:'scheduled', published:true,  filled:31, total:35, archived:true  },
+];
+
+/* ── Design tokens ─────────────────────────────────── */
+const C = {
+  sand: '#FAF9F6', surface: '#FFFFFF', charcoal: '#27272A',
+  muted: '#71717A', sage: '#6CBF6C', sageHover: '#52A352',
+  coral: '#F87171', border: 'rgba(39,39,42,0.10)',
+  borderMd: 'rgba(39,39,42,0.20)', shadow: '0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03)',
+  shadowMd: '0 4px 12px rgba(0,0,0,0.08)',
+};
+
+/* ── Shared atoms ──────────────────────────────────── */
+function Logo() {
+  return (
+    <span style={{ display:'inline-flex', alignItems:'center', gap:8 }}>
+      <img src="../assets/smartly-icon.png" width={26} height={26} style={{ borderRadius:5 }} alt="" />
+      <span style={{ fontFamily:'Quicksand,sans-serif', fontWeight:700, fontSize:18, color:C.charcoal }}>SignupSmartly</span>
+    </span>
+  );
+}
+
+function NavBar({ onCreate }) {
+  return (
+    <div style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, boxShadow:C.shadow }}>
+      <div style={{ maxWidth:1024, margin:'0 auto', padding:'12px 24px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <Logo />
+        <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+          <PrimaryBtn onClick={onCreate} sm>Create Signup</PrimaryBtn>
+          <div style={{ width:40, height:40, borderRadius:10, border:`1px solid ${C.borderMd}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:C.charcoal }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PrimaryBtn({ children, onClick, sm, fullWidth }) {
+  const [h, setH] = useState(false);
+  return (
+    <button onClick={onClick} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+      style={{ background:h?C.sageHover:C.sage, color:'#fff', border:'2px solid transparent', borderRadius:10,
+        padding: sm ? '8px 14px' : '9px 18px', fontSize: sm ? 13 : 14, fontWeight:600,
+        fontFamily:'Inter,sans-serif', cursor:'pointer', minHeight:40, width:fullWidth?'100%':undefined,
+        transition:'background 0.15s', display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
+      {children}
+    </button>
+  );
+}
+
+function SecondaryBtn({ children, onClick, sm, fullWidth }) {
+  const [h, setH] = useState(false);
+  return (
+    <button onClick={onClick} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+      style={{ background:h?'rgba(39,39,42,0.05)':'transparent', color:C.charcoal, border:`2px solid ${C.charcoal}`,
+        borderRadius:10, padding: sm ? '8px 14px' : '9px 18px', fontSize: sm ? 13 : 14, fontWeight:500,
+        fontFamily:'Inter,sans-serif', cursor:'pointer', minHeight:40, width:fullWidth?'100%':undefined,
+        transition:'background 0.15s', display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
+      {children}
+    </button>
+  );
+}
+
+function Badge({ label, color='amber' }) {
+  const colors = { amber:{ bg:'#fef3c7', text:'#92400e' }, draft:{ bg:'#f3f4f6', text:'#6b7280' } };
+  const c = colors[color] || colors.amber;
+  return <span style={{ background:c.bg, color:c.text, borderRadius:9999, padding:'2px 8px', fontSize:11, fontWeight:600 }}>{label}</span>;
+}
+
+function TypeBadge({ type }) {
+  return <span style={{ background:'rgba(39,39,42,0.06)', color:C.muted, borderRadius:6, padding:'2px 7px', fontSize:11, fontWeight:500 }}>{type === 'simple' ? 'Simple list' : 'Scheduled'}</span>;
+}
+
+function CoverageMeter({ filled, total, size='sm' }) {
+  const pct = total > 0 ? Math.round(filled/total*100) : 0;
+  const h = size === 'sm' ? 6 : 8;
+  return (
+    <div>
+      <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4 }}>
+        <span style={{ fontWeight:500, color:C.charcoal }}>Coverage</span>
+        <span style={{ color:C.muted }}>{filled}/{total} · {pct}%</span>
+      </div>
+      <div style={{ background:'rgba(39,39,42,0.10)', borderRadius:9999, height:h, overflow:'hidden' }}>
+        <div style={{ background:C.sage, height:'100%', width:`${pct}%`, borderRadius:9999, transition:'width 0.3s' }} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Overflow menu ─────────────────────────────────── */
+function OverflowMenu({ event, style='dot' }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open]);
+
+  const items = [
+    ...(event.published ? [] : [{ label: 'Publish', danger: false }]),
+    { label: 'Edit signup', danger: false },
+    { label: 'Copy signup', danger: false },
+    { label: 'View roster', danger: false },
+    { label: 'Delete', danger: true },
+  ];
+
+  const trigger = style === 'dot'
+    ? (
+      <button onClick={()=>setOpen(o=>!o)} style={{ width:36, height:36, borderRadius:9, border:`2px solid ${C.borderMd}`, background:C.surface, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:C.charcoal }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+      </button>
+    ) : (
+      <button onClick={()=>setOpen(o=>!o)} style={{ padding:'7px 12px', borderRadius:9, border:`1px solid ${C.borderMd}`, background:C.surface, display:'flex', alignItems:'center', gap:5, cursor:'pointer', color:C.charcoal, fontSize:13, fontWeight:500, fontFamily:'Inter,sans-serif' }}>
+        More
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    );
+
+  return (
+    <div ref={ref} style={{ position:'relative', flexShrink:0 }}>
+      {trigger}
+      {open && (
+        <div style={{ position:'absolute', right:0, top:'calc(100% + 6px)', zIndex:50, background:C.surface, borderRadius:12, border:`1px solid ${C.border}`, boxShadow:C.shadowMd, minWidth:180, padding:'4px 0' }}>
+          {items.map(item => (
+            <div key={item.label} onClick={()=>setOpen(false)}
+              style={{ padding:'10px 14px', fontSize:13, fontWeight:500, color:item.danger?C.coral:C.charcoal, cursor:'pointer', fontFamily:'Inter,sans-serif' }}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(39,39,42,0.04)'}
+              onMouseLeave={e=>e.currentTarget.style.background='none'}>
+              {item.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════
+   OPTION A — Refined current
+   Fix: actions move to a proper inline right-aligned row
+   on desktop; stacked on mobile. Overflow menu dot button
+   stays top-right of card. Cleaner button pairing.
+════════════════════════════════════════════════════ */
+function CardA({ event, mobile }) {
+  const rem = event.total - event.filled;
+  return (
+    <li style={{ background:C.surface, borderRadius:12, border:`1px solid ${C.border}`, padding: mobile?'16px':'18px 24px', boxShadow:C.shadow, listStyle:'none' }}>
+      {/* Header row */}
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:12 }}>
+        <div style={{ minWidth:0, flex:1 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:3 }}>
+            <span style={{ fontWeight:600, fontSize:15, color:C.charcoal }}>{event.title}</span>
+            {!event.published && <Badge label="Draft" color="draft" />}
+            <TypeBadge type={event.type} />
+          </div>
+          <span style={{ fontSize:13, color:C.muted }}>{event.date}</span>
+        </div>
+        <OverflowMenu event={event} />
+      </div>
+
+      {/* Coverage */}
+      <CoverageMeter filled={event.filled} total={event.total} />
+
+      {/* Actions — inline row, right-aligned on desktop */}
+      <div style={{ marginTop:16, display:'flex', justifyContent: mobile?'stretch':'flex-end', gap:10, flexDirection: mobile?'column':'row' }}>
+        <PrimaryBtn fullWidth={mobile}>View My Signups</PrimaryBtn>
+        {event.published
+          ? <SecondaryBtn fullWidth={mobile}>Signup Page</SecondaryBtn>
+          : <SecondaryBtn fullWidth={mobile}>Publish</SecondaryBtn>
+        }
+      </div>
+    </li>
+  );
+}
+
+function DashboardA({ mobile }) {
+  const w = mobile ? 375 : 860;
+  return (
+    <div style={{ width:w, background:C.sand, minHeight:820 }}>
+      <NavBar />
+      <div style={{ maxWidth:1024, margin:'0 auto', padding: mobile?'20px 16px':'28px 24px' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+          <h1 style={{ fontSize:22, fontWeight:600, color:C.charcoal }}>Your Signups</h1>
+          {!mobile && <PrimaryBtn>+ Create Signup</PrimaryBtn>}
+        </div>
+        <ul style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {EVENTS.map(ev => <CardA key={ev.id} event={ev} mobile={mobile} />)}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════
+   OPTION B — Compact row layout (desktop optimized)
+   Actions live in a permanent right column.
+   "View My Signups" primary, "Signup Page" as text link.
+   Overflow is a "More ▾" button instead of dot.
+   Mobile: collapses to stacked buttons.
+════════════════════════════════════════════════════ */
+function CardB({ event, mobile }) {
+  return (
+    <li style={{ background:C.surface, borderRadius:12, border:`1px solid ${C.border}`, padding: mobile?'16px':'16px 24px', boxShadow:C.shadow, listStyle:'none',
+      display:'flex', flexDirection: mobile?'column':'row', alignItems: mobile?'stretch':'center', gap: mobile?12:20 }}>
+
+      {/* Info block */}
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:7, flexWrap:'wrap', marginBottom:2 }}>
+          <span style={{ fontWeight:600, fontSize:15, color:C.charcoal }}>{event.title}</span>
+          {!event.published && <Badge label="Draft" color="draft" />}
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+          <span style={{ fontSize:12, color:C.muted }}>{event.date}</span>
+          <span style={{ fontSize:12, color:C.muted }}>·</span>
+          <TypeBadge type={event.type} />
+        </div>
+        <CoverageMeter filled={event.filled} total={event.total} />
+      </div>
+
+      {/* Actions — right column on desktop, bottom row on mobile */}
+      <div style={{ display:'flex', flexDirection: mobile?'row':'column', gap:8, flexShrink:0, alignItems: mobile?'stretch':'flex-end', justifyContent: mobile?'flex-end':'center', flexWrap: mobile?'wrap':'nowrap' }}>
+        <PrimaryBtn sm fullWidth={mobile}>View My Signups</PrimaryBtn>
+        <div style={{ display:'flex', gap:8 }}>
+          {event.published
+            ? <SecondaryBtn sm>Signup Page</SecondaryBtn>
+            : <SecondaryBtn sm>Publish</SecondaryBtn>
+          }
+          <OverflowMenu event={event} style="dot" />
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function DashboardB({ mobile }) {
+  const w = mobile ? 375 : 860;
+  return (
+    <div style={{ width:w, background:C.sand, minHeight:820 }}>
+      <NavBar />
+      <div style={{ maxWidth:1024, margin:'0 auto', padding: mobile?'20px 16px':'28px 24px' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+          <h1 style={{ fontSize:22, fontWeight:600, color:C.charcoal }}>Your Signups</h1>
+          {!mobile && <PrimaryBtn>+ Create Signup</PrimaryBtn>}
+        </div>
+        <ul style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {EVENTS.map(ev => <CardB key={ev.id} event={ev} mobile={mobile} />)}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════
+   OPTION C — Table row on desktop, card on mobile
+   Desktop: single-line rows with coverage bar inline.
+   No card elevation — clean list feel.
+   Actions: icon buttons inline (eye + link + overflow).
+   Mobile: full card with stacked actions.
+════════════════════════════════════════════════════ */
+function SortIcon({ dir }) {
+  if (!dir) return (
+    <svg width="10" height="10" viewBox="0 0 10 14" fill="none" style={{ opacity:0.35 }}>
+      <path d="M5 1v12M1 4l4-3 4 3M1 10l4 3 4-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+  if (dir === 'asc') return (
+    <svg width="10" height="10" viewBox="0 0 10 14" fill="none">
+      <path d="M5 1v12M1 4l4-3 4 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 14" fill="none">
+      <path d="M5 1v12M1 10l4 3 4-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function RowC({ event }) {
+  const pct = event.total > 0 ? Math.round(event.filled/event.total*100) : 0;
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:20, padding:'14px 20px', borderBottom:`1px solid ${C.border}`, background:C.surface }}
+      onMouseEnter={e=>e.currentTarget.style.background='rgba(39,39,42,0.015)'}
+      onMouseLeave={e=>e.currentTarget.style.background=C.surface}>
+      {/* Title */}
+      <div style={{ flex:'0 0 280px', minWidth:0 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <span style={{ fontWeight:600, fontSize:14, color:C.charcoal, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{event.title}</span>
+          {!event.published && <Badge label="Draft" color="draft" />}
+        </div>
+      </div>
+
+      {/* Date */}
+      <div style={{ flex:'0 0 140px' }}>
+        <span style={{ fontSize:13, color: event.date ? C.charcoal : C.muted }}>
+          {event.date || '—'}
+        </span>
+      </div>
+
+      {/* Coverage bar */}
+      <div style={{ flex:1 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ flex:1, background:'rgba(39,39,42,0.10)', borderRadius:9999, height:6, overflow:'hidden' }}>
+            <div style={{ background:C.sage, height:'100%', width:`${pct}%`, borderRadius:9999 }} />
+          </div>
+          <span style={{ fontSize:12, color:C.muted, whiteSpace:'nowrap', width:80, textAlign:'right' }}>{event.filled}/{event.total} · {pct}%</span>
+        </div>
+      </div>
+
+      {/* Action icons */}
+      <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+        <button title="View My Signups" style={{ width:34, height:34, borderRadius:8, border:`1px solid ${C.borderMd}`, background:C.sage, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'#fff' }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button title={event.published ? 'Signup Page' : 'Not yet published'} disabled={!event.published}
+          style={{ width:34, height:34, borderRadius:8, border:`1px solid ${event.published ? C.borderMd : 'rgba(39,39,42,0.08)'}`,
+            background: event.published ? C.surface : 'rgba(39,39,42,0.03)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            cursor: event.published ? 'pointer' : 'not-allowed',
+            color: event.published ? C.charcoal : 'rgba(39,39,42,0.25)', flexShrink:0 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </button>
+        <OverflowMenu event={event} style="dot" />
+      </div>
+    </div>
+  );
+}
+
+function CardC({ event }) {
+  const pct = event.total > 0 ? Math.round(event.filled/event.total*100) : 0;
+  return (
+    <li style={{ background:C.surface, borderRadius:12, border:`1px solid ${C.border}`, padding:'16px', boxShadow:C.shadow, listStyle:'none' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', gap:12, marginBottom:10 }}>
+        <div>
+          <div style={{ display:'flex', alignItems:'center', gap:7, flexWrap:'wrap', marginBottom:3 }}>
+            <span style={{ fontWeight:600, fontSize:15, color:C.charcoal }}>{event.title}</span>
+            {!event.published && <Badge label="Draft" color="draft" />}
+          </div>
+          <span style={{ fontSize:12, color:C.muted }}>{event.date} · </span>
+          <TypeBadge type={event.type} />
+        </div>
+        <OverflowMenu event={event} style="dot" />
+      </div>
+      <CoverageMeter filled={event.filled} total={event.total} />
+      <div style={{ display:'flex', gap:8, marginTop:14 }}>
+        <PrimaryBtn fullWidth>View My Signups</PrimaryBtn>
+        {event.published ? <SecondaryBtn fullWidth>Signup Page</SecondaryBtn> : <SecondaryBtn fullWidth>Publish</SecondaryBtn>}
+      </div>
+    </li>
+  );
+}
+
+function TabToggle({ tab, setTab, archivedCount }) {
+  return (
+    <div style={{ display:'inline-flex', background:'rgba(39,39,42,0.07)', borderRadius:10, padding:3, gap:2 }}>
+      {['active','archived'].map(t => {
+        const active = tab === t;
+        return (
+          <button key={t} onClick={() => setTab(t)}
+            style={{ padding:'6px 14px', borderRadius:8, border:'none', cursor:'pointer', fontFamily:'Inter,sans-serif',
+              fontSize:13, fontWeight:600, transition:'background 0.15s, color 0.15s',
+              background: active ? C.surface : 'transparent',
+              color: active ? C.charcoal : C.muted,
+              boxShadow: active ? '0 1px 3px rgba(0,0,0,0.10)' : 'none',
+              display:'flex', alignItems:'center', gap:6 }}>
+            {t === 'active' ? 'Active' : 'Archived'}
+
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function DashboardC({ mobile }) {
+  const [sort, setSort] = useState({ col: null, dir: null });
+  const [tab, setTab] = useState('active');
+  const w = mobile ? 375 : 860;
+
+  const archivedCount = EVENTS.filter(e => e.archived).length;
+  const visibleEvents = EVENTS.filter(e => tab === 'active' ? !e.archived : e.archived);
+
+  function toggleSort(col) {
+    setSort(s => {
+      if (s.col !== col) return { col, dir: 'asc' };
+      if (s.dir === 'asc') return { col, dir: 'desc' };
+      return { col: null, dir: null };
+    });
+  }
+
+  const sorted = [...visibleEvents].sort((a, b) => {
+    if (!sort.col) return 0;
+    let av, bv;
+    if (sort.col === 'event') { av = a.title.toLowerCase(); bv = b.title.toLowerCase(); }
+    if (sort.col === 'date')  { av = a.date || 'zzz'; bv = b.date || 'zzz'; }
+    if (av < bv) return sort.dir === 'asc' ? -1 : 1;
+    if (av > bv) return sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  function ColHeader({ col, label, style: extraStyle }) {
+    const active = sort.col === col;
+    return (
+      <button onClick={() => toggleSort(col)}
+        style={{ display:'inline-flex', alignItems:'center', gap:5, background:'none', border:'none', cursor:'pointer',
+          fontSize:11, fontWeight:600, color: active ? C.charcoal : C.muted,
+          letterSpacing:'0.05em', textTransform:'uppercase', fontFamily:'Inter,sans-serif', padding:0, ...extraStyle }}>
+        {label}
+        <SortIcon dir={active ? sort.dir : null} />
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ width:w, background:C.sand, minHeight:820 }}>
+      <NavBar />
+      <div style={{ maxWidth:1024, margin:'0 auto', padding: mobile?'20px 16px':'28px 24px' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+            <h1 style={{ fontSize:22, fontWeight:600, color:C.charcoal }}>Your Signups</h1>
+            {archivedCount > 0 && <TabToggle tab={tab} setTab={setTab} archivedCount={archivedCount} />}
+          </div>
+          {!mobile && tab === 'active' && <PrimaryBtn>+ Create Signup</PrimaryBtn>}
+        </div>
+        {mobile ? (
+          <ul style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {sorted.map(ev => <CardC key={ev.id} event={ev} />)}
+          </ul>
+        ) : (
+          <div style={{ background:C.surface, borderRadius:12, border:`1px solid ${C.border}`, overflow:'hidden', boxShadow:C.shadow }}>
+            {/* Table header */}
+            <div style={{ display:'flex', alignItems:'center', gap:20, padding:'10px 20px', borderBottom:`1px solid ${C.border}`, background:'rgba(39,39,42,0.02)' }}>
+              <div style={{ flex:'0 0 280px' }}><ColHeader col="event" label="Event" /></div>
+              <div style={{ flex:'0 0 140px' }}><ColHeader col="date" label="Date" /></div>
+              <div style={{ flex:1, fontSize:11, fontWeight:600, color:C.muted, letterSpacing:'0.05em', textTransform:'uppercase' }}>Coverage</div>
+              <div style={{ width:122, fontSize:11, fontWeight:600, color:C.muted, letterSpacing:'0.05em', textTransform:'uppercase' }}>Actions</div>
+            </div>
+            {sorted.map(ev => <RowC key={ev.id} event={ev} />)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Canvas ─────────────────────────────────────────── */
+function App() {
+  return (
+    <DesignCanvas title="Dashboard Redesign">
+      <DCSection id="desktop" title="Desktop (860px)">
+        <DCArtboard id="a-desk" label="A — Refined Current" width={860} height={860}>
+          <DashboardA mobile={false} />
+        </DCArtboard>
+        <DCArtboard id="b-desk" label="B — Compact Row" width={860} height={860}>
+          <DashboardB mobile={false} />
+        </DCArtboard>
+        <DCArtboard id="c-desk" label="C — Table on Desktop" width={860} height={860}>
+          <DashboardC mobile={false} />
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="mobile" title="Mobile (375px)">
+        <DCArtboard id="a-mob" label="A — Mobile" width={375} height={820}>
+          <DashboardA mobile={true} />
+        </DCArtboard>
+        <DCArtboard id="b-mob" label="B — Mobile" width={375} height={820}>
+          <DashboardB mobile={true} />
+        </DCArtboard>
+        <DCArtboard id="c-mob" label="C — Mobile" width={375} height={820}>
+          <DashboardC mobile={true} />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.body.appendChild(Object.assign(document.createElement('div'), {style:'position:fixed;inset:0'}))).render(<App />);
+</script>
+</body>
+</html>

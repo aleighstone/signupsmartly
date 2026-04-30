@@ -5,6 +5,15 @@
 
 import { test, expect } from '@playwright/test';
 
+const dashboardSignupsLinkForEvent = (page: any, eventId: string) =>
+  page.locator(`a[href*="/dashboard/event/${eventId}/signups"]:visible`).first();
+
+const dashboardMenuButtonForEvent = (page: any, eventId: string) =>
+  dashboardSignupsLinkForEvent(page, eventId)
+    .locator('xpath=ancestor::div[1]')
+    .getByRole('button', { name: /more actions for this signup/i })
+    .first();
+
 test.describe('Dashboard', () => {
   test('loads and shows Your Signups', async ({ page }) => {
     await page.goto('/dashboard');
@@ -13,7 +22,7 @@ test.describe('Dashboard', () => {
 
   test('shows Create Signup button in nav', async ({ page }) => {
     await page.goto('/dashboard');
-    await expect(page.getByRole('link', { name: /create signup/i })).toBeVisible();
+    await expect(page.getByRole('navigation').getByRole('link', { name: /^create signup$/i })).toBeVisible();
   });
 });
 
@@ -148,7 +157,9 @@ test.describe('Edit signup page', () => {
     }
 
     await page.goto('/dashboard');
-    const dashboardCardsBefore = await page.locator('main ul').first().locator('li').count();
+    const dashboardCardsBefore = await page
+      .locator('button[aria-label="More actions for this signup"]:visible')
+      .count();
 
     await page.goto(`/dashboard/event/${eventId}/edit`);
     const titleInput = page.getByLabel(/title/i).first();
@@ -162,9 +173,13 @@ test.describe('Edit signup page', () => {
     });
 
     await page.goto('/dashboard');
-    const dashboardCardsAfterSave = await page.locator('main ul').first().locator('li').count();
+    const dashboardCardsAfterSave = await page
+      .locator('button[aria-label="More actions for this signup"]:visible')
+      .count();
     expect(dashboardCardsAfterSave).toBe(dashboardCardsBefore);
-    await expect(page.locator(`li:has(a[href*="${eventId}"])`)).toHaveCount(1);
+    await expect(
+      page.locator(`a[href*="/dashboard/event/${eventId}/signups"]:visible`)
+    ).toHaveCount(1);
 
     // Cleanup so the shared seeded event title remains unchanged for other tests.
     await page.goto(`/dashboard/event/${eventId}/edit`);
@@ -177,7 +192,7 @@ test.describe('Edit signup page', () => {
 });
 
 test.describe('Draft event', () => {
-  test('shows Draft pill and Publish button on dashboard', async ({ page }) => {
+  test('shows Draft pill, disabled Signup Page, and Publish action in menu', async ({ page }) => {
     const draftId = process.env.E2E_TEST_DRAFT_EVENT_ID;
     if (!draftId) {
       test.skip(true, 'E2E_TEST_DRAFT_EVENT_ID not set');
@@ -185,10 +200,13 @@ test.describe('Draft event', () => {
     }
     await page.goto('/dashboard');
     // Scope to the specific draft card to avoid matching other events
-    const draftCard = page.locator(`li:has(a[href*="${draftId}"])`);
-    await expect(draftCard.getByText('Draft', { exact: true })).toBeVisible();
-    await expect(draftCard.getByRole('button', { name: /^publish$/i })).toBeVisible();
-    await expect(draftCard.getByRole('link', { name: /signup page/i })).not.toBeVisible();
+    await expect(dashboardSignupsLinkForEvent(page, draftId)).toBeVisible();
+    await expect(page.getByText('Draft').first()).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /not yet published/i }).first()
+    ).toBeDisabled();
+    await dashboardMenuButtonForEvent(page, draftId).click();
+    await expect(page.getByRole('menuitem', { name: /^publish$/i })).toBeVisible();
   });
 
   test('shows draft banner and Publish button on edit page', async ({ page }) => {
@@ -210,12 +228,11 @@ test.describe('Copy signup', () => {
       test.skip(true, 'E2E_TEST_EVENT_ID not set');
       return;
     }
+    await page.request.post(`/api/events/${eventId}/unarchive`);
     await page.goto('/dashboard');
-    // Scope to the specific published event card — drafts don't have a Copy menu item
-    const eventCard = page.locator(`li:has(a[href*="${eventId}"])`).first();
-    await expect(eventCard).toBeVisible();
-    await eventCard.getByRole('button', { name: /more actions for this signup/i }).click();
-    await page.getByRole('menuitem', { name: /^copy$/i }).click();
+    await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
+    await dashboardMenuButtonForEvent(page, eventId).click();
+    await page.getByRole('menuitem', { name: /^copy signup$/i }).click();
     // Should navigate to edit page of the new draft copy
     await page.waitForURL(/\/dashboard\/event\/.+\/edit/, { timeout: 10_000 });
     // Draft banner confirms the copy started as a draft
@@ -239,31 +256,24 @@ test.describe('Archive signup', () => {
 
     try {
       await page.goto('/dashboard');
-      const activeCard = page.locator(`li:has(a[href*="${eventId}"])`).first();
-      await expect(activeCard).toBeVisible();
+      await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
 
-      await activeCard
-        .getByRole('button', { name: /more actions for this signup/i })
-        .click();
+      await dashboardMenuButtonForEvent(page, eventId).click();
+      page.once('dialog', async (dialog) => {
+        expect(dialog.type()).toBe('confirm');
+        await dialog.accept();
+      });
       await page.getByRole('menuitem', { name: /^archive$/i }).click();
-      await expect(
-        page.getByRole('heading', { name: /archive this signup/i })
-      ).toBeVisible();
-      await page.getByRole('button', { name: /^archive$/i }).click();
       archived = true;
 
-      await expect(activeCard).not.toBeVisible();
+      await expect(dashboardSignupsLinkForEvent(page, eventId)).not.toBeVisible();
 
       await page.getByRole('button', { name: /^archived$/i }).click();
-      const archivedCard = page.locator(`li:has(a[href*="${eventId}"])`).first();
-      await expect(archivedCard).toBeVisible();
-      await expect(archivedCard.getByText('Archived', { exact: true })).toBeVisible();
+      await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
+      await expect(page.getByText('Archived', { exact: true }).first()).toBeVisible();
       await expect(
-        archivedCard.getByRole('link', { name: /view my signups/i })
-      ).toBeVisible();
-      await expect(
-        archivedCard.getByRole('link', { name: /signup page/i })
-      ).not.toBeVisible();
+        page.getByRole('button', { name: /archived signup/i }).first()
+      ).toBeDisabled();
 
       const response = await page.goto(`/event/${eventId}`);
       expect(response?.status()).toBe(404);
@@ -297,20 +307,41 @@ test.describe('Archive signup', () => {
     }
 
     await archivedTab.click();
-    const archivedCard = page.locator(`li:has(a[href*="${eventId}"])`).first();
-    await expect(archivedCard).toBeVisible();
+    await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
 
-    await archivedCard
-      .getByRole('button', { name: /more actions for this signup/i })
-      .click();
+    await dashboardMenuButtonForEvent(page, eventId).click();
     await page.getByRole('menuitem', { name: /^unarchive$/i }).click();
 
     await page.getByRole('button', { name: /^active$/i }).click();
-    const activeCard = page.locator(`li:has(a[href*="${eventId}"])`).first();
-    await expect(activeCard).toBeVisible();
-    await expect(activeCard.getByText('Archived', { exact: true })).not.toBeVisible();
+    await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
+    await expect(page.getByText('Archived', { exact: true })).not.toBeVisible();
 
     const response = await page.goto(`/event/${eventId}`);
     expect(response?.status()).toBe(200);
+  });
+});
+
+test.describe('Dashboard sorting', () => {
+  test('event sort persists after navigation within the session', async ({ page }) => {
+    await page.goto('/dashboard');
+    const eventHeader = page.getByRole('button', { name: /event/i });
+    await expect(eventHeader).toBeVisible();
+    await eventHeader.click(); // asc
+    await eventHeader.click(); // desc
+
+    const storedSort = await page.evaluate(() =>
+      window.localStorage.getItem('dashboard-signups-sort-v1')
+    );
+    expect(storedSort).toContain('"sortCol":"event"');
+    expect(storedSort).toContain('"sortDir":"desc"');
+
+    await page.goto('/create-event');
+    await page.goto('/dashboard');
+
+    const storedAfterReturn = await page.evaluate(() =>
+      window.localStorage.getItem('dashboard-signups-sort-v1')
+    );
+    expect(storedAfterReturn).toContain('"sortCol":"event"');
+    expect(storedAfterReturn).toContain('"sortDir":"desc"');
   });
 });
