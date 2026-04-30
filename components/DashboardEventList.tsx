@@ -273,16 +273,16 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
         <div className="flex items-center gap-4">
           <h1 className="text-[22px] font-semibold text-charcoal font-heading">Your Signups</h1>
           {hasArchived ? (
-            <div className="inline-flex gap-0.5 rounded-[10px] bg-charcoal/7 p-[3px]">
+            <div className="inline-flex items-center gap-[2px] rounded-[10px] bg-charcoal/7 p-[3px]">
               {(['active', 'archived'] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setTab(t)}
-                  className={`rounded-[8px] px-3.5 py-1.5 text-[13px] font-semibold transition-colors font-body ${
+                  className={`rounded-[8px] px-[14px] py-[6px] text-[13px] font-semibold leading-none transition-colors font-body ${
                     tab === t
                       ? 'bg-surface text-charcoal shadow-[0_1px_3px_rgba(0,0,0,0.10)]'
-                      : 'text-muted'
+                      : 'bg-transparent text-muted'
                   }`}
                 >
                   {t === 'active' ? 'Active' : 'Archived'}
@@ -292,11 +292,23 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
           ) : null}
         </div>
 
-        {tab === 'active' ? (
-          <Link href="/create-event" className="btn-primary hidden md:inline-flex">
-            + Create Signup
-          </Link>
-        ) : null}
+        <div className="hidden md:block">
+          {tab === 'active' ? (
+            <Link
+              href="/create-event"
+              className="inline-flex min-h-[40px] items-center justify-center rounded-[10px] border-2 border-transparent bg-sage px-[18px] py-[9px] text-sm font-semibold text-white transition-colors hover:bg-sage-hover font-body"
+            >
+              + Create Signup
+            </Link>
+          ) : (
+            <span
+              className="invisible inline-flex min-h-[40px] items-center justify-center rounded-[10px] border-2 border-transparent bg-sage px-[18px] py-[9px] text-sm font-semibold text-white font-body"
+              aria-hidden="true"
+            >
+              + Create Signup
+            </span>
+          )}
+        </div>
       </div>
 
       {sortedCards.length === 0 ? (
@@ -348,7 +360,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                 >
                   <div className="basis-[280px] shrink-0 grow-0 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="truncate text-sm font-semibold text-charcoal font-heading">
+                      <span className="overflow-hidden text-sm font-semibold text-charcoal font-heading [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
                         {card.event.title}
                       </span>
                       {!card.event.published ? (
@@ -385,7 +397,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                         href={`/dashboard/event/${card.event.id}/signups`}
                         title="View My Signups"
                         aria-label="View My Signups"
-                        className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-charcoal/20 bg-sage text-white"
+                        className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-charcoal/20 bg-sage text-white"
                       >
                         <Eye size={15} />
                       </Link>
@@ -396,7 +408,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                           rel="noopener noreferrer"
                           title="Signup Page"
                           aria-label="Signup Page"
-                          className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-charcoal/20 bg-surface text-charcoal"
+                          className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-charcoal/20 bg-surface text-charcoal"
                         >
                           <ExternalLink size={14} />
                         </a>
@@ -406,7 +418,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                           disabled
                           title={card.event.archived ? 'Archived signup' : 'Not yet published'}
                           aria-label={card.event.archived ? 'Archived signup' : 'Not yet published'}
-                          className="inline-flex h-[34px] w-[34px] cursor-not-allowed items-center justify-center rounded-lg border border-charcoal/[0.08] bg-charcoal/[0.03] text-charcoal/[0.25]"
+                          className="inline-flex h-[34px] w-[34px] cursor-not-allowed items-center justify-center rounded-[8px] border border-charcoal/[0.08] bg-charcoal/[0.03] text-charcoal/[0.25]"
                         >
                           <ExternalLink size={14} />
                         </button>
@@ -430,7 +442,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                   <div className="mb-2.5 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <h2 className="text-[15px] font-semibold text-charcoal font-heading">
+                        <h2 className="overflow-hidden text-[15px] font-semibold text-charcoal font-heading [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
                           {card.event.title}
                         </h2>
                         {!card.event.published ? (
@@ -467,7 +479,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                   <div className="mt-3.5 flex gap-2">
                     <Link
                       href={`/dashboard/event/${card.event.id}/signups`}
-                      className="btn-primary w-full justify-center"
+                      className="inline-flex min-h-[40px] w-full items-center justify-center rounded-[10px] border-2 border-transparent bg-sage px-[14px] py-2 text-[13px] font-semibold text-white transition-colors hover:bg-sage-hover font-body"
                     >
                       View My Signups
                     </Link>
@@ -476,7 +488,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                         href={card.signupPageUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn-secondary w-full justify-center"
+                        className="inline-flex min-h-[40px] w-full items-center justify-center rounded-[10px] border-2 border-charcoal bg-transparent px-[14px] py-2 text-[13px] font-medium text-charcoal transition-colors hover:bg-charcoal/5 font-body"
                       >
                         Signup Page
                       </a>
@@ -484,7 +496,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                       <button
                         type="button"
                         disabled
-                        className="btn-secondary w-full justify-center opacity-50"
+                        className="inline-flex min-h-[40px] w-full cursor-not-allowed items-center justify-center rounded-[10px] border-2 border-charcoal bg-transparent px-[14px] py-2 text-[13px] font-medium text-charcoal opacity-50 font-body"
                         title={card.event.archived ? 'Archived signup' : 'Not yet published'}
                       >
                         Signup Page
