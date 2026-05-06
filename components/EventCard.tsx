@@ -6,11 +6,11 @@ import { useEffect, useRef, useState } from 'react';
 import { MoreVertical } from 'lucide-react';
 import { CoverageMeter } from '@/components/CoverageMeter';
 
-/** Full-width stacked on mobile; from sm up, right-aligned row using half the card, two equal buttons. */
+/** Full-width stacked on mobile; from md up, right-aligned row using half the card, two equal buttons. */
 const CARD_ACTION_ROW =
   'mt-5 flex w-full justify-end';
 const CARD_ACTION_GRID =
-  'grid w-full grid-cols-1 gap-3 sm:w-1/2 sm:grid-cols-2 sm:gap-4';
+  'grid w-full grid-cols-1 gap-3 md:w-1/2 md:grid-cols-2 md:gap-4';
 
 type EventCardProps = {
   event: {

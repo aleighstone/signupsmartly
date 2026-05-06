@@ -53,6 +53,35 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       testMatch: /volunteer\./,
     },
+
+    // Mobile: organizer flows at iPhone 14 viewport (authenticated)
+    {
+      name: 'mobile-organizer',
+      testMatch: /organizer\.smoke\.ts/,
+      use: {
+        ...devices['iPhone 14'],
+        storageState: 'e2e/.auth/organizer.json',
+      },
+      dependencies: ['setup'],
+    },
+
+    // Mobile: volunteer/public pages at iPhone 14 viewport (no auth)
+    {
+      name: 'mobile-volunteer',
+      use: { ...devices['iPhone 14'] },
+      testMatch: /volunteer\./,
+    },
+
+    // Mobile screenshots: captures key pages at iPhone 14 viewport for visual review
+    {
+      name: 'mobile-screenshots',
+      testMatch: /mobile-screenshots\.ts/,
+      use: {
+        ...devices['iPhone 14'],
+        storageState: 'e2e/.auth/organizer.json',
+      },
+      dependencies: ['setup'],
+    },
   ],
 
   // Automatically start dev server if not already running

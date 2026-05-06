@@ -119,6 +119,44 @@ When a new or changed test requires a new `.env.local` variable, make that **ver
 - **At the end of every session**, append a new dated entry summarizing: what was completed, any bugs fixed, and backlog items carried forward.
 - Format: `## YYYY-MM-DD` heading, `### Completed` and `### Backlog` sections.
 
+## Dashboard redesign (Apr 30, 2026)
+
+The organizer dashboard and "View My Signups" page received a high-fidelity redesign via Claude Design. Implementation specs and HTML prototypes live in `dashboard-redesign/` in the project root. **Read those files before touching either page.**
+
+### Key decisions (treat as locked)
+
+- **Layout:** Desktop = table inside a single card; mobile = stacked cards. Not the old card-per-event layout.
+- **Event title is a link** that navigates to "View My Signups" for that event.
+- **Actions column (desktop):** exactly two icon buttons (Signup Page + Edit) + overflow ⋮ menu. No other layout.
+  - Signup Page icon: Lucide `ExternalLink` — not a share icon, not a globe.
+  - Edit icon: Lucide `Pencil` (standalone diagonal pencil, **no box/square**) — not `Edit2`, not `Edit3`, not `FilePen`.
+- **Overflow menu contains ALL actions** including duplicates of the icon buttons. This is intentional.
+- **Draft rows:** Signup Page button is visible but disabled (`cursor: not-allowed`, dimmed). Not hidden.
+- **Active/Archived toggle:** only rendered when `archivedCount > 0`. "+ Create Signup" is hidden when Archived tab is active.
+- **Sort state** persists in `localStorage`, not URL params. Null dates sort last.
+
+### Label accuracy — overflow menu (match exactly, no paraphrasing)
+
+| Correct label | Do NOT use |
+|---|---|
+| `Edit signup` | "Edit", "Edit event", "Edit Signup" |
+| `Copy signup` | "Copy", "Duplicate", "Clone" |
+| `View my signups` | "View roster", "View responses", "View signups" |
+| `Archive` | "Archived", "Move to archive" |
+| `Delete` | "Remove", "Delete signup" |
+| `Publish` | any variation — shown only when `published === false` |
+
+> **Note:** The archive feature shipped in April used shortened labels ("Edit", "Copy"). The dashboard redesign supersedes those labels with the full wording above. Update the overflow menu to match when implementing the redesign.
+
+### View My Signups page (new design)
+
+- Header action buttons (horizontal row, right-aligned): `Copy Signup URL` (primary) · `Edit Event` (secondary) · `Export ▾` (secondary dropdown)
+- Export dropdown options: `Export CSV` · `Export List` · `Print`
+- Coverage card shows large `%` stat on the right side
+- Signups table: SPOT · DATE & TIME · NAME · EMAIL · COMMENT · SIGNUP TIMESTAMP · (delete button)
+- "by organizer" badge shown in SIGNUP TIMESTAMP cell for organizer-added rows
+- Notifications selector below the table: `Daily digest` · `Instant` · `None`
+
 ## History
 
 - SignupSmartly was originally created as a subfolder under `digitaleigh-dev`.

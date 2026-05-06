@@ -1,21 +1,21 @@
 {
   "cookies": [
     {
-      "name": "_fbp",
-      "value": "fb.0.1776893604708.235607685148756823",
+      "name": "sb-127-auth-token",
+      "value": "base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSkZVekkxTmlJc0ltdHBaQ0k2SW1JNE1USTJPV1l4TFRJeFpEZ3ROR1l5WlMxaU56RTVMV015TWpRd1lUZzBNR1E1TUNJc0luUjVjQ0k2SWtwWFZDSjkuZXlKcGMzTWlPaUpvZEhSd09pOHZNVEkzTGpBdU1DNHhPalUwTXpJeEwyRjFkR2d2ZGpFaUxDSnpkV0lpT2lJeU9URTRNRE5pTXkwek4ySmlMVFJoTkRndE9ERmtPQzB6TldVNE1EZzBOekU1Tm1VaUxDSmhkV1FpT2lKaGRYUm9aVzUwYVdOaGRHVmtJaXdpWlhod0lqb3hOemMzTlRnek5qUTRMQ0pwWVhRaU9qRTNOemMxT0RBd05EZ3NJbVZ0WVdsc0lqb2lZV3hzYVhOdmJteGxhV2RvYzNSdmJtVkFaMjFoYVd3dVkyOXRJaXdpY0dodmJtVWlPaUlpTENKaGNIQmZiV1YwWVdSaGRHRWlPbnNpY0hKdmRtbGtaWElpT2lKbGJXRnBiQ0lzSW5CeWIzWnBaR1Z5Y3lJNld5SmxiV0ZwYkNKZGZTd2lkWE5sY2w5dFpYUmhaR0YwWVNJNmV5SmxiV0ZwYkY5MlpYSnBabWxsWkNJNmRISjFaWDBzSW5KdmJHVWlPaUpoZFhSb1pXNTBhV05oZEdWa0lpd2lZV0ZzSWpvaVlXRnNNU0lzSW1GdGNpSTZXM3NpYldWMGFHOWtJam9pY0dGemMzZHZjbVFpTENKMGFXMWxjM1JoYlhBaU9qRTNOemMxT0RBd05EaDlYU3dpYzJWemMybHZibDlwWkNJNklqZG1ZMkpqWkRZMUxXSXpNbU10TkdNMVpDMWhOelZrTFRVeE1XSm1PRFl6T1dNd1pTSXNJbWx6WDJGdWIyNTViVzkxY3lJNlptRnNjMlY5LnJuelluU3E3elFVaHFTb0NTVmM4ZmFNa0Q4ZDVkT2YxNjU5RmlrZ1dFa195UXNtNzZNUHkzcjJiTF9BM2MyVzBUSXdaUjdZbU9tZmhSWFJCOHZSUEtRIiwidG9rZW5fdHlwZSI6ImJlYXJlciIsImV4cGlyZXNfaW4iOjM2MDAsImV4cGlyZXNfYXQiOjE3Nzc1ODM2NDgsInJlZnJlc2hfdG9rZW4iOiJtNmxkNmo0NHU1N3kiLCJ1c2VyIjp7ImlkIjoiMjkxODAzYjMtMzdiYi00YTQ4LTgxZDgtMzVlODA4NDcxOTZlIiwiYXVkIjoiYXV0aGVudGljYXRlZCIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiZW1haWwiOiJhbGxpc29ubGVpZ2hzdG9uZUBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI2LTA0LTI1VDAxOjE5OjM0LjkxMzM2OFoiLCJwaG9uZSI6IiIsImNvbmZpcm1lZF9hdCI6IjIwMjYtMDQtMjVUMDE6MTk6MzQuOTEzMzY4WiIsImxhc3Rfc2lnbl9pbl9hdCI6IjIwMjYtMDQtMzBUMjA6MTQ6MDguODI1NTUxNzk5WiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwiaWRlbnRpdGllcyI6W3siaWRlbnRpdHlfaWQiOiJiOTI5YjhhZC01NjkxLTQ5NWItYjhlZi1iYjc4OWViOTM1YWYiLCJpZCI6IjI5MTgwM2IzLTM3YmItNGE0OC04MWQ4LTM1ZTgwODQ3MTk2ZSIsInVzZXJfaWQiOiIyOTE4MDNiMy0zN2JiLTRhNDgtODFkOC0zNWU4MDg0NzE5NmUiLCJpZGVudGl0eV9kYXRhIjp7ImVtYWlsIjoiYWxsaXNvbmxlaWdoc3RvbmVAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjI5MTgwM2IzLTM3YmItNGE0OC04MWQ4LTM1ZTgwODQ3MTk2ZSJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNi0wNC0yNVQwMToxOTozNC45MTEyNDNaIiwiY3JlYXRlZF9hdCI6IjIwMjYtMDQtMjVUMDE6MTk6MzQuOTExMjY1WiIsInVwZGF0ZWRfYXQiOiIyMDI2LTA0LTI1VDAxOjE5OjM0LjkxMTI2NVoiLCJlbWFpbCI6ImFsbGlzb25sZWlnaHN0b25lQGdtYWlsLmNvbSJ9XSwiY3JlYXRlZF9hdCI6IjIwMjYtMDQtMjVUMDE6MTk6MzQuOTA5Njg2WiIsInVwZGF0ZWRfYXQiOiIyMDI2LTA0LTMwVDIwOjE0OjA4LjgyOTY3WiIsImlzX2Fub255bW91cyI6ZmFsc2V9LCJ3ZWFrX3Bhc3N3b3JkIjpudWxsfQ",
       "domain": "localhost",
       "path": "/",
-      "expires": 1784669605,
+      "expires": 1812140048.868518,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
-      "name": "sb-127-auth-token",
-      "value": "base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSkZVekkxTmlJc0ltdHBaQ0k2SW1JNE1USTJPV1l4TFRJeFpEZ3ROR1l5WlMxaU56RTVMV015TWpRd1lUZzBNR1E1TUNJc0luUjVjQ0k2SWtwWFZDSjkuZXlKcGMzTWlPaUpvZEhSd09pOHZNVEkzTGpBdU1DNHhPalUwTXpJeEwyRjFkR2d2ZGpFaUxDSnpkV0lpT2lJM1pUazJPR00zTlMweE5UaGtMVFF5TXpJdFlUZzBPUzFpWkRVellXWTNOVFppWmpJaUxDSmhkV1FpT2lKaGRYUm9aVzUwYVdOaGRHVmtJaXdpWlhod0lqb3hOemMyT0RrM01qQTBMQ0pwWVhRaU9qRTNOelk0T1RNMk1EUXNJbVZ0WVdsc0lqb2lZV3hzYVhOdmJteGxhV2RvYzNSdmJtVkFaMjFoYVd3dVkyOXRJaXdpY0dodmJtVWlPaUlpTENKaGNIQmZiV1YwWVdSaGRHRWlPbnNpY0hKdmRtbGtaWElpT2lKbGJXRnBiQ0lzSW5CeWIzWnBaR1Z5Y3lJNld5SmxiV0ZwYkNKZGZTd2lkWE5sY2w5dFpYUmhaR0YwWVNJNmV5SmxiV0ZwYkY5MlpYSnBabWxsWkNJNmRISjFaWDBzSW5KdmJHVWlPaUpoZFhSb1pXNTBhV05oZEdWa0lpd2lZV0ZzSWpvaVlXRnNNU0lzSW1GdGNpSTZXM3NpYldWMGFHOWtJam9pY0dGemMzZHZjbVFpTENKMGFXMWxjM1JoYlhBaU9qRTNOelk0T1RNMk1EUjlYU3dpYzJWemMybHZibDlwWkNJNklqWXpORGxtWVRZMExUUXhOelF0TkdKallpMWhaVFJqTFRFNU9UUTNOMk14TTJZME55SXNJbWx6WDJGdWIyNTViVzkxY3lJNlptRnNjMlY5LmdmU202dVcwQXBhQUo0YnJFWDg0UDFIbU90b2Q4OEp3czk4eEFnRDdSVlpYVEVaV3k2c3hiWWpQNEFmX2lRcjJTbGpzSl85aDJRMW1iVldXSms4a2pBIiwidG9rZW5fdHlwZSI6ImJlYXJlciIsImV4cGlyZXNfaW4iOjM2MDAsImV4cGlyZXNfYXQiOjE3NzY4OTcyMDQsInJlZnJlc2hfdG9rZW4iOiJpeG9vY2pndWRrb2QiLCJ1c2VyIjp7ImlkIjoiN2U5NjhjNzUtMTU4ZC00MjMyLWE4NDktYmQ1M2FmNzU2YmYyIiwiYXVkIjoiYXV0aGVudGljYXRlZCIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiZW1haWwiOiJhbGxpc29ubGVpZ2hzdG9uZUBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI2LTA0LTIyVDIxOjMxOjE1LjIxNzUyNloiLCJwaG9uZSI6IiIsImNvbmZpcm1lZF9hdCI6IjIwMjYtMDQtMjJUMjE6MzE6MTUuMjE3NTI2WiIsImxhc3Rfc2lnbl9pbl9hdCI6IjIwMjYtMDQtMjJUMjE6MzM6MjQuNzEwMDkyODM5WiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwiaWRlbnRpdGllcyI6W3siaWRlbnRpdHlfaWQiOiIwYmI2YjI5NC1jMDlhLTQxMWMtYjBjNi0yMTg0ZGJjNzBkYzkiLCJpZCI6IjdlOTY4Yzc1LTE1OGQtNDIzMi1hODQ5LWJkNTNhZjc1NmJmMiIsInVzZXJfaWQiOiI3ZTk2OGM3NS0xNThkLTQyMzItYTg0OS1iZDUzYWY3NTZiZjIiLCJpZGVudGl0eV9kYXRhIjp7ImVtYWlsIjoiYWxsaXNvbmxlaWdoc3RvbmVAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjdlOTY4Yzc1LTE1OGQtNDIzMi1hODQ5LWJkNTNhZjc1NmJmMiJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNi0wNC0yMlQyMTozMToxNS4yMTU1MjFaIiwiY3JlYXRlZF9hdCI6IjIwMjYtMDQtMjJUMjE6MzE6MTUuMjE1NTQ2WiIsInVwZGF0ZWRfYXQiOiIyMDI2LTA0LTIyVDIxOjMxOjE1LjIxNTU0NloiLCJlbWFpbCI6ImFsbGlzb25sZWlnaHN0b25lQGdtYWlsLmNvbSJ9XSwiY3JlYXRlZF9hdCI6IjIwMjYtMDQtMjJUMjE6MzE6MTUuMjEzOTA1WiIsInVwZGF0ZWRfYXQiOiIyMDI2LTA0LTIyVDIxOjMzOjI0LjcxNDE0MVoiLCJpc19hbm9ueW1vdXMiOmZhbHNlfSwid2Vha19wYXNzd29yZCI6bnVsbH0",
+      "name": "_fbp",
+      "value": "fb.0.1777580048998.182621746153154623",
       "domain": "localhost",
       "path": "/",
-      "expires": 1811453604.722574,
+      "expires": 1785356049,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -30,16 +30,20 @@
           "value": "empty"
         },
         {
-          "name": "signupsmartly_fb_CompleteRegistration_7e968c75-158d-4232-a849-bd53af756bf2",
-          "value": "1"
+          "name": "dashboard-signups-sort-v1",
+          "value": "{\"sortCol\":null,\"sortDir\":null}"
         },
         {
           "name": "lastExternalReferrerTime",
-          "value": "1776893604701"
+          "value": "1777580048992"
+        },
+        {
+          "name": "signupsmartly_fb_CompleteRegistration_291803b3-37bb-4a48-81d8-35e80847196e",
+          "value": "1"
         },
         {
           "name": "ph_phc_iJXeaj3dy5VucLO5tfcBibnaubMzbHFCE0Y1L0eayOh_posthog",
-          "value": "{\"$initialization_time\":\"2026-04-22T21:33:24.063Z\",\"$configured_session_timeout_ms\":1800000,\"distinct_id\":\"7e968c75-158d-4232-a849-bd53af756bf2\",\"$device_id\":\"019db71c-b0e1-742c-923a-8587c730b144\",\"$user_state\":\"identified\",\"$error_tracking_suppression_rules\":[],\"$session_recording_remote_config\":{\"cache_timestamp\":1776893604618,\"enabled\":false,\"networkPayloadCapture\":{\"capturePerformance\":{\"network_timing\":true,\"web_vitals\":false,\"web_vitals_allowed_metrics\":null}},\"canvasRecording\":{},\"sampleRate\":null,\"minimumDurationMilliseconds\":null},\"$autocapture_disabled_server_side\":false,\"$product_tours_enabled_server_side\":false,\"$heatmaps_enabled_server_side\":false,\"$web_vitals_enabled_server_side\":false,\"$web_vitals_allowed_metrics\":null,\"$exception_capture_enabled_server_side\":false,\"$dead_clicks_enabled_server_side\":false,\"$epp\":true,\"$user_id\":\"7e968c75-158d-4232-a849-bd53af756bf2\",\"$stored_person_properties\":{\"email\":\"allisonleighstone@gmail.com\"}}"
+          "value": "{\"$initialization_time\":\"2026-04-30T20:14:08.563Z\",\"$configured_session_timeout_ms\":1800000,\"distinct_id\":\"291803b3-37bb-4a48-81d8-35e80847196e\",\"$device_id\":\"019de007-00b6-7d2c-873b-3cc46f328cbd\",\"$user_state\":\"identified\",\"$error_tracking_suppression_rules\":[],\"$session_recording_remote_config\":{\"cache_timestamp\":1777580048769,\"enabled\":false,\"networkPayloadCapture\":{\"capturePerformance\":{\"network_timing\":true,\"web_vitals\":false,\"web_vitals_allowed_metrics\":null}},\"canvasRecording\":{},\"sampleRate\":null,\"minimumDurationMilliseconds\":null},\"$autocapture_disabled_server_side\":false,\"$product_tours_enabled_server_side\":false,\"$heatmaps_enabled_server_side\":false,\"$web_vitals_enabled_server_side\":false,\"$web_vitals_allowed_metrics\":null,\"$exception_capture_enabled_server_side\":false,\"$dead_clicks_enabled_server_side\":false,\"$epp\":true,\"$user_id\":\"291803b3-37bb-4a48-81d8-35e80847196e\",\"$stored_person_properties\":{\"email\":\"allisonleighstone@gmail.com\"},\"$feature_flag_errors\":[],\"$active_feature_flags\":[],\"$enabled_feature_flags\":{},\"$feature_flag_payloads\":{},\"$feature_flag_details\":{},\"$feature_flag_request_id\":\"ca499642-e789-431c-9dbd-cb8482fc03c4\",\"$feature_flag_evaluated_at\":1777580049201}"
         }
       ]
     }
