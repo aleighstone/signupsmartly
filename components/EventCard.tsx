@@ -232,14 +232,14 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
       {event.archived ? (
         <div className={CARD_ACTION_ROW}>
           <Link href={`/dashboard/event/${event.id}/signups`} className="btn-primary text-center">
-            View My Signups
+            View Signups
           </Link>
         </div>
       ) : !event.published ? (
         <div className={CARD_ACTION_ROW}>
           <div className={CARD_ACTION_GRID}>
             <Link href={`/dashboard/event/${event.id}/signups`} className="btn-primary w-full text-center">
-              View My Signups
+              View Signups
             </Link>
             <button
               type="button"
@@ -255,7 +255,7 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
         <div className={CARD_ACTION_ROW}>
           <div className={CARD_ACTION_GRID}>
             <Link href={`/dashboard/event/${event.id}/signups`} className="btn-primary w-full text-center">
-              View My Signups
+              View Signups
             </Link>
             <a
               href={signupPageUrl}
