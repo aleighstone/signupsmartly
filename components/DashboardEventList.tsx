@@ -492,7 +492,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                       href={`/dashboard/event/${card.event.id}/signups`}
                       className="inline-flex min-h-[40px] w-full items-center justify-center rounded-[10px] border-2 border-transparent bg-sage px-[14px] py-2 text-[13px] font-semibold text-white transition-colors hover:bg-sage-hover font-body"
                     >
-                      View My Signups
+                      View Signups
                     </Link>
                     {isSignupPageEnabled ? (
                       <a
