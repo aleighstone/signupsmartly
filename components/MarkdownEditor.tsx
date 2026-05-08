@@ -43,18 +43,18 @@ export const MarkdownEditor = forwardRef<HTMLTextAreaElement, MarkdownEditorProp
   ) {
     const [mode, setMode] = useState<Mode>('write');
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const forwardedRefRef = useRef(forwardedRef);
+    forwardedRefRef.current = forwardedRef;
 
-    const setRefs = useCallback(
-      (el: HTMLTextAreaElement | null) => {
-        textareaRef.current = el;
-        if (typeof forwardedRef === 'function') {
-          forwardedRef(el);
-        } else if (forwardedRef != null) {
-          (forwardedRef as MutableRefObject<HTMLTextAreaElement | null>).current = el;
-        }
-      },
-      [forwardedRef]
-    );
+    const setRefs = useCallback((el: HTMLTextAreaElement | null) => {
+      textareaRef.current = el;
+      const ref = forwardedRefRef.current;
+      if (typeof ref === 'function') {
+        ref(el);
+      } else if (ref != null) {
+        (ref as MutableRefObject<HTMLTextAreaElement | null>).current = el;
+      }
+    }, []);
 
     const applyChange = (next: string) => {
       if (maxLength !== undefined && next.length > maxLength) {

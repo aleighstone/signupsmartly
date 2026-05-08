@@ -430,6 +430,26 @@ export function CreateEventForm({
     setTimeout(() => document.querySelector<HTMLInputElement>('[name="title"]')?.focus(), 0);
   };
 
+  const handleSignupTypeChange = (nextType: SignupType) => {
+    if (nextType === signupType) return;
+
+    if (signupType === 'scheduled' && nextType === 'simple') {
+      const current = scheduledForm.getValues();
+      simpleForm.setValue('title', current.title || '', { shouldDirty: true });
+      simpleForm.setValue('description', current.description || '', { shouldDirty: true });
+      simpleForm.setValue('location', current.location || '', { shouldDirty: true });
+      simpleForm.setValue('show_signups', current.show_signups ?? true, { shouldDirty: true });
+    } else if (signupType === 'simple' && nextType === 'scheduled') {
+      const current = simpleForm.getValues();
+      scheduledForm.setValue('title', current.title || '', { shouldDirty: true });
+      scheduledForm.setValue('description', current.description || '', { shouldDirty: true });
+      scheduledForm.setValue('location', current.location || '', { shouldDirty: true });
+      scheduledForm.setValue('show_signups', current.show_signups ?? true, { shouldDirty: true });
+    }
+
+    setSignupType(nextType);
+  };
+
   const onSubmitScheduled = async (data: ScheduledFormData): Promise<boolean> => {
     setIsSubmitting(true);
     try {
@@ -714,7 +734,7 @@ export function CreateEventForm({
           </span>
           <select
             value={signupType}
-            onChange={(e) => setSignupType(e.target.value as SignupType)}
+            onChange={(e) => handleSignupTypeChange(e.target.value as SignupType)}
             className="min-w-[220px] appearance-none rounded-xl border border-charcoal/20 bg-surface bg-no-repeat bg-[length:14px_14px] pl-3 pr-11 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
             style={{
               backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")",
