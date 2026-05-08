@@ -324,7 +324,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
         </div>
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-xl border border-charcoal/10 bg-surface shadow-soft md:block">
+          <div className="hidden overflow-visible rounded-xl border border-charcoal/10 bg-surface shadow-soft md:block">
             <div className="flex items-center gap-5 border-b border-charcoal/10 bg-charcoal/[0.02] px-5 py-2.5">
               <div className="basis-[280px] shrink-0 grow-0">
                 <button
