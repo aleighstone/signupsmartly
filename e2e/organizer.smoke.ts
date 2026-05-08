@@ -23,6 +23,15 @@ const dashboardMenuButtonForEvent = (page: any, eventId: string) =>
     .getByRole('button', { name: /more actions for this signup/i })
     .first();
 
+const createDescriptionTextarea = (page: any, type: 'scheduled' | 'simple') =>
+  page.locator(`textarea[name="signupsmartly-event-description-${type}"]`);
+
+const editDescriptionTextarea = (page: any) =>
+  page.locator('textarea[name="signupsmartly-event-description"]');
+
+const signupTypeSelect = (page: any) =>
+  page.getByRole('combobox', { name: /signup type/i });
+
 test.describe('Dashboard', () => {
   test('loads and shows Your Signups', async ({ page }) => {
     await page.goto('/dashboard');
@@ -32,6 +41,61 @@ test.describe('Dashboard', () => {
   test('shows Create Signup button in nav', async ({ page }) => {
     await page.goto('/dashboard');
     await expect(page.getByRole('navigation').getByRole('link', { name: /^create signup$/i })).toBeVisible();
+  });
+
+
+  test('overflow menu is fully visible and not clipped', async ({ page }) => {
+    const eventId = process.env.E2E_TEST_EVENT_ID;
+    if (!eventId) {
+      test.skip(true, 'E2E_TEST_EVENT_ID not set');
+      return;
+    }
+
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.request.post(`/api/events/${eventId}/unarchive`);
+    await page.goto('/dashboard');
+    await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
+    await dashboardMenuButtonForEvent(page, eventId).click();
+
+    const menu = page.getByRole('menu').first();
+    await expect(menu).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^edit signup$/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^delete$/i })).toBeVisible();
+
+    const box = await menu.boundingBox();
+    const viewport = page.viewportSize();
+    expect(box).not.toBeNull();
+    expect(viewport).not.toBeNull();
+    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width);
+    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
+
+    const bottomIsMenu = await page.evaluate(({ x, y }) => {
+      const element = document.elementFromPoint(x, y);
+      return Boolean(element?.closest('[role="menu"]'));
+    }, {
+      x: box!.x + 12,
+      y: box!.y + box!.height - 6,
+    });
+    expect(bottomIsMenu).toBe(true);
+  });
+
+  test('event row actions navigate to edit and signups pages', async ({ page }) => {
+    const eventId = process.env.E2E_TEST_EVENT_ID;
+    if (!eventId) {
+      test.skip(true, 'E2E_TEST_EVENT_ID not set');
+      return;
+    }
+
+    await page.goto('/dashboard');
+    await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
+    await dashboardEventRow(page, eventId)
+      .getByRole('link', { name: /edit signup/i })
+      .click();
+    await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/edit`), { timeout: 10_000 });
+
+    await page.goto('/dashboard');
+    await dashboardSignupsLinkForEvent(page, eventId).click();
+    await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), { timeout: 10_000 });
   });
 });
 
@@ -66,6 +130,50 @@ test.describe('Create signup flow', () => {
     await page.getByRole('button', { name: /← back to dashboard/i }).click();
     await page.getByRole('button', { name: /discard/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
+  });
+
+
+  test('description remains editable after switching signup types', async ({ page }) => {
+    await page.goto('/create-event');
+
+    const scheduledFirst = 'Scheduled description before switch';
+    const simpleEdit = 'Scheduled description before switch plus simple edit';
+    const scheduledFinal = 'Final create description after switching twice';
+
+    await expect(createDescriptionTextarea(page, 'scheduled')).toBeVisible();
+    await createDescriptionTextarea(page, 'scheduled').fill(scheduledFirst);
+    await expect(createDescriptionTextarea(page, 'scheduled')).toHaveValue(scheduledFirst);
+
+    await signupTypeSelect(page).selectOption('simple');
+    await expect(createDescriptionTextarea(page, 'simple')).toBeVisible();
+    await expect(createDescriptionTextarea(page, 'simple')).toHaveValue(scheduledFirst);
+    await createDescriptionTextarea(page, 'simple').fill(simpleEdit);
+    await expect(createDescriptionTextarea(page, 'simple')).toHaveValue(simpleEdit);
+
+    await signupTypeSelect(page).selectOption('scheduled');
+    await expect(createDescriptionTextarea(page, 'scheduled')).toBeVisible();
+    await expect(createDescriptionTextarea(page, 'scheduled')).toHaveValue(simpleEdit);
+    await createDescriptionTextarea(page, 'scheduled').fill(scheduledFinal);
+    await expect(createDescriptionTextarea(page, 'scheduled')).toHaveValue(scheduledFinal);
+  });
+
+  test('can save a draft after switching signup types with a description', async ({ page }) => {
+    const title = `Playwright Switch Description Draft ${Date.now()}`;
+    const description = 'Description entered after switching to simple list';
+
+    await page.goto('/create-event');
+    await createDescriptionTextarea(page, 'scheduled').fill('Initial scheduled description');
+    await signupTypeSelect(page).selectOption('simple');
+    await createDescriptionTextarea(page, 'simple').fill(description);
+    await page.getByLabel(/title/i).first().fill(title);
+    await page.getByPlaceholder(/entree/i).first().fill('Test item');
+    await page.getByRole('button', { name: /save as draft/i }).click();
+
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: new RegExp(`${title} created!`, 'i') })).toBeVisible();
+    await page.getByRole('button', { name: /no, i.?m good/i }).click();
+    await page.waitForURL(/dashboard/, { timeout: 15_000 });
+    await expect(page.getByText(title)).toBeVisible();
   });
 });
 
@@ -217,6 +325,64 @@ test.describe('Edit signup page', () => {
     await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), {
       timeout: 15_000,
     });
+  });
+
+
+  test('description can be changed and persists after save', async ({ page }) => {
+    const eventId = process.env.E2E_TEST_EVENT_ID;
+    if (!eventId) {
+      test.skip(true, 'E2E_TEST_EVENT_ID not set');
+      return;
+    }
+
+    await page.goto(`/dashboard/event/${eventId}/edit`);
+    const description = editDescriptionTextarea(page);
+    await expect(description).toBeVisible();
+    const originalDescription = await description.inputValue();
+    const updatedDescription = `Playwright persisted description ${Date.now()}`;
+
+    try {
+      await description.fill(updatedDescription);
+      await expect(description).toHaveValue(updatedDescription);
+      await page.getByRole('button', { name: /^save$/i }).click();
+      await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), {
+        timeout: 15_000,
+      });
+
+      await page.goto(`/dashboard/event/${eventId}/edit`);
+      await expect(editDescriptionTextarea(page)).toHaveValue(updatedDescription);
+    } finally {
+      await page.goto(`/dashboard/event/${eventId}/edit`);
+      await editDescriptionTextarea(page).fill(originalDescription);
+      await page.getByRole('button', { name: /^save$/i }).click();
+      await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), {
+        timeout: 15_000,
+      }).catch(() => {
+        // If cleanup navigation fails, leave the test failure to report the main issue.
+      });
+    }
+  });
+
+  test('description remains editable after adding and removing a slot', async ({ page }) => {
+    const eventId = process.env.E2E_TEST_EVENT_ID;
+    if (!eventId) {
+      test.skip(true, 'E2E_TEST_EVENT_ID not set');
+      return;
+    }
+
+    await page.goto(`/dashboard/event/${eventId}/edit`);
+    const addSlotButton = page.getByRole('button', { name: /^\+ add (spot|item)$/i });
+    await expect(addSlotButton).toBeVisible();
+    await addSlotButton.click();
+
+    const removeButton = page.getByRole('button', { name: /^remove (spot|item)$/i }).last();
+    await expect(removeButton).toBeVisible();
+    await removeButton.click();
+
+    const description = editDescriptionTextarea(page);
+    const text = `Editable after slot churn ${Date.now()}`;
+    await description.fill(text);
+    await expect(description).toHaveValue(text);
   });
 });
 
