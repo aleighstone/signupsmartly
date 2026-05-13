@@ -28,7 +28,7 @@ export default function Home() {
           </h1>
 
           <p className="mt-6 text-lg text-muted leading-relaxed font-body">
-            A cleaner way to coordinate volunteer and sign up lists for community
+            A cleaner way to coordinate volunteer and signup lists for community
             events, classrooms, and sports. Create events, add slots, share a
             link.<br />No ads, no clutter.
           </p>
@@ -38,7 +38,7 @@ export default function Home() {
               href="/signup"
               className="btn-primary-lg w-full sm:w-auto"
             >
-              Create your first sign up
+              Create your first signup
             </Link>
             <Link
               href="/login"

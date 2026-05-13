@@ -38,7 +38,7 @@ export default function PrivacyPage() {
               </h2>
               <p>
                 SignupSmartly is a free volunteer coordination tool built and
-                operated by Digitaleigh Co. It lets organizers create sign-up
+                operated by Digitaleigh Co. It lets organizers create signup
                 events and share them with volunteers. Volunteers can claim
                 slots without creating an account.
               </p>

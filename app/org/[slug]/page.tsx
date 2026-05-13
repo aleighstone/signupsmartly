@@ -36,13 +36,13 @@ export default async function OrgHomePage({ params }: PageProps) {
             {displayName}
           </h1>
           <p className="mt-2 text-muted font-body">
-            Volunteer sign-ups for {displayName}
+            Volunteer signups for {displayName}
           </p>
         </div>
 
         {events.length === 0 ? (
           <p className="text-center text-muted font-body py-8">
-            No sign-ups are available yet. Check back soon.
+            No signups are available yet. Check back soon.
           </p>
         ) : (
           <ul className="space-y-4">

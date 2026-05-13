@@ -761,7 +761,7 @@ export async function sendEventCreatedConfirmation(params: {
   }
 
   const typeLabel =
-    signupType === 'scheduled' ? 'Scheduled sign-up' : 'Simple sign-up list';
+    signupType === 'scheduled' ? 'Scheduled signup' : 'Simple signup list';
   const typeRow = `<p style="margin: 0; padding: 12px 0;"><strong>Type:</strong> ${typeLabel}</p>`;
 
   const detailRows = [eventRow, dateRow, typeRow].filter(Boolean).join('');
@@ -885,7 +885,7 @@ export async function sendSignupCancelledByOrganizer(params: {
       </div>
       <div style="padding: 24px;">
         <h1 style="font-size: 24px; font-weight: 600; color: #27272A; margin: 0 0 20px;">Your signup has been cancelled</h1>
-        <p style="margin: 0 0 16px; color: #27272A;">Your sign-up for the following ${labelSpotOrItem.toLowerCase()} has been removed by the event organizer.</p>
+        <p style="margin: 0 0 16px; color: #27272A;">Your signup for the following ${labelSpotOrItem.toLowerCase()} has been removed by the event organizer.</p>
         <div style="background-color: #F0F9F0; border-radius: 8px; padding: 0 20px; margin-bottom: 24px;">
           ${detailRows}
         </div>
