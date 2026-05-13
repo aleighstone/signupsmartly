@@ -84,9 +84,20 @@ export default async function DashboardPage() {
       const coverage = eventWithSlots
         ? getEventCoverage(eventWithSlots)
         : { filled: 0, total: 0, percentage: 0 };
+      const availabilityStats = eventWithSlots && eventWithSlots.signup_type === 'availability'
+        ? {
+            responses: eventWithSlots.slots.reduce((sum, slot) => sum + slot.signups.length, 0),
+            people: new Set(
+              eventWithSlots.slots.flatMap((slot) =>
+                slot.signups.map((signup) => (signup.email || signup.name).toLowerCase())
+              )
+            ).size,
+          }
+        : undefined;
       return {
         event: event as Event & { archived: boolean },
         coverage,
+        availabilityStats,
         dateLabel: formatEventDateRangeCompact(event.start_date, event.end_date),
         signupPageUrl: eventUrl(event.id),
       };

@@ -15,10 +15,29 @@ const slotSchema = z.object({
   comment_required: z.boolean().optional(),
 });
 
+
+function availabilitySlotKey(slot: { start_time?: string | null; end_time?: string | null }): string {
+  const startDate = slot.start_time?.slice(0, 10) ?? '';
+  const startTime = slot.start_time?.slice(11, 16) ?? '';
+  const endTime = slot.end_time?.slice(11, 16) ?? '';
+  return [startDate, startTime, endTime].join('|');
+}
+
+function hasDuplicateAvailabilitySlots(slots: Array<{ start_time?: string | null; end_time?: string | null }>): boolean {
+  const seen = new Set<string>();
+  for (const slot of slots) {
+    const key = availabilitySlotKey(slot);
+    if (!slot.start_time || !key.trim()) return true;
+    if (seen.has(key)) return true;
+    seen.add(key);
+  }
+  return false;
+}
+
 const createEventSchema = z.object({
   organization_id: z.string().uuid(),
   created_by: z.string().uuid(),
-  signup_type: z.enum(['scheduled', 'simple']).optional(),
+  signup_type: z.enum(['scheduled', 'simple', 'availability']).optional(),
   title: z.string().min(1),
   description: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
@@ -54,6 +73,13 @@ export async function POST(request: Request) {
     }
 
     const { slots, ...eventData } = parsed.data;
+    if (eventData.signup_type === 'availability' && hasDuplicateAvailabilitySlots(slots)) {
+      return NextResponse.json(
+        { error: 'Availability poll dates must be unique and include a date.' },
+        { status: 400 }
+      );
+    }
+
     const { theme, ...eventFields } = eventData;
     const eventPayload = {
       ...eventFields,

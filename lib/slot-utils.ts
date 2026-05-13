@@ -28,7 +28,7 @@ function createdAtMs(slot: SlotWithSignups): number {
  */
 export function sortSlotsForVolunteerDisplay(
   slots: SlotWithSignups[],
-  signupType: 'scheduled' | 'simple'
+  signupType: 'scheduled' | 'simple' | 'availability'
 ): SlotWithSignups[] {
   const copy = [...slots];
   if (signupType === 'simple') {

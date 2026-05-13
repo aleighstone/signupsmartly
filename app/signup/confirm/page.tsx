@@ -18,7 +18,7 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
   const { id } = await searchParams;
   if (!id) notFound();
 
-  const { data: signup, error } = await serviceSupabase
+  const { data: signupRows, error } = await serviceSupabase
     .from('signups')
     .select(`
       *,
@@ -27,11 +27,11 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
         events (*)
       )
     `)
-    .eq('id', id)
-    .eq('cancelled', false)
-    .single();
+    .or(`id.eq.${id},response_group_id.eq.${id}`)
+    .eq('cancelled', false);
 
-  if (error || !signup) notFound();
+  if (error || !signupRows?.length) notFound();
+  const signup = signupRows[0];
 
   type SignupWithRelations = {
     name: string;
@@ -58,7 +58,7 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
     title?: string;
     location?: string | null;
     start_date?: string | null;
-    signup_type?: 'scheduled' | 'simple';
+    signup_type?: 'scheduled' | 'simple' | 'availability';
     theme?: unknown;
   };
 
@@ -78,6 +78,13 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
     : null;
   const eventId = eventAny.id;
   const isSimple = eventAny.signup_type === 'simple';
+  const isAvailability = eventAny.signup_type === 'availability';
+  const availabilitySlots = isAvailability
+    ? (signupRows as unknown[]).map((row) => {
+        const rowSlotData = (row as { slots?: unknown }).slots;
+        return Array.isArray(rowSlotData) ? rowSlotData[0] : rowSlotData;
+      }).filter(Boolean) as Array<{ role_name?: string }>
+    : [];
   const primaryLabel = isSimple ? 'Item' : 'Spot';
   const hasComment = Boolean(signupTyped.comment?.trim());
 
@@ -94,7 +101,7 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
       <style dangerouslySetInnerHTML={{ __html: themeStyleCss }} />
       <main className="min-h-screen bg-sand flex flex-col items-center justify-center px-4">
       <TrackSignupSubmitted
-        signupType={isSimple ? 'simple' : 'scheduled'}
+        signupType={isAvailability ? 'availability' : isSimple ? 'simple' : 'scheduled'}
         hasComment={hasComment}
       />
       <div className="w-full max-w-md text-center space-y-6">
@@ -112,64 +119,95 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
           className="text-2xl font-semibold text-charcoal"
           style={{ fontFamily: 'var(--theme-font)' }}
         >
-          You&apos;re signed up!
+          {isAvailability ? "You're all set!" : "You're signed up!"}
         </h1>
 
         <div className="rounded-xl border border-charcoal/10 bg-surface p-6 text-left space-y-4 shadow-soft">
-          <div>
-            <p className="text-sm text-muted font-body">{primaryLabel}</p>
-            <p className="font-medium text-charcoal font-body">{slotAny.role_name}</p>
-          </div>
-          {dateText && (
-            <div>
-              <p className="text-sm text-muted font-body">Date</p>
-              <p className="font-medium text-charcoal font-body">{dateText}</p>
-            </div>
-          )}
-          {timeRange && (
-            <div>
-              <p className="text-sm text-muted font-body">Time</p>
-              <p className="font-medium text-charcoal font-body">{timeRange}</p>
-            </div>
-          )}
-          <div>
-            <p className="text-sm text-muted font-body">Event</p>
-            <p
-              className="font-medium text-charcoal font-body"
-              style={{ fontFamily: 'var(--theme-font)' }}
-            >
-              {eventAny.title}
-            </p>
-          </div>
-          {eventAny.location && (
-            <div>
-              <p className="text-sm text-muted font-body">Location</p>
-              <p className="font-medium text-charcoal font-body">
-                {eventAny.location}
+          {isAvailability ? (
+            <>
+              <p className="text-sm text-charcoal font-body">
+                Thanks for sharing your availability, {signupTyped.name}. The organizer will follow up once a date is chosen.
               </p>
-            </div>
+              <div>
+                <p className="text-sm text-muted font-body">Dates you marked</p>
+                <ul className="mt-2 list-inside list-disc space-y-1 text-sm font-medium text-charcoal font-body">
+                  {availabilitySlots.map((markedSlot, index) => (
+                    <li key={`${markedSlot.role_name ?? 'date'}-${index}`}>
+                      {markedSlot.role_name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-sm text-muted font-body">Event</p>
+                <p
+                  className="font-medium text-charcoal font-body"
+                  style={{ fontFamily: 'var(--theme-font)' }}
+                >
+                  {eventAny.title}
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <p className="text-sm text-muted font-body">{primaryLabel}</p>
+                <p className="font-medium text-charcoal font-body">{slotAny.role_name}</p>
+              </div>
+              {dateText && (
+                <div>
+                  <p className="text-sm text-muted font-body">Date</p>
+                  <p className="font-medium text-charcoal font-body">{dateText}</p>
+                </div>
+              )}
+              {timeRange && (
+                <div>
+                  <p className="text-sm text-muted font-body">Time</p>
+                  <p className="font-medium text-charcoal font-body">{timeRange}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-muted font-body">Event</p>
+                <p
+                  className="font-medium text-charcoal font-body"
+                  style={{ fontFamily: 'var(--theme-font)' }}
+                >
+                  {eventAny.title}
+                </p>
+              </div>
+              {eventAny.location && (
+                <div>
+                  <p className="text-sm text-muted font-body">Location</p>
+                  <p className="font-medium text-charcoal font-body">
+                    {eventAny.location}
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        <div className="flex flex-col gap-3">
-          {dateSource && (
-            <a
-              href={calendarUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-[48px] min-w-[140px] w-full items-center justify-center rounded-xl border-2 border-transparent px-6 py-3.5 text-base font-semibold font-body transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-charcoal/30 focus:ring-offset-2"
-              style={{
-                backgroundColor: 'var(--theme-primary)',
-                color: 'var(--theme-btn-text)',
-              }}
-            >
-              Add to Calendar
-            </a>
-          )}
-          <Link href={cancelUrl} className="btn-secondary-lg">
-            Cancel signup
-          </Link>
-        </div>
+        {!isAvailability && (
+          <div className="flex flex-col gap-3">
+            {dateSource && (
+              <a
+                href={calendarUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[48px] min-w-[140px] w-full items-center justify-center rounded-xl border-2 border-transparent px-6 py-3.5 text-base font-semibold font-body transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-charcoal/30 focus:ring-offset-2"
+                style={{
+                  backgroundColor: 'var(--theme-primary)',
+                  color: 'var(--theme-btn-text)',
+                }}
+              >
+                Add to Calendar
+              </a>
+            )}
+            <Link href={cancelUrl} className="btn-secondary-lg">
+              Cancel signup
+            </Link>
+          </div>
+        )}
 
         <div className="space-y-1">
           <p className="text-sm text-muted font-body">
@@ -191,14 +229,16 @@ export default async function ConfirmPage({ searchParams }: PageProps) {
               </>
             )}
           </p>
-          <p className="text-xs text-muted font-body">
-            <Link
-              href={`/signup/preferences?token=${signupTyped.cancel_token}`}
-              className="underline hover:text-charcoal transition-colors"
-            >
-              Manage reminder preferences
-            </Link>
-          </p>
+          {!isAvailability && (
+            <p className="text-xs text-muted font-body">
+              <Link
+                href={`/signup/preferences?token=${signupTyped.cancel_token}`}
+                className="underline hover:text-charcoal transition-colors"
+              >
+                Manage reminder preferences
+              </Link>
+            </p>
+          )}
         </div>
       </div>
       </main>

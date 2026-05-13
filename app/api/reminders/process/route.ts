@@ -243,7 +243,7 @@ type DigestRow = {
   events: {
     id: string;
     title: string;
-    signup_type: 'scheduled' | 'simple';
+    signup_type: 'scheduled' | 'simple' | 'availability';
     start_date: string | null;
     location: string | null;
     notification_override: 'instant' | 'daily' | 'weekly' | 'never' | null;
@@ -292,7 +292,7 @@ async function runOrganizerDigests(now: Date): Promise<number> {
       const signupRows = rows
         .filter((r) => r.signups && !r.signups.cancelled && r.slots && r.events)
         .map((r) => ({
-          signup: { ...r.signups!, cancel_token: '', created_at: '', reminder_opt_in: true, reminder_offset: '1_day' as const, reminder_sent_at: null, slot_id: r.slots!.id, cancelled: false, source: 'volunteer' as const },
+          signup: { ...r.signups!, cancel_token: '', created_at: '', reminder_opt_in: true, reminder_offset: '1_day' as const, reminder_sent_at: null, response_group_id: null, slot_id: r.slots!.id, cancelled: false, source: 'volunteer' as const },
           slot: r.slots as unknown as Slot,
           event: r.events as unknown as Event,
           digestId: r.id,
@@ -355,7 +355,7 @@ async function runOrganizerDigests(now: Date): Promise<number> {
         const signupRows = rows
           .filter((r) => r.signups && !r.signups.cancelled && r.slots && r.events)
           .map((r) => ({
-            signup: { ...r.signups!, cancel_token: '', created_at: '', reminder_opt_in: true, reminder_offset: '1_day' as const, reminder_sent_at: null, slot_id: r.slots!.id, cancelled: false, source: 'volunteer' as const },
+            signup: { ...r.signups!, cancel_token: '', created_at: '', reminder_opt_in: true, reminder_offset: '1_day' as const, reminder_sent_at: null, response_group_id: null, slot_id: r.slots!.id, cancelled: false, source: 'volunteer' as const },
             slot: r.slots as unknown as Slot,
             event: r.events as unknown as Event,
             digestId: r.id,

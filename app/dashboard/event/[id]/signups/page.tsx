@@ -74,6 +74,7 @@ export default async function SignupsPage({ params }: PageProps) {
 
   const coverage = getEventCoverage(eventData);
   const isSimple = eventData.signup_type === 'simple';
+  const isAvailability = eventData.signup_type === 'availability';
   const tableRows: TableRow[] = [];
   const csvRows: CsvRow[] = [];
 
@@ -110,7 +111,7 @@ export default async function SignupsPage({ params }: PageProps) {
         source: signupSource(signup),
       });
     }
-    const emptyCount = Math.max(0, slot.capacity - slot.signups.length);
+    const emptyCount = isAvailability ? 0 : Math.max(0, slot.capacity - slot.signups.length);
     for (let i = 0; i < emptyCount; i++) {
       tableRows.push({
         slotId: slot.id,
@@ -132,10 +133,30 @@ export default async function SignupsPage({ params }: PageProps) {
     })
     .filter((s) => s.needed > 0);
 
+  const availabilitySummaries = eventData.slots
+    .map((slot) => ({
+      id: slot.id,
+      roleName: slot.role_name,
+      count: slot.signups.length,
+      people: slot.signups
+        .map((signup) => ({ name: signup.name, email: signup.email ?? '' }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    }))
+    .sort((a, b) => b.count - a.count || a.roleName.localeCompare(b.roleName));
+  const availabilityTotalResponses = availabilitySummaries.reduce(
+    (sum, slot) => sum + slot.count,
+    0
+  );
+  const availabilityDistinctPeople = new Set(
+    eventData.slots.flatMap((slot) =>
+      slot.signups.map((signup) => (signup.email || signup.name).toLowerCase())
+    )
+  ).size;
+
   return (
     <AppLayout>
       <TrackSignupsPageView
-        signupType={eventData.signup_type}
+        signupType={isSimple ? 'simple' : 'scheduled'}
         totalSignups={coverage.filled}
         coveragePct={coverage.percentage}
       />
@@ -170,24 +191,60 @@ export default async function SignupsPage({ params }: PageProps) {
           <SignupsActions event={eventData} rows={csvRows} isSimple={isSimple} eventId={id} signupPageUrl={signupPageUrl} />
         </div>
 
-        <CoverageWithStillNeeded
-          filled={coverage.filled}
-          total={coverage.total}
-          percentage={coverage.percentage}
-          signupType={eventData.signup_type}
-          slotsNeedingFill={slotsNeedingFill}
-        />
+        {isAvailability ? (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-charcoal/10 bg-surface p-5 shadow-soft">
+              <h2 className="text-lg font-semibold text-charcoal font-heading">Availability</h2>
+              <p className="mt-1 text-sm text-muted font-body">
+                {availabilityTotalResponses} {availabilityTotalResponses === 1 ? 'response' : 'responses'} total from {availabilityDistinctPeople} {availabilityDistinctPeople === 1 ? 'person' : 'people'}
+              </p>
+            </div>
+            <div className="grid gap-3">
+              {availabilitySummaries.map((slot) => (
+                <div key={slot.id} className="rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <h3 className="font-semibold text-charcoal font-body">{slot.roleName}</h3>
+                    <span
+                      data-availability-count
+                      className="w-fit rounded-full bg-sage/10 px-3 py-1 text-sm font-semibold text-sage font-body"
+                    >
+                      {slot.count} {slot.count === 1 ? 'available' : 'available'}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm text-muted font-body">
+                    {slot.people.length > 0
+                      ? slot.people.map((person) => person.name).join(', ')
+                      : 'No responses yet'}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-muted font-body">
+              {availabilityTotalResponses} {availabilityTotalResponses === 1 ? 'response' : 'responses'} total from {availabilityDistinctPeople} {availabilityDistinctPeople === 1 ? 'person' : 'people'}
+            </p>
+          </div>
+        ) : (
+          <>
+            <CoverageWithStillNeeded
+              filled={coverage.filled}
+              total={coverage.total}
+              percentage={coverage.percentage}
+              signupType={isSimple ? 'simple' : 'scheduled'}
+              slotsNeedingFill={slotsNeedingFill}
+            />
 
-        <SignupsTable
-          rows={tableRows}
-          slots={eventData.slots.map((s) => ({
-            id: s.id,
-            role_name: s.role_name,
-            comment_label: s.comment_label ?? DEFAULT_COMMENT_LABEL,
-            comment_required: s.comment_required ?? false,
-          }))}
-          isSimple={isSimple}
-        />
+            <SignupsTable
+              rows={tableRows}
+              slots={eventData.slots.map((s) => ({
+                id: s.id,
+                role_name: s.role_name,
+                comment_label: s.comment_label ?? DEFAULT_COMMENT_LABEL,
+                comment_required: s.comment_required ?? false,
+              }))}
+              isSimple={isSimple}
+            />
+          </>
+        )}
 
         <div data-no-print className="mt-6">
           <EventNotificationOverride

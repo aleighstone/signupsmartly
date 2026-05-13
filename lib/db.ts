@@ -243,7 +243,7 @@ export async function getPublishedEventsForOrg(organizationId: string) {
     title: string;
     start_date: string | null;
     end_date: string | null;
-    signup_type: 'scheduled' | 'simple';
+    signup_type: 'scheduled' | 'simple' | 'availability';
   }>;
 }
 

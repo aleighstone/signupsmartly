@@ -12,7 +12,7 @@ import { SlotCardActions } from '@/components/SlotCardActions';
 import { UnsavedChangesModal } from '@/components/UnsavedChangesModal';
 import { DEFAULT_COLOR_KEY, DEFAULT_FONT_KEY } from '@/data/themes';
 
-type SignupType = 'scheduled' | 'simple' | 'template';
+type SignupType = 'scheduled' | 'simple' | 'availability' | 'template';
 
 interface Template {
   id: string;
@@ -28,6 +28,46 @@ interface Template {
     end_time: string | null;
     instructions: string | null;
   }>;
+}
+
+function formatAvailabilityDateLabel(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  if (!year || !month || !day) return dateStr;
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(year, month - 1, day));
+}
+
+function formatAvailabilityTimeLabel(timeStr: string): string {
+  const [hourRaw, minuteRaw] = timeStr.split(':').map(Number);
+  if (Number.isNaN(hourRaw) || Number.isNaN(minuteRaw)) return timeStr;
+  const suffix = hourRaw >= 12 ? 'PM' : 'AM';
+  const hour = hourRaw % 12 || 12;
+  return `${hour}:${String(minuteRaw).padStart(2, '0')} ${suffix}`;
+}
+
+function buildAvailabilitySlotLabel(slot: {
+  spot_date: string;
+  start_time?: string;
+  end_time?: string;
+}): string {
+  const dateLabel = formatAvailabilityDateLabel(slot.spot_date);
+  const start = slot.start_time?.trim();
+  const end = slot.end_time?.trim();
+  if (start && end) return `${dateLabel}, ${formatAvailabilityTimeLabel(start)} - ${formatAvailabilityTimeLabel(end)}`;
+  if (start) return `${dateLabel}, ${formatAvailabilityTimeLabel(start)}`;
+  return dateLabel;
+}
+
+function availabilitySlotUniqueKey(slot: {
+  spot_date?: string;
+  start_time?: string;
+  end_time?: string;
+}): string {
+  return [slot.spot_date?.trim() ?? '', slot.start_time?.trim() ?? '', slot.end_time?.trim() ?? ''].join('|');
 }
 
 const scheduledSlotSchema = z.object({
@@ -49,6 +89,13 @@ const simpleSlotSchema = z.object({
   comment_required: z.boolean().optional(),
 });
 
+const availabilitySlotSchema = z.object({
+  spot_date: z.string().min(1, 'Date required'),
+  start_time: z.string().optional(),
+  end_time: z.string().optional(),
+  instructions: z.string().max(800, 'Max 800 characters').optional(),
+});
+
 const scheduledFormSchema = z.object({
   title: z.string().min(1, 'Title required'),
   description: z.string().optional(),
@@ -66,8 +113,38 @@ const simpleFormSchema = z.object({
   slots: z.array(simpleSlotSchema).min(1, 'Add at least one item'),
 });
 
+const availabilityFormSchema = z.object({
+  title: z.string().min(1, 'Title required'),
+  description: z.string().optional(),
+  location: z.string().optional(),
+  show_signups: z.boolean().optional(),
+  slots: z.array(availabilitySlotSchema).min(1, 'Add at least one date'),
+}).superRefine((data, ctx) => {
+  const seen = new Map<string, number>();
+  data.slots.forEach((slot, index) => {
+    const key = availabilitySlotUniqueKey(slot);
+    if (!slot.spot_date || !key.trim()) return;
+    const firstIndex = seen.get(key);
+    if (firstIndex !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Each date/time option must be unique',
+        path: ['slots', index, 'spot_date'],
+      });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Each date/time option must be unique',
+        path: ['slots', firstIndex, 'spot_date'],
+      });
+    } else {
+      seen.set(key, index);
+    }
+  });
+});
+
 type ScheduledFormData = z.infer<typeof scheduledFormSchema>;
 type SimpleFormData = z.infer<typeof simpleFormSchema>;
+type AvailabilityFormData = z.infer<typeof availabilityFormSchema>;
 
 function SignupTypeHelpModal({
   isOpen,
@@ -136,7 +213,7 @@ function SaveAsTemplateModal({
   isOpen: boolean;
   onClose: () => void;
   signupTitle: string;
-  signupType: 'scheduled' | 'simple';
+  signupType: 'scheduled' | 'simple' | 'availability';
   description: string | null;
   location: string | null;
   slots: Array<{
@@ -209,8 +286,10 @@ function SaveAsTemplateModal({
             <h2 className="text-lg font-semibold text-charcoal font-heading">{signupTitle} created!</h2>
             <p className="mt-2 text-sm text-charcoal font-body">Do you want to save this signup as a template to reuse later?</p>
             <div className="mt-6 flex gap-3">
-              <button type="button" onClick={() => setStep(2)} className="btn-primary">Yes, Save it</button>
-              <button type="button" onClick={handleClose} className="btn-secondary">No, I&apos;m good.</button>
+              {signupType !== 'availability' && (
+                <button type="button" onClick={() => setStep(2)} className="btn-primary">Yes, Save it</button>
+              )}
+              <button type="button" onClick={handleClose} className={signupType === 'availability' ? 'btn-primary' : 'btn-secondary'}>No, I&apos;m good.</button>
             </div>
           </>
         )}
@@ -267,7 +346,7 @@ export function CreateEventForm({
   const [createModalPending, setCreateModalPending] = useState<'publish' | 'draft' | null>(null);
   const [lastCreated, setLastCreated] = useState<{
     title: string;
-    signupType: 'scheduled' | 'simple';
+    signupType: 'scheduled' | 'simple' | 'availability';
     description: string | null;
     location: string | null;
     slots: Array<{ role_name: string; role_description?: string | null; capacity: number; start_time?: string; end_time?: string; instructions?: string | null }>;
@@ -324,6 +403,24 @@ export function CreateEventForm({
     },
   });
 
+  const availabilityForm = useForm<AvailabilityFormData>({
+    resolver: zodResolver(availabilityFormSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      location: '',
+      show_signups: true,
+      slots: [
+        {
+          spot_date: '',
+          start_time: '',
+          end_time: '',
+          instructions: '',
+        },
+      ],
+    },
+  });
+
   const {
     fields: scheduledFields,
     append: appendScheduled,
@@ -337,6 +434,14 @@ export function CreateEventForm({
     remove: removeSimpleAt,
     swap: swapSimple,
   } = useFieldArray({ control: simpleForm.control, name: 'slots' });
+
+
+  const {
+    fields: availabilityFields,
+    append: appendAvailability,
+    remove: removeAvailabilityAt,
+    swap: swapAvailability,
+  } = useFieldArray({ control: availabilityForm.control, name: 'slots' });
 
   const addScheduledSlot = () => {
     const slots = scheduledForm.getValues('slots');
@@ -363,6 +468,17 @@ export function CreateEventForm({
     });
   };
 
+  const addAvailabilitySlot = () => {
+    const slots = availabilityForm.getValues('slots');
+    const prev = slots[slots.length - 1];
+    appendAvailability({
+      spot_date: prev?.spot_date || '',
+      start_time: '',
+      end_time: '',
+      instructions: '',
+    });
+  };
+
   const removeScheduledSlot = (index: number) => {
     if (scheduledFields.length <= 1) return;
     removeScheduledAt(index);
@@ -371,6 +487,11 @@ export function CreateEventForm({
   const removeSimpleSlot = (index: number) => {
     if (simpleFields.length <= 1) return;
     removeSimpleAt(index);
+  };
+
+  const removeAvailabilitySlot = (index: number) => {
+    if (availabilityFields.length <= 1) return;
+    removeAvailabilityAt(index);
   };
 
   const goToDashboard = () => {
@@ -433,18 +554,35 @@ export function CreateEventForm({
   const handleSignupTypeChange = (nextType: SignupType) => {
     if (nextType === signupType) return;
 
-    if (signupType === 'scheduled' && nextType === 'simple') {
-      const current = scheduledForm.getValues();
-      simpleForm.setValue('title', current.title || '', { shouldDirty: true });
-      simpleForm.setValue('description', current.description || '', { shouldDirty: true });
-      simpleForm.setValue('location', current.location || '', { shouldDirty: true });
-      simpleForm.setValue('show_signups', current.show_signups ?? true, { shouldDirty: true });
-    } else if (signupType === 'simple' && nextType === 'scheduled') {
-      const current = simpleForm.getValues();
-      scheduledForm.setValue('title', current.title || '', { shouldDirty: true });
-      scheduledForm.setValue('description', current.description || '', { shouldDirty: true });
-      scheduledForm.setValue('location', current.location || '', { shouldDirty: true });
-      scheduledForm.setValue('show_signups', current.show_signups ?? true, { shouldDirty: true });
+    const current =
+      signupType === 'simple'
+        ? simpleForm.getValues()
+        : signupType === 'availability'
+          ? availabilityForm.getValues()
+          : scheduledForm.getValues();
+
+    const shared = {
+      title: current.title || '',
+      description: current.description || '',
+      location: current.location || '',
+      show_signups: current.show_signups ?? true,
+    };
+
+    if (nextType === 'scheduled') {
+      scheduledForm.setValue('title', shared.title, { shouldDirty: true });
+      scheduledForm.setValue('description', shared.description, { shouldDirty: true });
+      scheduledForm.setValue('location', shared.location, { shouldDirty: true });
+      scheduledForm.setValue('show_signups', shared.show_signups, { shouldDirty: true });
+    } else if (nextType === 'simple') {
+      simpleForm.setValue('title', shared.title, { shouldDirty: true });
+      simpleForm.setValue('description', shared.description, { shouldDirty: true });
+      simpleForm.setValue('location', shared.location, { shouldDirty: true });
+      simpleForm.setValue('show_signups', shared.show_signups, { shouldDirty: true });
+    } else if (nextType === 'availability') {
+      availabilityForm.setValue('title', shared.title, { shouldDirty: true });
+      availabilityForm.setValue('description', shared.description, { shouldDirty: true });
+      availabilityForm.setValue('location', shared.location, { shouldDirty: true });
+      availabilityForm.setValue('show_signups', shared.show_signups, { shouldDirty: true });
     }
 
     setSignupType(nextType);
@@ -485,7 +623,11 @@ export function CreateEventForm({
             };
 
             return {
-              role_name: s.role_name,
+              role_name: buildAvailabilitySlotLabel({
+                spot_date: date || '',
+                start_time: startTimeStr,
+                end_time: endTimeStr,
+              }),
               role_description: s.instructions || null,
               start_time:
                 date && startTimeStr
@@ -599,6 +741,77 @@ export function CreateEventForm({
     }
   };
 
+  const onSubmitAvailability = async (data: AvailabilityFormData): Promise<boolean> => {
+    setIsSubmitting(true);
+    try {
+      const datedSlots = data.slots.filter((s) => s.spot_date);
+      const dates = datedSlots.map((s) => s.spot_date!).filter(Boolean);
+      const startDate = dates.length ? dates.reduce((a, b) => (a < b ? a : b)) : null;
+      const endDate = dates.length ? dates.reduce((a, b) => (a > b ? a : b)) : null;
+      const showSignups = data.show_signups ?? true;
+      const toLiteralIso = (dateStr: string, timeStr: string): string => {
+        const [hh, mm] = timeStr.split(':').map((x) => parseInt(x, 10) || 0);
+        const padded = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+        return `${dateStr}T${padded}:00.000Z`;
+      };
+      const res = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organization_id: organizationId,
+          created_by: createdBy,
+          signup_type: 'availability',
+          title: data.title,
+          description: data.description || null,
+          location: data.location || null,
+          start_date: startDate ? `${startDate}T00:00:00Z` : null,
+          end_date: endDate ? `${endDate}T23:59:59Z` : null,
+          published: submitIntentRef.current === 'publish',
+          show_signups: showSignups,
+          theme: { colorKey, fontKey },
+          slots: data.slots.map((s) => {
+            const date = s.spot_date?.trim();
+            const startTimeStr = s.start_time?.trim();
+            const endTimeStr = s.end_time?.trim();
+            return {
+              role_name: buildAvailabilitySlotLabel({
+                spot_date: date || '',
+                start_time: startTimeStr,
+                end_time: endTimeStr,
+              }),
+              role_description: s.instructions || null,
+              start_time:
+                date && startTimeStr
+                  ? toLiteralIso(date, startTimeStr)
+                  : date
+                    ? `${date}T00:00:00.000Z`
+                    : null,
+              end_time: date && endTimeStr ? toLiteralIso(date, endTimeStr) : null,
+              capacity: 9999,
+              instructions: null,
+              comment_label: undefined,
+              comment_required: false,
+            };
+          }),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to create poll');
+      posthog?.capture('availability_poll_created', {
+        slot_count: data.slots.length,
+      });
+      router.push(`/dashboard/event/${json.id}/signups`);
+      router.refresh();
+      return true;
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Something went wrong');
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+
   const closeUnsavedModal = useCallback(() => setUnsavedModalOpen(false), []);
 
   const handleBackClick = () => {
@@ -609,7 +822,9 @@ export function CreateEventForm({
     const isDirty =
       signupType === 'scheduled'
         ? scheduledForm.formState.isDirty
-        : simpleForm.formState.isDirty;
+        : signupType === 'availability'
+          ? availabilityForm.formState.isDirty
+          : simpleForm.formState.isDirty;
     if (!isDirty) {
       router.push('/dashboard');
       return;
@@ -630,6 +845,10 @@ export function CreateEventForm({
       } else if (signupType === 'simple') {
         await simpleForm.handleSubmit(async (data) => {
           success = await onSubmitSimple(data);
+        })();
+      } else if (signupType === 'availability') {
+        await availabilityForm.handleSubmit(async (data) => {
+          success = await onSubmitAvailability(data);
         })();
       }
       if (success) setUnsavedModalOpen(false);
@@ -653,6 +872,10 @@ export function CreateEventForm({
         await simpleForm.handleSubmit(async (data) => {
           success = await onSubmitSimple(data);
         })();
+      } else if (signupType === 'availability') {
+        await availabilityForm.handleSubmit(async (data) => {
+          success = await onSubmitAvailability(data);
+        })();
       }
       if (success) setUnsavedModalOpen(false);
     } finally {
@@ -671,7 +894,9 @@ export function CreateEventForm({
     const isDirty =
       signupType === 'scheduled'
         ? scheduledForm.formState.isDirty
-        : simpleForm.formState.isDirty;
+        : signupType === 'availability'
+          ? availabilityForm.formState.isDirty
+          : simpleForm.formState.isDirty;
     if (!isDirty) return;
 
     const handler = (e: BeforeUnloadEvent) => {
@@ -680,7 +905,7 @@ export function CreateEventForm({
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, [signupType, scheduledForm.formState.isDirty, simpleForm.formState.isDirty]);
+  }, [signupType, scheduledForm.formState.isDirty, simpleForm.formState.isDirty, availabilityForm.formState.isDirty]);
 
   return (
     <>
@@ -744,6 +969,7 @@ export function CreateEventForm({
           >
             <option value="scheduled">organize by schedule</option>
             <option value="simple">request items in a simple list</option>
+            <option value="availability">create an availability poll</option>
             {templates.length > 0 && <option value="template">use one of my templates</option>}
           </select>
           <button
@@ -784,6 +1010,7 @@ export function CreateEventForm({
           </div>
         ) : signupType === 'scheduled' ? (
           <form
+            key="create-scheduled-form"
             onSubmit={scheduledForm.handleSubmit(onSubmitScheduled)}
             className="space-y-8"
           >
@@ -932,6 +1159,11 @@ export function CreateEventForm({
                         {...scheduledForm.register(`slots.${index}.spot_date`)}
                         className="w-full max-w-xs rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
                       />
+                      {availabilityForm.formState.errors.slots?.[index]?.spot_date && (
+                        <p className="mt-1 text-sm text-coral font-body">
+                          {availabilityForm.formState.errors.slots?.[index]?.spot_date?.message}
+                        </p>
+                      )}
                       {scheduledForm.formState.errors.slots?.[index]?.spot_date && (
                         <p className="mt-1 text-sm text-coral font-body">
                           {scheduledForm.formState.errors.slots?.[index]?.spot_date?.message}
@@ -1065,8 +1297,210 @@ export function CreateEventForm({
               </button>
             </div>
           </form>
+        ) : signupType === 'availability' ? (
+          <form
+            key="create-availability-form"
+            onSubmit={availabilityForm.handleSubmit(onSubmitAvailability)}
+            className="space-y-8"
+          >
+            <section className="rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft">
+              <h2 className="text-lg font-semibold text-charcoal mb-4 font-heading">
+                Poll Details
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                    Title <span className="text-coral">*</span>
+                  </label>
+                  <input
+                    {...availabilityForm.register('title')}
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                    placeholder="Game night availability"
+                  />
+                  {availabilityForm.formState.errors.title && (
+                    <p className="mt-1 text-sm text-coral font-body">
+                      {availabilityForm.formState.errors.title.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label
+                    htmlFor="signupsmartly-event-desc-availability"
+                    className="block text-sm font-medium text-charcoal mb-1 font-body"
+                  >
+                    Description
+                  </label>
+                  <Controller
+                    control={availabilityForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <MarkdownEditor
+                        key="availability-description-editor"
+                        ref={field.ref}
+                        id="signupsmartly-event-desc-availability"
+                        name="signupsmartly-event-description-availability"
+                        value={typeof field.value === 'string' ? field.value : ''}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        placeholder="optional"
+                        rows={3}
+                      />
+                    )}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                    Location
+                  </label>
+                  <input
+                    {...availabilityForm.register('location')}
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body placeholder:text-muted/70"
+                    placeholder="optional"
+                  />
+                </div>
+                <div className="border-t border-charcoal/10 pt-4">
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      {...availabilityForm.register('show_signups')}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-charcoal/30 text-sage focus:ring-2 focus:ring-sage/30"
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-charcoal font-body">
+                        Display who is available for each date.
+                      </span>
+                      <span className="mt-0.5 block text-xs text-muted font-body">
+                        Turn off to keep responses private.
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft">
+              <h2 className="text-lg font-semibold text-charcoal font-heading mb-4">
+                Proposed dates
+              </h2>
+              <div className="space-y-6">
+                {availabilityFields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="rounded-xl border border-charcoal/10 p-4 space-y-4 bg-sand/30"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-medium text-muted font-body">
+                        Date {index + 1}
+                      </span>
+                      <SlotCardActions
+                        listLength={availabilityFields.length}
+                        index={index}
+                        onMoveUp={() => index > 0 && swapAvailability(index, index - 1)}
+                        onMoveDown={() =>
+                          index < availabilityFields.length - 1 &&
+                          swapAvailability(index, index + 1)
+                        }
+                        onRemove={() => removeAvailabilitySlot(index)}
+                        removeAriaLabel="Remove date"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                        Date <span className="text-coral">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        {...availabilityForm.register(`slots.${index}.spot_date`)}
+                        className="w-full max-w-xs rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                      />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                          Start time <span className="text-muted font-normal">(optional)</span>
+                        </label>
+                        <input
+                          type="time"
+                          {...availabilityForm.register(`slots.${index}.start_time`)}
+                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                          End time <span className="text-muted font-normal">(optional)</span>
+                        </label>
+                        <input
+                          type="time"
+                          {...availabilityForm.register(`slots.${index}.end_time`)}
+                          className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30 font-body"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                        Notes <span className="text-muted font-normal">(optional)</span>
+                      </label>
+                      <Controller
+                        control={availabilityForm.control}
+                        name={`slots.${index}.instructions`}
+                        render={({ field }) => (
+                          <MarkdownEditor
+                            ref={field.ref}
+                            name={field.name}
+                            value={typeof field.value === 'string' ? field.value : ''}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder=""
+                            maxLength={800}
+                            rows={2}
+                          />
+                        )}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addAvailabilitySlot}
+                className="btn-secondary mt-4 min-w-0"
+              >
+                + Add date
+              </button>
+            </section>
+
+            <CustomizeAppearanceSection
+              colorKey={colorKey}
+              fontKey={fontKey}
+              onColorChange={setColorKey}
+              onFontChange={setFontKey}
+            />
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                onClick={preparePublishSubmit}
+                className="rounded-xl bg-sage px-6 py-3 text-sm font-medium text-white hover:bg-sage-hover disabled:opacity-60 transition-colors font-body"
+              >
+                {isSubmitting && submitIntent === 'publish' ? 'Creating…' : 'Create poll'}
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => {
+                  prepareDraftSubmit();
+                  void availabilityForm.handleSubmit(onSubmitAvailability)();
+                }}
+                className="rounded-xl border border-charcoal/20 bg-surface px-6 py-3 text-sm font-medium text-charcoal hover:bg-charcoal/5 disabled:opacity-60 transition-colors font-body"
+              >
+                {isSubmitting && submitIntent === 'draft' ? 'Saving…' : 'Save as Draft'}
+              </button>
+            </div>
+          </form>
         ) : (
           <form
+            key="create-simple-form"
             onSubmit={simpleForm.handleSubmit(onSubmitSimple)}
             className="space-y-8"
           >

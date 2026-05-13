@@ -8,7 +8,7 @@ export function TrackSignupsPageView({
   totalSignups,
   coveragePct,
 }: {
-  signupType: 'scheduled' | 'simple';
+  signupType: 'scheduled' | 'simple' | 'availability';
   totalSignups: number;
   coveragePct: number;
 }) {
@@ -40,7 +40,7 @@ export function TrackEventPageView({
   coveragePct,
   openSlots,
 }: {
-  signupType: 'scheduled' | 'simple';
+  signupType: 'scheduled' | 'simple' | 'availability';
   coveragePct: number;
   openSlots: number;
 }) {
@@ -61,7 +61,7 @@ export function TrackSignupSubmitted({
   signupType,
   hasComment,
 }: {
-  signupType: 'scheduled' | 'simple';
+  signupType: 'scheduled' | 'simple' | 'availability';
   hasComment: boolean;
 }) {
   const posthog = usePostHog();

@@ -6,6 +6,25 @@ import { reportProductionError } from '@/lib/error-reporter';
 import { normalizeCommentLabel } from '@/lib/slot-comment';
 import type { Event, Slot, Signup } from '@/types/database';
 
+
+function availabilitySlotKey(slot: { start_time?: string | null; end_time?: string | null }): string {
+  const startDate = slot.start_time?.slice(0, 10) ?? '';
+  const startTime = slot.start_time?.slice(11, 16) ?? '';
+  const endTime = slot.end_time?.slice(11, 16) ?? '';
+  return [startDate, startTime, endTime].join('|');
+}
+
+function hasDuplicateAvailabilitySlots(slots: Array<{ start_time?: string | null; end_time?: string | null }>): boolean {
+  const seen = new Set<string>();
+  for (const slot of slots) {
+    const key = availabilitySlotKey(slot);
+    if (!slot.start_time || !key.trim()) return true;
+    if (seen.has(key)) return true;
+    seen.add(key);
+  }
+  return false;
+}
+
 const patchEventSchema = z.object({
   title: z.string().min(1),
   description: z.string().nullable().optional(),
@@ -110,7 +129,7 @@ export async function PATCH(
 
     const { data: eventRow, error: eventError } = await serviceSupabase
       .from('events')
-      .select('id, organization_id, start_date, end_date, location, title')
+      .select('id, organization_id, start_date, end_date, location, title, signup_type')
       .eq('id', id)
       .single();
 
@@ -125,6 +144,7 @@ export async function PATCH(
       end_date: string | null;
       location: string | null;
       title: string;
+      signup_type: 'scheduled' | 'simple' | 'availability';
     };
 
     const { data: membership } = await serviceSupabase
@@ -150,6 +170,13 @@ export async function PATCH(
       slots,
       deleted_slot_ids = [],
     } = parsed.data;
+
+    if (event.signup_type === 'availability' && hasDuplicateAvailabilitySlots(slots)) {
+      return NextResponse.json(
+        { error: 'Availability poll dates must be unique and include a date.' },
+        { status: 400 }
+      );
+    }
 
     const dateChanged =
       start_date !== event.start_date || end_date !== event.end_date;
@@ -341,7 +368,10 @@ export async function PATCH(
         sendEventLocationChanged,
       } = await import('@/lib/email');
 
+      const skipSlotDeletionEmails = event.signup_type === 'availability';
+
       for (const { signup, slot, reason } of cancelledSignups) {
+        if (skipSlotDeletionEmails) continue;
         if (signup.email) {
           await sendSignupCancelledByOrganizer({
             signup,

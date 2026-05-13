@@ -20,8 +20,9 @@ interface EditEventFormProps {
 }
 
 const isSimple = (e: EventWithSlots) => e.signup_type === 'simple';
-const slotLabel = (e: EventWithSlots) => (isSimple(e) ? 'Item' : 'Spot');
-const slotsLabel = (e: EventWithSlots) => (isSimple(e) ? 'Items' : 'Spots');
+const isAvailability = (e: EventWithSlots) => e.signup_type === 'availability';
+const slotLabel = (e: EventWithSlots) => (isSimple(e) ? 'Item' : isAvailability(e) ? 'Date' : 'Spot');
+const slotsLabel = (e: EventWithSlots) => (isSimple(e) ? 'Items' : isAvailability(e) ? 'Proposed dates' : 'Spots');
 
 function seedThemeKeys(ev: EventWithSlots): { colorKey: string; fontKey: string } {
   const raw = ev.theme;
@@ -47,6 +48,11 @@ const scheduledSlotSchema = z.object({
   comment_required: z.boolean().optional(),
 });
 
+/** Availability rows derive `role_name` in `buildPayload`; the name field is hidden, so allow empty string (scheduled spots still require min 1). */
+const availabilityPollSlotSchema = scheduledSlotSchema.omit({ role_name: true }).extend({
+  role_name: z.string(),
+});
+
 const simpleSlotSchema = z.object({
   id: z.string().uuid().optional(),
   role_name: z.string().min(1),
@@ -64,6 +70,10 @@ const scheduledFormSchema = z.object({
   end_date: z.string().optional(),
   show_signups: z.boolean().optional(),
   slots: z.array(scheduledSlotSchema).min(1),
+});
+
+const availabilityScheduledFormSchema = scheduledFormSchema.extend({
+  slots: z.array(availabilityPollSlotSchema).min(1),
 });
 
 const simpleFormSchema = z.object({
@@ -84,10 +94,43 @@ function toLiteralIso(dateStr: string, timeStr: string): string {
   return `${dateStr}T${padded}:00.000Z`;
 }
 
+function formatAvailabilityDateLabel(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  if (!year || !month || !day) return dateStr;
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(year, month - 1, day));
+}
+
+function formatAvailabilityTimeLabel(timeStr: string): string {
+  const [hourRaw, minuteRaw] = timeStr.split(':').map(Number);
+  if (Number.isNaN(hourRaw) || Number.isNaN(minuteRaw)) return timeStr;
+  const suffix = hourRaw >= 12 ? 'PM' : 'AM';
+  const hour = hourRaw % 12 || 12;
+  return `${hour}:${String(minuteRaw).padStart(2, '0')} ${suffix}`;
+}
+
+function buildAvailabilitySlotLabel(slot: {
+  spot_date: string;
+  start_time?: string;
+  end_time?: string;
+}): string {
+  const dateLabel = formatAvailabilityDateLabel(slot.spot_date);
+  const start = slot.start_time?.trim();
+  const end = slot.end_time?.trim();
+  if (start && end) return `${dateLabel}, ${formatAvailabilityTimeLabel(start)} - ${formatAvailabilityTimeLabel(end)}`;
+  if (start) return `${dateLabel}, ${formatAvailabilityTimeLabel(start)}`;
+  return dateLabel;
+}
+
 export function EditEventForm({ event }: EditEventFormProps) {
   const router = useRouter();
   const posthog = usePostHog();
   const simple = isSimple(event);
+  const availability = isAvailability(event);
   const slot = slotLabel(event);
   const slots = slotsLabel(event);
 
@@ -109,7 +152,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
   const [fontKey, setFontKey] = useState(seededTheme.fontKey);
 
   const scheduledForm = useForm<ScheduledFormData>({
-    resolver: zodResolver(scheduledFormSchema),
+    resolver: zodResolver(availability ? availabilityScheduledFormSchema : scheduledFormSchema),
     defaultValues: {
       title: event.title,
       description: event.description || '',
@@ -132,8 +175,8 @@ export function EditEventForm({ event }: EditEventFormProps) {
           role_name: s.role_name,
           start_time,
           end_time,
-          capacity: s.capacity,
-          instructions: s.instructions || '',
+          capacity: availability ? 9999 : s.capacity,
+          instructions: s.instructions || s.role_description || '',
           comment_label:
             !s.comment_label || s.comment_label === DEFAULT_COMMENT_LABEL
               ? ''
@@ -203,6 +246,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
     if (simple) {
       return simpleSlots.some((s, i) => hasCapacityError(i, s.capacity));
     }
+    if (availability) return false;
     return scheduledSlots.some((s, i) => hasCapacityError(i, s.capacity));
   };
 
@@ -223,7 +267,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
         role_name: '',
         start_time: '',
         end_time: '',
-        capacity: 1,
+        capacity: availability ? 9999 : 1,
         instructions: '',
         comment_label: '',
         comment_required: false,
@@ -277,8 +321,8 @@ export function EditEventForm({ event }: EditEventFormProps) {
           role_description: s.role_description?.trim() || null,
           start_time: null as string | null,
           end_time: null as string | null,
-          comment_label: s.comment_label?.trim() || undefined,
-          comment_required: s.comment_required ?? false,
+          comment_label: availability ? undefined : s.comment_label?.trim() || undefined,
+          comment_required: availability ? false : s.comment_required ?? false,
         }));
       return {
         title: data.title,
@@ -305,9 +349,16 @@ export function EditEventForm({ event }: EditEventFormProps) {
         const endTimeStr = s.end_time?.trim();
         return {
           id: s.id,
-          role_name: s.role_name,
-          capacity: s.capacity,
-          instructions: s.instructions?.trim() || null,
+          role_name: availability
+            ? buildAvailabilitySlotLabel({
+                spot_date: date,
+                start_time: startTimeStr,
+                end_time: endTimeStr,
+              })
+            : s.role_name,
+          capacity: availability ? 9999 : s.capacity,
+          role_description: availability ? s.instructions?.trim() || null : undefined,
+          instructions: availability ? null : s.instructions?.trim() || null,
           start_time:
             date && startTimeStr
               ? toLiteralIso(date, startTimeStr)
@@ -377,6 +428,10 @@ export function EditEventForm({ event }: EditEventFormProps) {
 
   const onSubmit = async () => {
     await saveEdits();
+  };
+
+  const onScheduledSubmitInvalid = () => {
+    setError('Please fix the fields marked below and try again.');
   };
 
   const handleBackClick = () => {
@@ -453,7 +508,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
         </button>
       </div>
 
-      <h1 className="text-2xl font-semibold text-charcoal font-heading mb-6">Edit signup</h1>
+      <h1 className="text-2xl font-semibold text-charcoal font-heading mb-6">{availability ? 'Edit availability poll' : 'Edit signup'}</h1>
 
       <UnsavedChangesModal
         isOpen={unsavedModalOpen}
@@ -534,14 +589,14 @@ export function EditEventForm({ event }: EditEventFormProps) {
         </form>
       ) : (
         <form
-          onSubmit={scheduledForm.handleSubmit(onSubmit)}
+          onSubmit={scheduledForm.handleSubmit(onSubmit, onScheduledSubmitInvalid)}
           className="space-y-8"
         >
           <EventDetailsSection
             control={scheduledForm.control}
             form={scheduledForm as { register: (n: string, o?: { valueAsNumber?: boolean }) => object; formState: { errors: Record<string, unknown> } }}
             showEndDate
-            signupTypeLabel="Scheduled"
+            signupTypeLabel={availability ? 'Availability poll' : 'Scheduled'}
           />
           <SlotsSectionScheduled
             control={scheduledForm.control}
@@ -555,6 +610,8 @@ export function EditEventForm({ event }: EditEventFormProps) {
             onSwapSlots={swapScheduledSlots}
             getSignupCount={getSignupCount}
             hasCapacityError={hasCapacityError}
+            hideCapacity={availability}
+            hideSignupSettings={availability}
           />
           <CustomizeAppearanceSection
             colorKey={colorKey}
@@ -585,49 +642,81 @@ export function EditEventForm({ event }: EditEventFormProps) {
             aria-hidden="true"
           />
           <div className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md">
-            <h2
-              id="delete-modal-title"
-              className="text-lg font-semibold text-charcoal font-heading"
-            >
-              Remove this {slot.toLowerCase()}?
-            </h2>
-            <p className="mt-2 text-sm text-charcoal font-body">
-              The following volunteers will have their signup cancelled and will
-              be notified by email:
-            </p>
-            <ul className="mt-2 list-inside list-disc text-sm text-charcoal font-body">
-              {deleteModal.signups.map((s) => (
-                <li key={s.name}>{s.name}</li>
-              ))}
-            </ul>
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                Reason for removal (optional — included in notification email)
-              </label>
-              <textarea
-                value={deleteReason}
-                onChange={(e) => setDeleteReason(e.target.value)}
-                rows={2}
-                placeholder="Reason for removal (optional)"
-                className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30"
-              />
-            </div>
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setDeleteModal(null)}
-                className="btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDeleteWithSignups}
-                className="rounded-xl bg-coral px-5 py-2.5 text-sm font-medium text-white hover:bg-coral/90 font-body"
-              >
-                Remove {slot} and notify volunteers
-              </button>
-            </div>
+            {availability ? (
+              <>
+                <h2
+                  id="delete-modal-title"
+                  className="text-lg font-semibold text-charcoal font-heading"
+                >
+                  Delete poll option?
+                </h2>
+                <p className="mt-2 text-sm text-charcoal font-body">
+                  You already have signups for this poll option. Are you sure you want to delete?
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteModal(null)}
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmDeleteWithSignups}
+                    className="rounded-xl bg-coral px-5 py-2.5 text-sm font-medium text-white hover:bg-coral/90 font-body"
+                  >
+                    Yes
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2
+                  id="delete-modal-title"
+                  className="text-lg font-semibold text-charcoal font-heading"
+                >
+                  Remove this {slot.toLowerCase()}?
+                </h2>
+                <p className="mt-2 text-sm text-charcoal font-body">
+                  The following volunteers will have their signup cancelled and will
+                  be notified by email:
+                </p>
+                <ul className="mt-2 list-inside list-disc text-sm text-charcoal font-body">
+                  {deleteModal.signups.map((s) => (
+                    <li key={s.name}>{s.name}</li>
+                  ))}
+                </ul>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                    Reason for removal (optional — included in notification email)
+                  </label>
+                  <textarea
+                    value={deleteReason}
+                    onChange={(e) => setDeleteReason(e.target.value)}
+                    rows={2}
+                    placeholder="Reason for removal (optional)"
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30"
+                  />
+                </div>
+                <div className="mt-6 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteModal(null)}
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmDeleteWithSignups}
+                    className="rounded-xl bg-coral px-5 py-2.5 text-sm font-medium text-white hover:bg-coral/90 font-body"
+                  >
+                    Remove {slot} and notify volunteers
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -917,6 +1006,8 @@ function SlotsSectionScheduled({
   onSwapSlots,
   getSignupCount,
   hasCapacityError,
+  hideCapacity = false,
+  hideSignupSettings = false,
 }: {
   control: Control<ScheduledFormData>;
   slotFields: { id: string }[];
@@ -939,6 +1030,8 @@ function SlotsSectionScheduled({
   onSwapSlots: (indexA: number, indexB: number) => void;
   getSignupCount: (i: number) => number;
   hasCapacityError: (i: number, cap: number) => boolean;
+  hideCapacity?: boolean;
+  hideSignupSettings?: boolean;
 }) {
   return (
     <section className="rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft">
@@ -968,13 +1061,18 @@ function SlotsSectionScheduled({
             </div>
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                Date
+                Date {hideCapacity ? <span className="text-coral">*</span> : null}
               </label>
               <input
                 type="date"
                 {...form.register(`slots.${index}.spot_date`)}
                 className="w-full max-w-xs rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30"
               />
+              {(form.formState.errors.slots as Array<{ spot_date?: { message?: string } }> | undefined)?.[index]?.spot_date && (
+                <p className="mt-1 text-sm text-coral font-body">
+                  {(form.formState.errors.slots as Array<{ spot_date?: { message?: string } }>)[index].spot_date?.message}
+                </p>
+              )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -998,36 +1096,38 @@ function SlotsSectionScheduled({
                 />
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                  {slotLabel} name <span className="text-coral">*</span>
-                </label>
-                <input
-                  {...form.register(`slots.${index}.role_name`)}
-                  className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30"
-                />
+            {!hideCapacity && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                    {slotLabel} name <span className="text-coral">*</span>
+                  </label>
+                  <input
+                    {...form.register(`slots.${index}.role_name`)}
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-charcoal mb-1 font-body">
+                    Capacity <span className="text-coral">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    {...form.register(`slots.${index}.capacity`, { valueAsNumber: true })}
+                    className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30"
+                  />
+                  {hasCapacityError(index, slots[index].capacity) && (
+                    <p className="mt-1 text-sm text-coral font-body">
+                      This {slotLabel.toLowerCase()} has {getSignupCount(index)} volunteer(s) signed up. Capacity cannot be below {getSignupCount(index)}.
+                    </p>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                  Capacity <span className="text-coral">*</span>
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  {...form.register(`slots.${index}.capacity`, { valueAsNumber: true })}
-                  className="w-full rounded-xl border border-charcoal/20 px-3 py-2.5 text-sm text-charcoal font-body focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/30"
-                />
-                {hasCapacityError(index, slots[index].capacity) && (
-                  <p className="mt-1 text-sm text-coral font-body">
-                    This {slotLabel.toLowerCase()} has {getSignupCount(index)} volunteer(s) signed up. Capacity cannot be below {getSignupCount(index)}.
-                  </p>
-                )}
-              </div>
-            </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1 font-body">
-                Instructions <span className="text-muted font-normal">(optional)</span>
+                {hideSignupSettings ? 'Notes' : 'Instructions'} <span className="text-muted font-normal">(optional)</span>
               </label>
               <Controller
                 control={control}
@@ -1039,7 +1139,7 @@ function SlotsSectionScheduled({
                     value={typeof field.value === 'string' ? field.value : ''}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    placeholder="Any notes for volunteers"
+                    placeholder={hideSignupSettings ? "" : "Any notes for volunteers"}
                     maxLength={800}
                     rows={2}
                   />
@@ -1051,10 +1151,11 @@ function SlotsSectionScheduled({
                 </p>
               )}
             </div>
-            <div className="border-t border-charcoal/10 pt-4 space-y-4">
-              <span className="block text-sm font-medium text-muted font-body">
-                Signup settings for this {slotLabel.toLowerCase()}
-              </span>
+            {!hideSignupSettings && (
+              <div className="border-t border-charcoal/10 pt-4 space-y-4">
+                <span className="block text-sm font-medium text-muted font-body">
+                  Signup settings for this {slotLabel.toLowerCase()}
+                </span>
               <div className="space-y-3">
                 <label className="flex cursor-pointer items-start gap-3">
                   <input
@@ -1087,8 +1188,9 @@ function SlotsSectionScheduled({
                     {(form.formState.errors.slots as Array<{ comment_label?: { message?: string } }>)[index].comment_label?.message}
                   </p>
                 )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         ))}
       </div>

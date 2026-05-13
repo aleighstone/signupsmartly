@@ -74,7 +74,7 @@ export default async function OrgHomePage({ params }: PageProps) {
                       total={coverage.total}
                       percentage={coverage.percentage}
                       size="sm"
-                      signupType={event.signup_type}
+                      signupType={event.signup_type === 'simple' ? 'simple' : 'scheduled'}
                       primaryColor={org.primary_color}
                     />
                   </div>

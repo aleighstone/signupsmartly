@@ -64,6 +64,11 @@ export default async function EventPage({ params }: PageProps) {
   const isFalcons = slug === 'falconstrack';
 
   const coverage = getEventCoverage(eventData);
+  const isAvailability = eventData.signup_type === 'availability';
+  const availabilityResponses = eventData.slots.reduce(
+    (sum, slot) => sum + slot.signups.length,
+    0
+  );
   const openSlots = eventData.slots.reduce(
     (sum, s) => sum + Math.max(0, s.capacity - s.signups.length),
     0
@@ -115,21 +120,27 @@ export default async function EventPage({ params }: PageProps) {
         <EventHeader event={eventData} titleStyle={{ fontFamily: 'var(--theme-font)' }} />
 
         <TrackEventPageView
-          signupType={eventData.signup_type}
+          signupType={eventData.signup_type === 'simple' ? 'simple' : 'scheduled'}
           coveragePct={coverage.percentage}
           openSlots={openSlots}
         />
-        <div className="mt-8 rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft">
-          <CoverageMeter
-            filled={coverage.filled}
-            total={coverage.total}
-            percentage={coverage.percentage}
-            signupType={eventData.signup_type}
-            volunteerPageThemed
-          />
+        <div className="mt-7 rounded-xl border border-charcoal/10 bg-surface p-5 shadow-soft sm:mt-8">
+          {isAvailability ? (
+            <p className="text-sm font-semibold text-charcoal font-body">
+              {availabilityResponses} {availabilityResponses === 1 ? 'response' : 'responses'} so far
+            </p>
+          ) : (
+            <CoverageMeter
+              filled={coverage.filled}
+              total={coverage.total}
+              percentage={coverage.percentage}
+              signupType={eventData.signup_type === 'simple' ? 'simple' : 'scheduled'}
+              volunteerPageThemed
+            />
+          )}
         </div>
 
-        <div className="mt-8">
+        <div className="mt-7 sm:mt-8">
           <EventPageClient event={eventData} />
         </div>
 

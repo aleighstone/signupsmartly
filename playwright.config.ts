@@ -72,6 +72,24 @@ export default defineConfig({
       testMatch: /volunteer\./,
     },
 
+    // Availability poll — organizer-side tests (authenticated)
+    {
+      name: 'availability-organizer',
+      testMatch: /availability\.smoke\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/organizer.json',
+      },
+      dependencies: ['setup'],
+    },
+
+    // Availability poll — public/volunteer-side tests (no auth)
+    {
+      name: 'availability-volunteer',
+      testMatch: /availability\.smoke\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+
     // Mobile screenshots: captures key pages at iPhone 14 viewport for visual review
     {
       name: 'mobile-screenshots',

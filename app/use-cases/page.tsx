@@ -72,6 +72,23 @@ const useCases = [
     screenshotAlt: 'Book club signup showing who is bringing each item',
     flip: true,
   },
+  {
+    id: 'group-scheduling',
+    badge: 'Availability poll',
+    badgeColor: 'bg-violet-100 text-violet-700',
+    headline: 'Mahjong nights, game crews & recurring groups',
+    subhead: 'Skip the group text. Find the date that works for everyone.',
+    description:
+      'Add the dates you\'re considering, share one link, and let your group mark which ones they can make. See which date has the most availability at a glance — no tallying, no back-and-forth.',
+    points: [
+      'Everyone marks all their available dates in one submission',
+      'Responses sorted by most available — the best date rises to the top',
+      'Works for any recurring group: game nights, hiking crews, dinners',
+    ],
+    screenshot: '/marketing-content/SS_Availability_poll_placeholder.png',
+    screenshotAlt: 'Availability poll showing proposed dates with checkboxes and response counts',
+    flip: false,
+  },
 ];
 
 export default function UseCasesPage() {
@@ -104,11 +121,12 @@ export default function UseCasesPage() {
       <section className="border-b border-charcoal/10 bg-surface px-4 py-14 sm:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-4xl font-semibold tracking-tight text-charcoal sm:text-5xl font-heading">
-            Works for any volunteer coordination
+            Works for any volunteer coordination or group scheduling
           </h1>
           <p className="mt-5 text-lg text-muted leading-relaxed font-body">
             Sports teams, classrooms, clubs, neighborhood groups — if you need
-            people to sign up for something, SignupSmartly handles it.<br />No account required. Just a link.
+            people to sign up for something or find a date that works,
+            SignupSmartly handles it.<br />No account required. Just a link.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <span className="inline-flex items-center rounded-full bg-sage/15 px-3.5 py-1.5 text-sm font-medium text-sage-hover font-body">
@@ -116,6 +134,9 @@ export default function UseCasesPage() {
             </span>
             <span className="inline-flex items-center rounded-full bg-sky-100 px-3.5 py-1.5 text-sm font-medium text-sky-700 font-body">
               Simple list — for &quot;who&apos;s bringing what&quot;
+            </span>
+            <span className="inline-flex items-center rounded-full bg-violet-100 px-3.5 py-1.5 text-sm font-medium text-violet-700 font-body">
+              Availability poll — for finding a date that works
             </span>
           </div>
         </div>

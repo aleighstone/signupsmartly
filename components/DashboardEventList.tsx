@@ -11,12 +11,13 @@ export type EventCardData = {
     title: string;
     start_date: string | null;
     end_date: string | null;
-    signup_type: 'scheduled' | 'simple';
+    signup_type: 'scheduled' | 'simple' | 'availability';
     published: boolean;
     archived: boolean;
   };
   dateLabel: string;
   coverage: { filled: number; total: number; percentage: number };
+  availabilityStats?: { responses: number; people: number };
   signupPageUrl: string;
 };
 
@@ -358,6 +359,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
 
             {sortedCards.map((card) => {
               const isSignupPageEnabled = card.event.published;
+              const isAvailability = card.event.signup_type === 'availability';
               return (
                 <div
                   key={card.event.id}
@@ -381,6 +383,11 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                           Archived
                         </span>
                       ) : null}
+                      {isAvailability ? (
+                        <span className="inline-flex shrink-0 items-center rounded-full bg-sage/10 px-2 py-0.5 text-[11px] font-semibold text-sage font-body">
+                          Poll
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   <div className="basis-[140px] shrink-0 grow-0">
@@ -389,15 +396,23 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                     </span>
                   </div>
                   <div className="flex flex-1 items-center gap-2.5">
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-charcoal/10">
-                      <div
-                        className="h-full rounded-full bg-sage"
-                        style={{ width: `${card.coverage.percentage}%` }}
-                      />
-                    </div>
-                    <span className="w-20 whitespace-nowrap text-right text-xs text-muted font-body">
-                      {pctLabel(card.coverage.filled, card.coverage.total)}
-                    </span>
+                    {isAvailability ? (
+                      <span className="text-xs text-muted font-body">
+                        {card.availabilityStats?.responses ?? 0} responses · {card.availabilityStats?.people ?? 0} people
+                      </span>
+                    ) : (
+                      <>
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-charcoal/10">
+                          <div
+                            className="h-full rounded-full bg-sage"
+                            style={{ width: `${card.coverage.percentage}%` }}
+                          />
+                        </div>
+                        <span className="w-20 whitespace-nowrap text-right text-xs text-muted font-body">
+                          {pctLabel(card.coverage.filled, card.coverage.total)}
+                        </span>
+                      </>
+                    )}
                   </div>
                   <div className="w-[122px]">
                     <div className="flex items-center gap-1.5">
@@ -442,6 +457,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
           <ul className="space-y-3 md:hidden">
             {sortedCards.map((card) => {
               const isSignupPageEnabled = card.event.published;
+              const isAvailability = card.event.signup_type === 'availability';
               return (
                 <li
                   key={card.event.id}
@@ -466,6 +482,11 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                             Archived
                           </span>
                         ) : null}
+                        {isAvailability ? (
+                          <span className="inline-flex items-center rounded-full bg-sage/10 px-2 py-0.5 text-[11px] font-semibold text-sage font-body">
+                            Poll
+                          </span>
+                        ) : null}
                       </div>
                       <p className="text-xs text-muted font-body">
                         {card.event.start_date ? card.dateLabel : '—'}
@@ -474,18 +495,24 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                     <MoreMenu card={card} />
                   </div>
 
-                  <div>
-                    <div className="mb-1 flex items-center justify-between text-xs font-body">
-                      <span className="font-medium text-charcoal">Coverage</span>
-                      <span className="text-muted">{pctLabel(card.coverage.filled, card.coverage.total)}</span>
+                  {isAvailability ? (
+                    <p className="text-xs text-muted font-body">
+                      {card.availabilityStats?.responses ?? 0} responses · {card.availabilityStats?.people ?? 0} people
+                    </p>
+                  ) : (
+                    <div>
+                      <div className="mb-1 flex items-center justify-between text-xs font-body">
+                        <span className="font-medium text-charcoal">Coverage</span>
+                        <span className="text-muted">{pctLabel(card.coverage.filled, card.coverage.total)}</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-charcoal/10">
+                        <div
+                          className="h-full rounded-full bg-sage"
+                          style={{ width: `${card.coverage.percentage}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-charcoal/10">
-                      <div
-                        className="h-full rounded-full bg-sage"
-                        style={{ width: `${card.coverage.percentage}%` }}
-                      />
-                    </div>
-                  </div>
+                  )}
 
                   <div className="mt-3.5 flex gap-2">
                     <Link

@@ -212,12 +212,12 @@ export function SignupsActions({
           className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-[10px] border-2 border-transparent bg-sage px-[18px] py-[9px] text-sm font-semibold text-white transition-colors hover:bg-sage-hover font-body"
         >
           <Copy className="h-3.5 w-3.5" aria-hidden />
-          Copy Signup URL
+          Copy Public URL
         </button>
 
         <Link href={`/dashboard/event/${eventId}/edit`} className={secondaryButtonClass + ' no-underline'}>
           <Pencil className="h-3.5 w-3.5" aria-hidden />
-          Edit Event
+          Edit
         </Link>
 
         <div className="relative" ref={exportDropdownRef}>
@@ -274,7 +274,7 @@ export function SignupsActions({
         role="status"
         aria-live="polite"
       >
-        Signup URL copied!
+        Public URL copied!
       </div>
     </>
   );

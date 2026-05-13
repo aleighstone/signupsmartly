@@ -102,7 +102,7 @@ export interface Database {
           location: string | null;
           start_date: string | null;
           end_date: string | null;
-          signup_type: 'scheduled' | 'simple';
+          signup_type: 'scheduled' | 'simple' | 'availability';
           published: boolean;
           created_by: string | null;
           created_at: string;
@@ -118,7 +118,7 @@ export interface Database {
           location?: string | null;
           start_date?: string | null;
           end_date?: string | null;
-          signup_type?: 'scheduled' | 'simple';
+          signup_type?: 'scheduled' | 'simple' | 'availability';
           published?: boolean;
           created_by?: string | null;
           created_at?: string;
@@ -134,7 +134,7 @@ export interface Database {
           location?: string | null;
           start_date?: string | null;
           end_date?: string | null;
-          signup_type?: 'scheduled' | 'simple';
+          signup_type?: 'scheduled' | 'simple' | 'availability';
           published?: boolean;
           created_by?: string | null;
           created_at?: string;
@@ -195,7 +195,7 @@ export interface Database {
           id: string;
           organization_id: string;
           name: string;
-          signup_type: 'scheduled' | 'simple';
+          signup_type: 'scheduled' | 'simple' | 'availability';
           description: string | null;
           location: string | null;
           created_at: string;
@@ -204,7 +204,7 @@ export interface Database {
           id?: string;
           organization_id: string;
           name: string;
-          signup_type: 'scheduled' | 'simple';
+          signup_type: 'scheduled' | 'simple' | 'availability';
           description?: string | null;
           location?: string | null;
           created_at?: string;
@@ -213,7 +213,7 @@ export interface Database {
           id?: string;
           organization_id?: string;
           name?: string;
-          signup_type?: 'scheduled' | 'simple';
+          signup_type?: 'scheduled' | 'simple' | 'availability';
           description?: string | null;
           location?: string | null;
           created_at?: string;
@@ -292,6 +292,7 @@ export interface Database {
             | 'morning_of'
             | '1_hour';
           reminder_sent_at: string | null;
+          response_group_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -311,6 +312,7 @@ export interface Database {
             | 'morning_of'
             | '1_hour';
           reminder_sent_at?: string | null;
+          response_group_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -330,6 +332,7 @@ export interface Database {
             | 'morning_of'
             | '1_hour';
           reminder_sent_at?: string | null;
+          response_group_id?: string | null;
           created_at?: string;
         };
       };

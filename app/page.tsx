@@ -28,8 +28,8 @@ export default function Home() {
           </h1>
 
           <p className="mt-6 text-lg text-muted leading-relaxed font-body">
-            A cleaner way to coordinate volunteer and signup lists for community
-            events, classrooms, and sports. Create events, add slots, share a
+            A cleaner way to coordinate volunteer signups and group scheduling
+            for community events, classrooms, and sports. Create, share a
             link.<br />No ads, no clutter.
           </p>
 
@@ -156,8 +156,8 @@ export default function Home() {
           </h2>
           <p className="mt-4 text-base text-muted font-body leading-relaxed">
             Track meet volunteers, snack duty rotations, parent-teacher
-            conference booking, book club and potlucks — see how organizers use
-            SignupSmartly for every kind of coordination.
+            conference booking, book club potlucks, recurring group scheduling
+            — see how organizers use SignupSmartly for every kind of coordination.
           </p>
           <Link
             href="/use-cases"

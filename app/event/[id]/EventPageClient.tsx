@@ -4,6 +4,8 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SlotList } from '@/components/SlotList';
 import { SignupModal } from '@/components/SignupModal';
+import { AvailabilitySlotList } from '@/components/AvailabilitySlotList';
+import { AvailabilityModal } from '@/components/AvailabilityModal';
 import { SignupsModal } from '@/components/SignupsModal';
 import {
   formatScheduledSlotWhen,
@@ -20,6 +22,8 @@ interface EventPageClientProps {
 export function EventPageClient({ event }: EventPageClientProps) {
   const router = useRouter();
   const [modalSlot, setModalSlot] = useState<SlotWithSignups | null>(null);
+  const [selectedAvailabilitySlotIds, setSelectedAvailabilitySlotIds] = useState<string[]>([]);
+  const [availabilityModalOpen, setAvailabilityModalOpen] = useState(false);
   const [signupsModalSlot, setSignupsModalSlot] = useState<SlotWithSignups | null>(
     null
   );
@@ -29,6 +33,10 @@ export function EventPageClient({ event }: EventPageClientProps) {
   const submitInFlightRef = useRef(false);
 
   const showSignups = event.show_signups ?? true;
+  const isAvailability = event.signup_type === 'availability';
+  const selectedAvailabilitySlots = event.slots.filter((slot) =>
+    selectedAvailabilitySlotIds.includes(slot.id)
+  );
 
   const eventDateFallback =
     event.signup_type === 'scheduled'
@@ -48,6 +56,7 @@ export function EventPageClient({ event }: EventPageClientProps) {
     if (!isSubmitting) {
       submitInFlightRef.current = false;
       setModalSlot(null);
+      setAvailabilityModalOpen(false);
       setError(null);
     }
   };
@@ -84,6 +93,34 @@ export function EventPageClient({ event }: EventPageClientProps) {
       );
     }
   };
+  const handleAvailabilitySubmit = async (data: { name: string; email: string }) => {
+    if (selectedAvailabilitySlotIds.length === 0) return;
+    if (submitInFlightRef.current) return;
+    submitInFlightRef.current = true;
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/availability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slotIds: selectedAvailabilitySlotIds,
+          name: data.name,
+          email: data.email,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Availability submission failed');
+      router.push(`/signup/confirm?id=${json.responseId}`);
+    } catch (e) {
+      submitInFlightRef.current = false;
+      setIsSubmitting(false);
+      setError(
+        e instanceof Error ? e.message : 'Something went wrong, please try again.'
+      );
+    }
+  };
+
 
   const signupsModalWhen =
     signupsModalSlot && event.signup_type === 'scheduled'
@@ -97,15 +134,31 @@ export function EventPageClient({ event }: EventPageClientProps) {
 
   return (
     <>
-      <SlotList
-        slots={event.slots}
-        onSignUp={handleSignUp}
-        showSignups={showSignups}
-        onOpenSignups={setSignupsModalSlot}
-        signupType={event.signup_type}
-        eventDateFallback={eventDateFallback}
-        volunteerPageThemed
-      />
+      {isAvailability ? (
+        <AvailabilitySlotList
+          slots={event.slots}
+          selectedSlotIds={selectedAvailabilitySlotIds}
+          onSelectionChange={setSelectedAvailabilitySlotIds}
+          onSubmit={() => {
+            submitInFlightRef.current = false;
+            setError(null);
+            setAvailabilityModalOpen(true);
+          }}
+          showSignups={showSignups}
+          onOpenSignups={setSignupsModalSlot}
+          volunteerPageThemed
+        />
+      ) : (
+        <SlotList
+          slots={event.slots}
+          onSignUp={handleSignUp}
+          showSignups={showSignups}
+          onOpenSignups={setSignupsModalSlot}
+          signupType={event.signup_type === 'simple' ? 'simple' : 'scheduled'}
+          eventDateFallback={eventDateFallback}
+          volunteerPageThemed
+        />
+      )}
       <SignupsModal
         isOpen={!!signupsModalSlot}
         onClose={() => setSignupsModalSlot(null)}
@@ -121,7 +174,17 @@ export function EventPageClient({ event }: EventPageClientProps) {
         showComments={showSignups}
         commentLabel={signupsModalSlot?.comment_label ?? DEFAULT_COMMENT_LABEL}
       />
-      <SignupModal
+      <AvailabilityModal
+        isOpen={availabilityModalOpen}
+        onClose={handleCloseModal}
+        selectedSlots={selectedAvailabilitySlots}
+        onSubmit={handleAvailabilitySubmit}
+        isSubmitting={isSubmitting}
+        error={error}
+        volunteerPageThemed
+      />
+      {!isAvailability && (
+        <SignupModal
         isOpen={!!modalSlot}
         onClose={handleCloseModal}
         slotId={modalSlot?.id}
@@ -146,7 +209,8 @@ export function EventPageClient({ event }: EventPageClientProps) {
         isSubmitting={isSubmitting}
         error={error}
         volunteerPageThemed
-      />
+        />
+      )}
     </>
   );
 }
