@@ -46,10 +46,10 @@ function ScheduledSlotVolunteerHeading({
   if (timeLessSingleDay) {
     return (
       <>
-        <h3 className="text-base font-semibold text-charcoal font-body leading-tight">
+        <h3 className="text-base font-semibold text-charcoal font-body">
           {whenFallback}
         </h3>
-        <h4 className="mt-0.5 text-sm font-medium text-charcoal font-body">
+        <h4 className="mt-1 text-sm font-medium text-charcoal font-body">
           {slot.role_name}
         </h4>
       </>
@@ -64,10 +64,10 @@ function ScheduledSlotVolunteerHeading({
             {prefixWeekday(slot.start_time)}
           </p>
         ) : null}
-        <h3 className="text-base font-semibold text-charcoal font-body leading-tight">
+        <h3 className="mt-1 text-base font-semibold text-charcoal font-body">
           {timeLine}
         </h3>
-        <h4 className="mt-0.5 text-sm font-medium text-charcoal font-body">
+        <h4 className="mt-1 text-sm font-medium text-charcoal font-body">
           {slot.role_name}
         </h4>
       </>
@@ -76,13 +76,13 @@ function ScheduledSlotVolunteerHeading({
 
   return (
     <>
-      <h3 className="text-base font-semibold text-charcoal font-body leading-tight">
+      <h3 className="text-base font-semibold text-charcoal font-body">
         {dateLine}
       </h3>
       {timeLine ? (
-        <p className="text-sm text-muted font-body mt-0.5">{timeLine}</p>
+        <p className="mt-1 text-sm text-muted font-body">{timeLine}</p>
       ) : null}
-      <h4 className="mt-0.5 text-sm font-medium text-charcoal font-body">
+      <h4 className="mt-1 text-sm font-medium text-charcoal font-body">
         {slot.role_name}
       </h4>
     </>
@@ -197,7 +197,7 @@ function SlotCard({
           ) : null}
         </p>
         {(slot.role_description || slot.instructions) && (
-          <div className="mt-1 text-sm text-muted font-body prose prose-sm max-w-none prose-p:text-muted prose-li:text-muted prose-headings:text-charcoal prose-strong:text-charcoal">
+          <div className="mt-1 text-sm text-muted font-body prose prose-sm max-w-none prose-p:text-muted prose-li:text-muted prose-headings:text-charcoal prose-strong:text-charcoal [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
             <MarkdownBody markdown={slot.role_description || slot.instructions || ''} />
           </div>
         )}

@@ -24,7 +24,7 @@ export function EventHeader({ event, titleStyle }: EventHeaderProps) {
         {dateRange && (
           <div>
             <dt className="sr-only">Date</dt>
-            <dd className="text-base font-semibold text-charcoal leading-tight">{dateRange}</dd>
+            <dd className="text-base font-semibold text-charcoal">{dateRange}</dd>
           </div>
         )}
         {event.location && (
@@ -35,7 +35,7 @@ export function EventHeader({ event, titleStyle }: EventHeaderProps) {
         )}
       </dl>
       {event.description && (
-        <div className="text-muted text-sm leading-relaxed font-body prose prose-sm max-w-none prose-p:text-muted prose-li:text-muted prose-headings:text-charcoal prose-strong:text-charcoal">
+        <div className="text-muted text-sm leading-relaxed font-body prose prose-sm max-w-none prose-p:text-muted prose-li:text-muted prose-headings:text-charcoal prose-strong:text-charcoal [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
           <MarkdownBody markdown={event.description} />
         </div>
       )}
