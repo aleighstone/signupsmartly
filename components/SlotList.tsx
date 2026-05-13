@@ -238,7 +238,7 @@ export function SlotList({
   const orderedSlots = sortSlotsForVolunteerDisplay(slots, signupType);
   const openSlots = orderedSlots.filter((s) => getSlotRemainingCapacity(s) > 0);
   const filledSlots = orderedSlots.filter((s) => getSlotRemainingCapacity(s) === 0);
-  const filledLabel = isSimple ? 'Filled Items' : 'Filled Roles';
+  const filledLabel = 'Filled';
   const allFilledText = isSimple
     ? 'All items are filled. Thank you!'
     : 'All roles are filled. Thank you!';
@@ -286,7 +286,7 @@ export function SlotList({
               style={sectionIconStyle}
               aria-hidden
             />
-            Still Needed
+            Open
           </h2>
           {anchorSlotId ? (
             <button
