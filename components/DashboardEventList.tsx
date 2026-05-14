@@ -26,6 +26,17 @@ type Tab = 'active' | 'archived';
 type SortCol = 'event' | 'date' | null;
 type SortDir = 'asc' | 'desc' | null;
 
+type MobileSortOption = 'date-desc' | 'date-asc' | 'event-asc' | 'event-desc';
+
+function mobileSortValueFromState(sortCol: SortCol, sortDir: SortDir): MobileSortOption | null {
+  if (!sortCol || !sortDir) return null;
+  if (sortCol === 'date' && sortDir === 'desc') return 'date-desc';
+  if (sortCol === 'date' && sortDir === 'asc') return 'date-asc';
+  if (sortCol === 'event' && sortDir === 'asc') return 'event-asc';
+  if (sortCol === 'event' && sortDir === 'desc') return 'event-desc';
+  return null;
+}
+
 const SORT_STORAGE_KEY = 'dashboard-signups-sort-v1';
 
 function pctLabel(filled: number, total: number) {
@@ -207,6 +218,46 @@ function MoreMenu({ card }: { card: EventCardData }) {
   );
 }
 
+function EventQuickActions({ card }: { card: EventCardData }) {
+  const isSignupPageEnabled = card.event.published;
+  return (
+    <div className="flex items-center gap-1.5">
+      {isSignupPageEnabled ? (
+        <a
+          href={card.signupPageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Signup Page"
+          aria-label="Signup Page"
+          className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-charcoal/20 bg-surface text-charcoal"
+        >
+          <ExternalLink size={14} />
+        </a>
+      ) : (
+        <button
+          type="button"
+          disabled
+          title="Not yet published"
+          aria-label="Not yet published"
+          className="inline-flex h-[34px] w-[34px] cursor-not-allowed items-center justify-center rounded-[8px] border border-charcoal/[0.08] bg-charcoal/[0.03] text-charcoal/[0.25]"
+        >
+          <ExternalLink size={14} />
+        </button>
+      )}
+      <Link
+        href={`/dashboard/event/${card.event.id}/edit`}
+        title="Edit signup"
+        aria-label="Edit signup"
+        className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-charcoal/20 bg-surface text-charcoal"
+      >
+        <Pencil size={14} />
+      </Link>
+      <MoreMenu card={card} />
+    </div>
+  );
+}
+
+
 export function DashboardEventList({ activeCards, archivedCards }: Props) {
   const [tab, setTab] = useState<Tab>('active');
   const [sortCol, setSortCol] = useState<SortCol>(null);
@@ -236,6 +287,22 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
     } catch {
       // ignore storage failures
     }
+  }, [sortCol, sortDir]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 767px)');
+
+    const ensureMobileSort = () => {
+      if (mq.matches && sortCol === null && sortDir === null) {
+        setSortCol('date');
+        setSortDir('desc');
+      }
+    };
+
+    ensureMobileSort();
+    mq.addEventListener('change', ensureMobileSort);
+    return () => mq.removeEventListener('change', ensureMobileSort);
   }, [sortCol, sortDir]);
 
   const cards = tab === 'active' ? activeCards : archivedCards;
@@ -325,6 +392,44 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
         </div>
       ) : (
         <>
+          <div className="mb-3 md:hidden">
+            <label htmlFor="dashboard-signups-mobile-sort" className="mb-1 block pl-3.5 text-[13px] font-medium tracking-tight text-charcoal font-body">
+              Sort:
+            </label>
+            <select
+              id="dashboard-signups-mobile-sort"
+              value={mobileSortValueFromState(sortCol, sortDir) ?? 'date-desc'}
+              onChange={(e) => {
+                const v = e.target.value as MobileSortOption;
+                if (v === 'date-desc') {
+                  setSortCol('date');
+                  setSortDir('desc');
+                  return;
+                }
+                if (v === 'date-asc') {
+                  setSortCol('date');
+                  setSortDir('asc');
+                  return;
+                }
+                if (v === 'event-asc') {
+                  setSortCol('event');
+                  setSortDir('asc');
+                  return;
+                }
+                setSortCol('event');
+                setSortDir('desc');
+              }}
+              className="h-10 w-full appearance-none rounded-[10px] border-2 border-charcoal/20 bg-surface bg-[length:14px_14px] bg-[right_14px_center] bg-no-repeat px-3 py-2 pr-10 text-[13px] font-medium text-charcoal outline-none focus:border-sage focus:ring-2 focus:ring-sage/25 font-body"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2352525b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+              }}
+            >
+              <option value="date-desc">Date · Newest first</option>
+              <option value="date-asc">Date · Oldest first</option>
+              <option value="event-asc">Event · A–Z</option>
+              <option value="event-desc">Event · Z–A</option>
+            </select>
+          </div>
           <div className="hidden overflow-visible rounded-xl border border-charcoal/10 bg-surface shadow-soft md:block">
             <div className="flex items-center gap-5 border-b border-charcoal/10 bg-charcoal/[0.02] px-5 py-2.5">
               <div className="basis-[280px] shrink-0 grow-0">
@@ -358,7 +463,6 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
             </div>
 
             {sortedCards.map((card) => {
-              const isSignupPageEnabled = card.event.published;
               const isAvailability = card.event.signup_type === 'availability';
               return (
                 <div
@@ -415,39 +519,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                     )}
                   </div>
                   <div className="w-[122px]">
-                    <div className="flex items-center gap-1.5">
-                      {isSignupPageEnabled ? (
-                        <a
-                          href={card.signupPageUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="Signup Page"
-                          aria-label="Signup Page"
-                          className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-charcoal/20 bg-surface text-charcoal"
-                        >
-                          <ExternalLink size={14} />
-                        </a>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled
-                          title="Not yet published"
-                          aria-label="Not yet published"
-                          className="inline-flex h-[34px] w-[34px] cursor-not-allowed items-center justify-center rounded-[8px] border border-charcoal/[0.08] bg-charcoal/[0.03] text-charcoal/[0.25]"
-                        >
-                          <ExternalLink size={14} />
-                        </button>
-                      )}
-                      <Link
-                        href={`/dashboard/event/${card.event.id}/edit`}
-                        title="Edit signup"
-                        aria-label="Edit signup"
-                        className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-charcoal/20 bg-surface text-charcoal"
-                      >
-                        <Pencil size={14} />
-                      </Link>
-                      <MoreMenu card={card} />
-                    </div>
+                    <EventQuickActions card={card} />
                   </div>
                 </div>
               );
@@ -456,98 +528,70 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
 
           <ul className="space-y-3 md:hidden">
             {sortedCards.map((card) => {
-              const isSignupPageEnabled = card.event.published;
               const isAvailability = card.event.signup_type === 'availability';
               return (
                 <li
                   key={card.event.id}
                   className="rounded-xl border border-charcoal/10 bg-surface p-4 shadow-soft"
                 >
-                  <div className="mb-2.5 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <Link
-                          href={`/dashboard/event/${card.event.id}/signups`}
-                          className="overflow-hidden text-[15px] font-semibold leading-[1.4] text-charcoal no-underline underline-offset-2 hover:underline font-heading [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
-                        >
-                          {card.event.title}
-                        </Link>
-                        {!card.event.published ? (
-                          <span className="inline-flex items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280] font-body">
-                            Draft
-                          </span>
-                        ) : null}
-                        {card.event.archived ? (
-                          <span className="inline-flex items-center rounded-full bg-charcoal/10 px-2 py-0.5 text-[11px] font-semibold text-charcoal/60 font-body">
-                            Archived
-                          </span>
-                        ) : null}
-                        {isAvailability ? (
-                          <span className="inline-flex items-center rounded-full bg-sage/10 px-2 py-0.5 text-[11px] font-semibold text-sage font-body">
-                            Poll
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="text-xs text-muted font-body">
-                        {card.event.start_date ? card.dateLabel : '—'}
-                      </p>
+                  <div className="min-w-0 space-y-2.5">
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1.5">
+                      <Link
+                        href={`/dashboard/event/${card.event.id}/signups`}
+                        className="overflow-hidden text-[15px] font-semibold leading-[1.4] text-charcoal no-underline underline-offset-2 hover:underline font-heading [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
+                      >
+                        {card.event.title}
+                      </Link>
+                      {!card.event.published ? (
+                        <span className="inline-flex shrink-0 items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280] font-body leading-none">
+                          Draft
+                        </span>
+                      ) : null}
+                      {card.event.archived ? (
+                        <span className="inline-flex shrink-0 items-center rounded-full bg-charcoal/10 px-2 py-0.5 text-[11px] font-semibold text-charcoal/60 font-body leading-none">
+                          Archived
+                        </span>
+                      ) : null}
+                      {isAvailability ? (
+                        <span className="inline-flex shrink-0 items-center rounded-full bg-sage/10 px-2 py-0.5 text-[11px] font-semibold text-sage font-body leading-none">
+                          Poll
+                        </span>
+                      ) : null}
                     </div>
-                    <MoreMenu card={card} />
+                    <p className="text-xs text-muted font-body">{card.event.start_date ? card.dateLabel : '—'}</p>
                   </div>
 
-                  {isAvailability ? (
-                    <p className="text-xs text-muted font-body">
-                      {card.availabilityStats?.responses ?? 0} responses · {card.availabilityStats?.people ?? 0} people
-                    </p>
-                  ) : (
-                    <div>
-                      <div className="mb-1 flex items-center justify-between text-xs font-body">
-                        <span className="font-medium text-charcoal">Coverage</span>
-                        <span className="text-muted">{pctLabel(card.coverage.filled, card.coverage.total)}</span>
-                      </div>
-                      <div className="h-1.5 overflow-hidden rounded-full bg-charcoal/10">
-                        <div
-                          className="h-full rounded-full bg-sage"
-                          style={{ width: `${card.coverage.percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="mt-3.5 flex gap-2">
-                    <Link
-                      href={`/dashboard/event/${card.event.id}/signups`}
-                      className="inline-flex min-h-[40px] w-full items-center justify-center rounded-[10px] border-2 border-transparent bg-sage px-[14px] py-2 text-[13px] font-semibold text-white transition-colors hover:bg-sage-hover font-body"
-                    >
-                      View Signups
-                    </Link>
-                    {isSignupPageEnabled ? (
-                      <a
-                        href={card.signupPageUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-h-[40px] w-full items-center justify-center rounded-[10px] border-2 border-charcoal bg-transparent px-[14px] py-2 text-[13px] font-medium text-charcoal transition-colors hover:bg-charcoal/5 font-body"
-                      >
-                        Signup Page
-                      </a>
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    {isAvailability ? (
+                      <>
+                        <p className="min-w-0 flex-1 text-xs leading-snug text-muted font-body">
+                          {card.availabilityStats?.responses ?? 0} responses · {card.availabilityStats?.people ?? 0} people
+                        </p>
+                        <div className="shrink-0 self-center">
+                          <EventQuickActions card={card} />
+                        </div>
+                      </>
                     ) : (
-                      <button
-                        type="button"
-                        disabled
-                        className="inline-flex min-h-[40px] w-full cursor-not-allowed items-center justify-center rounded-[10px] border-2 border-charcoal bg-transparent px-[14px] py-2 text-[13px] font-medium text-charcoal opacity-50 font-body"
-                        title="Not yet published"
-                      >
-                        Signup Page
-                      </button>
+                      <>
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex max-w-[12rem] items-center justify-between gap-2 text-xs font-body">
+                            <span className="shrink-0 font-medium text-charcoal">Coverage</span>
+                            <span className="shrink-0 text-right text-muted tabular-nums">
+                              {pctLabel(card.coverage.filled, card.coverage.total)}
+                            </span>
+                          </div>
+                          <div className="h-1.5 max-w-[12rem] overflow-hidden rounded-full bg-charcoal/10">
+                            <div
+                              className="h-full rounded-full bg-sage"
+                              style={{ width: `${card.coverage.percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div className="shrink-0 self-center">
+                          <EventQuickActions card={card} />
+                        </div>
+                      </>
                     )}
-                    <Link
-                      href={`/dashboard/event/${card.event.id}/edit`}
-                      aria-label="Edit signup"
-                      title="Edit signup"
-                      className="inline-flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-[8px] border border-charcoal/20 bg-surface text-charcoal"
-                    >
-                      <Pencil size={14} />
-                    </Link>
                   </div>
                 </li>
               );

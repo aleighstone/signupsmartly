@@ -102,11 +102,8 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                   Date &amp; Time
                 </th>
               )}
-              <th className="align-top px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.05em] text-muted font-body">
-                Name
-              </th>
-              <th className="align-top px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.05em] text-muted font-body">
-                Email
+              <th className="min-w-[12rem] max-w-[20rem] align-top px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.05em] text-muted font-body">
+                Contact
               </th>
               <th className="align-top px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.05em] text-muted font-body">
                 Comment
@@ -147,7 +144,9 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                     })()}
                   </td>
                 )}
-                <td className={`align-top px-5 py-3.5 text-[13px] leading-[1.45] font-body ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>
+                <td
+                  className={`min-w-[12rem] max-w-[20rem] align-top px-5 py-3.5 text-[13px] leading-[1.45] font-body whitespace-pre-line ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}
+                >
                   {row.isEmpty ? (
                     <button
                       type="button"
@@ -157,18 +156,14 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                       + Add
                     </button>
                   ) : (
-                    row.signup!.name
-                  )}
-                </td>
-                <td className="max-w-0 align-top px-5 py-3.5 text-[13px] leading-[1.45] font-body text-muted">
-                  {row.isEmpty ? (
-                    ''
-                  ) : row.signup!.email ? (
-                    <span className="block overflow-hidden text-ellipsis whitespace-nowrap">
-                      {row.signup!.email}
-                    </span>
-                  ) : (
-                    '—'
+                    <>
+                      <span className="block text-charcoal">{row.signup!.name}</span>
+                      {row.signup!.email ? (
+                        <span className="mt-0.5 block break-words text-muted">{row.signup!.email}</span>
+                      ) : (
+                        <span className="mt-0.5 block text-muted">—</span>
+                      )}
+                    </>
                   )}
                 </td>
                 <td className={`align-top px-5 py-3.5 text-[13px] leading-[1.45] font-body ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>

@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { usePostHog } from '@posthog/react';
 import { format } from 'date-fns';
-import { ChevronDown, Copy, Pencil } from 'lucide-react';
+import { Copy, ExternalLink, Pencil } from 'lucide-react';
 import type { EventWithSlots, Slot } from '@/types/database';
 import { formatTimeRange } from '@/lib/calendar';
 import { formatCommentForExport } from '@/lib/slot-comment';
@@ -28,6 +29,9 @@ interface SignupsActionsProps {
 
 const secondaryButtonClass =
   'inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-[10px] border-2 border-charcoal bg-transparent px-[18px] py-[9px] text-sm font-medium text-charcoal transition-colors hover:bg-charcoal/5 font-body';
+
+const primarySageButtonClass =
+  'inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-[10px] border-2 border-transparent bg-sage px-[18px] py-[9px] text-sm font-semibold text-white transition-colors hover:bg-sage-hover disabled:opacity-60 font-body';
 
 function formatSlotDateTime(slot: Slot): string {
   if (!slot.start_time) return '';
@@ -112,9 +116,11 @@ export function SignupsActions({
   eventId,
   signupPageUrl,
 }: SignupsActionsProps) {
+  const router = useRouter();
   const posthog = usePostHog();
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [showCopyToast, setShowCopyToast] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -187,6 +193,24 @@ export function SignupsActions({
     window.print();
   };
 
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    try {
+      const res = await fetch(`/api/events/${eventId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ published: true }),
+      });
+      if (!res.ok) throw new Error('Failed to publish');
+      posthog?.capture('event_published', { event_id: eventId, from: 'signups_header' });
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   return (
     <>
       <style
@@ -206,13 +230,40 @@ export function SignupsActions({
       />
 
       <div data-no-print className="flex flex-row flex-wrap items-center gap-2">
+        {event.published ? (
+          <a
+            href={signupPageUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={primarySageButtonClass + ' no-underline'}
+            onClick={() =>
+              posthog?.capture('organizer_view_public_page', {
+                event_id: eventId,
+                signup_type: event.signup_type,
+              })
+            }
+          >
+            <ExternalLink size={14} aria-hidden />
+            View
+          </a>
+        ) : (
+          <button
+            type="button"
+            disabled={isPublishing}
+            onClick={() => void handlePublish()}
+            className={primarySageButtonClass}
+          >
+            {isPublishing ? 'Publishing…' : 'Publish'}
+          </button>
+        )}
+
         <button
           type="button"
           onClick={() => void handleCopy()}
-          className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-[10px] border-2 border-transparent bg-sage px-[18px] py-[9px] text-sm font-semibold text-white transition-colors hover:bg-sage-hover font-body"
+          className={secondaryButtonClass}
         >
           <Copy className="h-3.5 w-3.5" aria-hidden />
-          Copy Public URL
+          Copy URL
         </button>
 
         <Link href={`/dashboard/event/${eventId}/edit`} className={secondaryButtonClass + ' no-underline'}>
@@ -229,7 +280,6 @@ export function SignupsActions({
             aria-haspopup="menu"
           >
             Export
-            <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
           </button>
           {showExportDropdown ? (
             <div
@@ -274,7 +324,7 @@ export function SignupsActions({
         role="status"
         aria-live="polite"
       >
-        Public URL copied!
+        URL copied!
       </div>
     </>
   );
