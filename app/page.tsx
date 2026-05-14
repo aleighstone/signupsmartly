@@ -24,13 +24,13 @@ export default function Home() {
       <section className="flex-1 flex flex-col items-center justify-center px-4 py-16 sm:py-24">
         <div className="max-w-2xl text-center">
           <h1 className="text-4xl font-semibold tracking-tight text-charcoal sm:text-5xl font-display">
-            SignupSmartly - smarter than a genius
+            Coordinate volunteers. Find dates that work.
           </h1>
 
           <p className="mt-6 text-lg text-muted leading-relaxed font-body">
-            A cleaner way to coordinate volunteer signups and group scheduling
-            for community events, classrooms, and sports. Create, share a
-            link.<br />No ads, no clutter.
+            Create a volunteer signup or an availability poll, share one link,
+            and let people respond in seconds. No account needed for
+            participants. No ads. No clutter.
           </p>
 
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -54,8 +54,9 @@ export default function Home() {
                 For organizers
               </h2>
               <p className="mt-2 text-sm text-muted font-body">
-                Create events, define what you need, and share one link. See
-                coverage at a glance and export rosters.
+                Create an event or availability poll, define what you need, and
+                share one link. See who&apos;s responded, find the best date or fill
+                your roster, and export when you&apos;re ready.
               </p>
             </div>
             <div className="rounded-xl border border-charcoal/10 bg-surface p-6 shadow-soft">
@@ -63,8 +64,8 @@ export default function Home() {
                 For volunteers
               </h2>
               <p className="mt-2 text-sm text-muted font-body">
-                View open slots, sign up in seconds, and get a confirmation
-                email with a cancel link if plans change.
+                See what&apos;s open, respond in seconds, and get a confirmation
+                email. No account needed — just click the link.
               </p>
             </div>
           </div>
@@ -87,9 +88,9 @@ export default function Home() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sage text-white font-semibold font-heading text-lg">
                 1
               </div>
-              <h3 className="mt-4 font-semibold text-charcoal font-heading">Create your signup</h3>
+              <h3 className="mt-4 font-semibold text-charcoal font-heading">Create your event or poll</h3>
               <p className="mt-2 text-sm text-muted font-body leading-relaxed">
-                Add your event details, spots, times, and how many volunteers you need for each role or item.
+                Add dates and roles for a volunteer signup, or proposed dates for a group availability poll. Set how many people you need, or just let everyone weigh in.
               </p>
               <div className="mt-5 w-full overflow-hidden rounded-lg border border-charcoal/10 shadow-soft">
                 <Image
@@ -129,9 +130,9 @@ export default function Home() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sage text-white font-semibold font-heading text-lg">
                 3
               </div>
-              <h3 className="mt-4 font-semibold text-charcoal font-heading">Track coverage</h3>
+              <h3 className="mt-4 font-semibold text-charcoal font-heading">See who responded</h3>
               <p className="mt-2 text-sm text-muted font-body leading-relaxed">
-                Watch your roster fill in from the dashboard. Export to a spreadsheet or print before your event.
+                Watch signups fill your roster, or see which proposed date has the most availability. Export to a spreadsheet or print when you&apos;re ready.
               </p>
               <div className="mt-5 w-full overflow-hidden rounded-lg border border-charcoal/10 shadow-soft">
                 <Image
@@ -152,12 +153,12 @@ export default function Home() {
       <section className="border-t border-charcoal/10 bg-sand px-4 py-14 sm:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl font-semibold text-charcoal font-heading sm:text-3xl">
-            Works for sports teams, classrooms, clubs, and more
+            Works for sports teams, classrooms, clubs, and groups of all kinds
           </h2>
           <p className="mt-4 text-base text-muted font-body leading-relaxed">
-            Track meet volunteers, snack duty rotations, parent-teacher
-            conference booking, book club potlucks, recurring group scheduling
-            — see how organizers use SignupSmartly for every kind of coordination.
+            Track meets, snack duty, conference slots, potluck lists, and groups
+            finding a date with an availability poll — see how organizers use
+            SignupSmartly for volunteer signups and group scheduling.
           </p>
           <Link
             href="/use-cases"
@@ -172,7 +173,7 @@ export default function Home() {
 
       <footer className="border-t border-charcoal/10 py-6">
         <div className="text-center text-sm text-muted space-y-1 font-body">
-          <p>SignupSmartly — organize volunteers smartly.</p>
+          <p>SignupSmartly — coordination made simple.</p>
           <p className="flex items-center justify-center gap-3 flex-wrap">
             <Link href="/privacy" className="text-charcoal hover:underline">
               Privacy Policy

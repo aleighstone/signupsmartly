@@ -16,7 +16,7 @@ This is a **server component** (no `'use client'`). It renders static content on
 - Prose text: `text-sm text-charcoal font-body leading-relaxed`
 - Section headings: `text-base font-semibold text-charcoal font-heading mt-6 mb-2`
 - Links: `text-charcoal underline hover:opacity-70`
-- Footer at bottom: same as `app/page.tsx` footer — "SignupSmartly — organize volunteers smartly." + Digitaleigh Co. link
+- Footer at bottom: same as `app/page.tsx` footer — "SignupSmartly — coordination made simple." + Digitaleigh Co. link
 
 ## Also update
 Add a Privacy Policy link to the footer in `app/page.tsx`. In the existing footer `<div>`, add a third line:

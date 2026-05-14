@@ -17,5 +17,5 @@
 - **For volunteers:** View open slots, sign up in seconds, and get a confirmation email with a cancel link if plans change.
 
 ## Footer
-- SignupSmartly — organize volunteers smartly.
+- SignupSmartly — coordination made simple.
 - Brought to you by Digitaleigh Co.

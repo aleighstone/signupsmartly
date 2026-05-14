@@ -229,7 +229,7 @@ export default function UseCasesPage() {
       {/* ── Footer ─────────────────────────────────────────────── */}
       <footer className="border-t border-charcoal/10 py-6">
         <div className="text-center text-sm text-muted space-y-1 font-body">
-          <p>SignupSmartly — organize volunteers smartly.</p>
+          <p>SignupSmartly — coordination made simple.</p>
           <p className="flex items-center justify-center gap-3 flex-wrap">
             <Link href="/privacy" className="text-charcoal hover:underline">
               Privacy Policy

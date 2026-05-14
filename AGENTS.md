@@ -34,6 +34,7 @@ The app stores two shapes of values:
 
 - **Always share the deploy commands** after making changes so the user can push to production.
 - **Setup:** GitHub + Vercel. Pushing to `main` triggers auto-deploy. Remote is `origin`.
+- **Local first:** validate with **`npm run build`** (and **`npm run dev`** / smoke checks as needed) before pushing; the maintainer prefers testing locally over relying on preview deploys by default.
 - **Commands to give after changes** (with a suggested commit message tailored to the work):
 
   ```
@@ -42,6 +43,8 @@ The app stores two shapes of values:
   git commit -m "Your suggested message here"
   git push origin main
   ```
+
+  Use a **preview branch + push** only when the user explicitly wants a Vercel preview URL instead of shipping `main`.
 
 ## Shell and Git (zsh)
 
@@ -104,6 +107,7 @@ When a new or changed test requires a new `.env.local` variable, make that **ver
 ## Learned User Preferences
 
 - User expects deploy/build commands to be provided after making code changes, often explicitly asking for them.
+- User prefers validating **`npm run build`** / **`npm run dev`** locally, then **`git push origin main`** for production (preview branches only when explicitly requested).
 - User prefers polished, professional front-end UI with careful spacing/alignment and consistency with the design system.
 - User does not want timezone translation in signup scheduling; see **Date and time display (mandatory)** above.
 
@@ -150,12 +154,31 @@ The organizer dashboard and "View My Signups" page received a high-fidelity rede
 
 ### View My Signups page (new design)
 
-- Header action buttons (horizontal row, right-aligned): `Copy Signup URL` (primary) · `Edit Event` (secondary) · `Export ▾` (secondary dropdown)
+- Header action buttons (horizontal row, right-aligned): `View` (primary sage, published only) · `Copy Signup URL` (secondary) · `Edit Event` (secondary) · `Export ▾` (secondary dropdown)
+- "View" button links to the public event page. It uses the primary sage style (same as Publish on drafts). Copy URL is secondary — not primary.
 - Export dropdown options: `Export CSV` · `Export List` · `Print`
 - Coverage card shows large `%` stat on the right side
 - Signups table: SPOT · DATE & TIME · NAME · EMAIL · COMMENT · SIGNUP TIMESTAMP · (delete button)
 - "by organizer" badge shown in SIGNUP TIMESTAMP cell for organizer-added rows
 - Notifications selector below the table: `Daily digest` · `Instant` · `None`
+
+### Mobile/desktop parity (non-negotiable)
+
+**Any change made to a desktop view must be mirrored on the equivalent mobile view in the same PR/commit — no exceptions.**
+
+This applies to: dashboard, manage signups page, public event page, edit form, create form, and any other page with a responsive layout. If a feature, label, button, action, or stat is added or changed on desktop, it must be audited and updated on mobile in the same pass. Shipping a desktop change without a corresponding mobile check is a bug, not a backlog item.
+
+The only acceptable divergence between mobile and desktop is layout adaptation for screen size (e.g. table → cards, hidden columns, stacked vs. inline). Functional parity — what actions are available, what labels say, what data is shown — must be identical.
+
+### Dashboard mobile layout (locked decisions)
+
+- **Mobile uses cards** (`md:hidden`); desktop uses a table (`md+`). Not enough horizontal space for a usable table on phones.
+- **`EventQuickActions`** is a shared component used in both the desktop table Actions column and the mobile card action row. Contains: `ExternalLink` (Signup Page) + `Pencil` (Edit) + ⋮ overflow. No text buttons.
+- **Mobile card action row:** single row with coverage/poll stat on the left and `EventQuickActions` flush right. No second full-width button row below.
+- **Coverage row (scheduled/simple):** narrow bar (`max-w-[12rem]`) + label + fraction + `EventQuickActions` on one line.
+- **Poll row (availability):** "N responses · M people" + `EventQuickActions` on one line.
+- **Mobile sort control:** `<select>` with options: `Date · Newest first`, `Date · Oldest first`, `Event · A–Z`, `Event · Z–A`. Uses the same `dashboard-signups-sort-v1` localStorage key as desktop column headers. A `matchMedia` `useEffect` normalizes to date·newest on mobile-width viewports (`max-width: 767px`) so the select always shows a real value. Label is "Sort:" (`font-body`, 13px, medium, charcoal).
+- **Title/badge block spacing:** `space-y-2.5`, badge uses `leading-none` + `shrink-0` so Poll/Draft pills don't crowd the date line on wrap.
 
 ## History
 
