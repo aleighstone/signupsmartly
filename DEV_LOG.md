@@ -213,3 +213,52 @@
 ### Backlog
 
 - Consider whether weekly event notification override should remain available in product UX or stay hidden behind the simplified Daily/Instant/None control.
+
+---
+
+## 2026-05-13
+
+### Completed
+
+| What | File(s) | Status |
+|---|---|---|
+| Spacing fix: consistent `mt-1` rhythm + removed `leading-tight` in slot cards and event header | `components/SlotList.tsx`, `components/EventHeader.tsx` | deployed |
+| Spacing fix: prose first/last `<p>` margin suppression via `[&_p:first-child]:mt-0 [&_p:last-child]:mb-0` on all prose containers | `components/SlotList.tsx`, `components/EventHeader.tsx` | deployed |
+| Section label rename: "Still Needed" → "Open", "Filled Roles"/"Filled Items" → "Filled" | `components/SlotList.tsx` | deployed |
+| Homepage copy: updated hero + use cases teaser to mention group scheduling | `app/page.tsx` | deployed |
+| Use cases page: new "Availability poll" badge in hero + new use case entry (mahjong/recurring groups) with placeholder screenshot | `app/use-cases/page.tsx` | deployed |
+| Manage signups actions: renamed "View Page" → "View" with primary sage button style for published events; Copy URL/Edit/Export stay secondary | `app/dashboard/event/[id]/signups/SignupsActions.tsx` | deployed |
+| Dashboard mobile/desktop parity: shared `EventQuickActions` (ExternalLink + Pencil + overflow) used in both table Actions column and mobile card row | `components/DashboardEventList.tsx` | deployed |
+| Dashboard mobile: removed text-button row ("View Signups" / "Signup Page"); event title link to View my signups retained | `components/DashboardEventList.tsx` | deployed |
+| Dashboard mobile: tighter title/badge spacing (`space-y-2.5`, `leading-none`, `shrink-0`) so Poll/Draft badges don't crowd date line | `components/DashboardEventList.tsx` | deployed |
+| Dashboard mobile: coverage row compacted — label + fraction + narrow bar + `EventQuickActions` on one row; poll rows show "N responses · M people" + actions on one row | `components/DashboardEventList.tsx` | deployed |
+| Dashboard mobile sort: `<select>` with Date·Newest / Date·Oldest / Event·A–Z / Event·Z–A, synced to same `localStorage` key as desktop headers; `matchMedia` normalizes to date·newest on mobile-width viewports | `components/DashboardEventList.tsx` | deployed |
+| Availability poll spec | `specs/availability-poll-spec.md` | committed |
+| Availability poll Playwright tests (written ahead of implementation) | `e2e/availability.smoke.ts` | committed |
+| Availability poll Cursor prompt (3-phase, with user steps for DB migration + seeding) | `specs/cursor-prompt-availability-poll.md` | committed |
+| Playwright config: two new projects for availability poll (organizer + volunteer) | `playwright.config.ts` | committed |
+
+### Backlog
+
+| Item | Notes |
+|---|---|
+| Availability poll — implement (Phase 1–3) | Spec + Cursor prompt ready at `specs/cursor-prompt-availability-poll.md`. DB migrations must be applied first (see prompt). |
+| Screenshot: replace `SS_Availability_poll_placeholder.png` | Capture after Phase 2 ships and public page looks good |
+| Marketing screenshots: replace 3 public-event screenshots | URLs confirmed; pending Chrome extension reconnect to capture |
+| Publish a draft from dashboard — E2E test | Publish button exists, no test that verifies it goes live |
+| Organizer breadcrumb — E2E test | No Playwright coverage yet |
+| Volunteer autofill — E2E test | No Playwright coverage yet |
+
+### Lessons
+
+| What happened | Fix / note |
+|---|---|
+| Prose `<p>` margins not suppressed through MarkdownBody's wrapper `<div>` | Tailwind Typography `:first-child` only applies to direct `.prose` children; add `[&_p:first-child]:mt-0 [&_p:last-child]:mb-0` explicitly on the prose container |
+| `leading-tight` on h3 created uneven half-leading vs surrounding `text-sm` lines | Remove `leading-tight`; use default leading throughout `ScheduledSlotVolunteerHeading` |
+| "View Page" button was primary style but Copy URL also competed for attention | Rename to "View", keep it primary (sage); demote Copy URL to secondary |
+| Mobile dashboard had a second full-width button row below coverage | Collapse to single row: narrow coverage bar + `EventQuickActions` flush right |
+| Mobile sort was missing while desktop had sortable column headers | Add `<select>` driven by same localStorage key; `matchMedia` normalizes default on narrow viewports |
+
+### Resume here
+
+> Availability poll is specced and ready for Cursor. Apply the two DB migrations in Supabase SQL Editor first, then hand Cursor `specs/cursor-prompt-availability-poll.md`. After Phase 1, create a test poll, seed responses, set `E2E_TEST_AVAILABILITY_EVENT_ID` in `.env.local`, then proceed to Phase 2 and 3.

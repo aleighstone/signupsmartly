@@ -192,6 +192,13 @@ function SignupTypeHelpModal({
             with a simple list; you control item order with the arrows on each row. e.g.
             request potluck items by type, request donations, request chaperones for a field trip.
           </p>
+          <p>
+            <strong>Choose availability poll</strong> if you need to find a date that works for
+            a group before anything is scheduled. Share proposed dates and let everyone mark
+            which ones they can make — you see which date has the most availability at a glance.
+            e.g. recurring game nights, mahjong groups, hiking crews, or any time picking the
+            right date matters more than signing people up for a role.
+          </p>
         </div>
       </div>
     </div>

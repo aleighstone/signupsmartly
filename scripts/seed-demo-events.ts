@@ -1,30 +1,32 @@
 /**
  * Seed demo events for local development and E2E testing.
  *
- * Creates 5 events with slots and pre-filled signups using Will Ferrell movie
- * character names. All dates are relative to today so they're always in the future.
+ * Creates 7 events with slots and pre-filled signups using Will Ferrell movie
+ * character names. Most dates track from today; availability polls pin to May/June 2026.
  *
  * Events created:
  *   1. Spring Track Meet        — single-date, many roles   → E2E_TEST_EVENT_ID
  *   2. Parent-Teacher Conf.     — single-date, appointment slots
  *   3. Baseball Snack Duty      — multi-date (spans weeks)  → E2E_TEST_MULTI_DATE_EVENT_ID
  *   4. Book Club                — simple list (no dates)
- *   5. Playwright Stable Draft  — always a draft            → E2E_TEST_DRAFT_EVENT_ID
+ *   5. Parents Dinner Poll      — availability (May 2026 Fri/Sat)
+ *   6. Crystal's Mahjong Poll   — availability (June 2026 Wed/Thu)
+ *   7. Playwright Stable Draft  — always a draft            → E2E_TEST_DRAFT_EVENT_ID
  *
- * At the end the script prints all three IDs in .env.local format for easy copy-paste.
+ * At the end the script prints E2E IDs (and optional DEMO_POLL_* IDs for the new polls) for .env.local copy-paste.
  *
  * Usage:
  *   npm run seed-demo
  *
  * Requires: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (in .env.local)
+ *
+ * Optional: SEED_ORGANIZATION_ID to force organizations.id (otherwise resolved via organization_members).
  */
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
 import { randomUUID } from 'crypto';
-
-const ORGANIZATION_ID  = 'e19c419e-04d8-481b-b786-0e5bdb8462e1';
-const ORGANIZER_EMAIL  = process.env.E2E_ORGANIZER_EMAIL ?? 'allisonleighstone@gmail.com';
+const ORGANIZER_EMAIL = process.env.E2E_ORGANIZER_EMAIL ?? 'allisonleighstone@gmail.com';
 
 const TEST_EMAILS = [
   'allison.troup@gmail.com',
@@ -62,6 +64,27 @@ function ts(date: string, time: string): string {
   return `${date}T${pad(h)}:${pad(m)}:00.000Z`;
 }
 
+/** Mirrors production availability posts: reminders off + optional grouped responses. */
+async function insertAvailabilitySeedSignup(
+  supabase: ReturnType<typeof createClient<Database>>,
+  slotId: string,
+  name: string,
+  email: string,
+  source: 'volunteer' | 'organizer',
+  responseGroupId: string | null
+): Promise<void> {
+  await supabase.from('signups').insert({
+    slot_id: slotId,
+    name,
+    email,
+    source,
+    cancel_token: randomUUID(),
+    reminder_opt_in: false,
+    reminder_offset: '1_day',
+    response_group_id: responseGroupId,
+  });
+}
+
 // ─── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -90,6 +113,32 @@ async function main() {
     process.exit(1);
   }
   const ORGANIZER_USER_ID = organizer.id;
+
+  const orgFromEnv = process.env.SEED_ORGANIZATION_ID?.trim();
+  let ORGANIZATION_ID;
+  if (orgFromEnv) {
+    ORGANIZATION_ID = orgFromEnv;
+    console.log('Using SEED_ORGANIZATION_ID from environment.');
+  } else {
+    const { data: orgRows, error: orgMembershipError } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('user_id', ORGANIZER_USER_ID)
+      .limit(1);
+    if (orgMembershipError) {
+      console.error('Could not look up organization membership:', orgMembershipError.message);
+      process.exit(1);
+    }
+    const oid = orgRows?.[0]?.organization_id;
+    if (!oid) {
+      console.error('No organization linked to this organizer:', ORGANIZER_EMAIL);
+      console.error('Run: npm run setup-local');
+      process.exit(1);
+    }
+    ORGANIZATION_ID = oid;
+  }
+
+  console.log('\nSeeding into organization:', ORGANIZATION_ID);
 
   let charIdx = 0;
   function nextSignup(source: 'volunteer' | 'organizer') {
@@ -381,7 +430,237 @@ async function main() {
   }
   console.log('✓ Book Club (Read or Die)');
 
-  // ─── 5. Playwright Stable Draft — always unpublished, for E2E tests ───────
+  // ─── 5. Parents Dinner availability poll — May 2026 (Fri/Sat) ─────────────
+  const dinnerStart = '2026-05-01T00:00:00.000Z';
+  const dinnerEnd = '2026-05-31T23:59:59.000Z';
+  const { data: eParentsDinner, error: errParentsDinner } = await supabase
+    .from('events')
+    .insert({
+      organization_id: ORGANIZATION_ID,
+      title: 'We Made It — End-of-Year Parents Dinner (Marg + Chips Poll)',
+      description:
+        "We survived the school year — caps off, backpacks stashed, permission slips shredded. Vote for every night you can join for margs + chips + victory laps at Salazar. We will lock the real date once the crowd votes with their thirsty hearts.",
+      location: 'Salazar — patio energy, salted rims, salty chips',
+      start_date: dinnerStart,
+      end_date: dinnerEnd,
+      signup_type: 'availability',
+      published: true,
+      created_by: ORGANIZER_USER_ID,
+    })
+    .select('id')
+    .single();
+
+  if (errParentsDinner || !eParentsDinner) {
+    console.error('Parents dinner poll insert failed:', errParentsDinner);
+    process.exit(1);
+  }
+
+  const dinnerOptions = [
+    {
+      role_name: 'Saturday, May 2, 2026',
+      start_time: '2026-05-02T00:00:00.000Z',
+      end_time: null as string | null,
+      notes: 'All-day-ish window — daytime hangouts or sunset chips',
+    },
+    {
+      role_name: 'Friday, May 8, 2026, 6:00 PM – 9:00 PM',
+      start_time: ts('2026-05-08', '18:00'),
+      end_time: ts('2026-05-08', '21:00'),
+      notes: 'Early birds bring limes.',
+    },
+    {
+      role_name: 'Saturday, May 9, 2026, 6:30 PM – 9:30 PM',
+      start_time: ts('2026-05-09', '18:30'),
+      end_time: ts('2026-05-09', '21:30'),
+      notes: 'Kid-energy night — high fives mandatory',
+    },
+    {
+      role_name: 'Friday, May 15, 2026, 7:00 PM – 10:00 PM',
+      start_time: ts('2026-05-15', '19:00'),
+      end_time: ts('2026-05-15', '22:00'),
+      notes: '"We survived grading" sparkling toast bracket',
+    },
+    {
+      role_name: 'Saturday, May 16, 2026',
+      start_time: '2026-05-16T00:00:00.000Z',
+      end_time: null,
+      notes: 'Flexible scheduling — brunch crew or dusk patio',
+    },
+    {
+      role_name: 'Friday, May 22, 2026, 6:30 PM – 9:30 PM',
+      start_time: ts('2026-05-22', '18:30'),
+      end_time: ts('2026-05-22', '21:30'),
+      notes: 'Almost-June glow — extra guac votes count double',
+    },
+    {
+      role_name: 'Saturday, May 23, 2026, 7:00 PM – 10:00 PM',
+      start_time: ts('2026-05-23', '19:00'),
+      end_time: ts('2026-05-23', '22:00'),
+      notes: 'Last weekend of May — go big on the chip basket',
+    },
+  ];
+
+  const dinnerSlotIds: string[] = [];
+  for (let i = 0; i < dinnerOptions.length; i++) {
+    const opt = dinnerOptions[i]!;
+    const { data: slot } = await supabase
+      .from('slots')
+      .insert({
+        event_id: eParentsDinner.id,
+        role_name: opt.role_name,
+        role_description: opt.notes,
+        start_time: opt.start_time,
+        end_time: opt.end_time,
+        capacity: 9999,
+        instructions: null,
+        sort_order: i,
+      })
+      .select('id')
+      .single();
+    if (slot?.id) dinnerSlotIds.push(slot.id);
+  }
+
+  const rgDinnerRon = randomUUID();
+  await insertAvailabilitySeedSignup(
+    supabase,
+    dinnerSlotIds[1]!,
+    CHARACTERS[0]!.name,
+    TEST_EMAILS[CHARACTERS[0]!.email]!,
+    'volunteer',
+    rgDinnerRon
+  );
+  await insertAvailabilitySeedSignup(
+    supabase,
+    dinnerSlotIds[3]!,
+    CHARACTERS[0]!.name,
+    TEST_EMAILS[CHARACTERS[0]!.email]!,
+    'volunteer',
+    rgDinnerRon
+  );
+  await insertAvailabilitySeedSignup(
+    supabase,
+    dinnerSlotIds[6]!,
+    CHARACTERS[4]!.name,
+    TEST_EMAILS[CHARACTERS[4]!.email]!,
+    'organizer',
+    randomUUID()
+  );
+
+  console.log('✓ Parents Dinner availability poll (May 2026)');
+
+  // ─── 6. Crystal Mahjong availability poll — June 2026 (Wed/Thu) ─────────────
+  const mjStart = '2026-06-01T00:00:00.000Z';
+  const mjEnd = '2026-06-30T23:59:59.000Z';
+  const { data: eMahjong, error: errMahjong } = await supabase
+    .from('events')
+    .insert({
+      organization_id: ORGANIZATION_ID,
+      title: "Crystal's Philly Mahjong Mixer — clubhouse date poll",
+      description:
+        "Green dragons welcome. Crystal reserved the mahogany room at The Clubhouse for June — tap every Wednesday or Thursday you can shuffle in before sundown gossip starts. Bri is bringing kettle corn; fancy tea RSVP on the spreadsheet of doom.",
+      location: 'The Clubhouse Philadelphia — mahogany parlor, Rittenhouse-adjacent (demo)',
+      start_date: mjStart,
+      end_date: mjEnd,
+      signup_type: 'availability',
+      published: true,
+      created_by: ORGANIZER_USER_ID,
+    })
+    .select('id')
+    .single();
+
+  if (errMahjong || !eMahjong) {
+    console.error('Mahjong poll insert failed:', errMahjong);
+    process.exit(1);
+  }
+
+  const mahjongOptions = [
+    {
+      role_name: 'Wednesday, June 3, 2026, 2:00 PM – 5:00 PM',
+      start_time: ts('2026-06-03', '14:00'),
+      end_time: ts('2026-06-03', '17:00'),
+      notes: 'Daytime retirees + remote-work sneaks alike',
+    },
+    {
+      role_name: 'Thursday, June 4, 2026, 6:30 PM – 9:00 PM',
+      start_time: ts('2026-06-04', '18:30'),
+      end_time: ts('2026-06-04', '21:00'),
+      notes: 'Tea service + petty plays only',
+    },
+    {
+      role_name: 'Wednesday, June 10, 2026',
+      start_time: '2026-06-10T00:00:00.000Z',
+      end_time: null as string | null,
+      notes: 'Floating midday/evening — host will DM thread',
+    },
+    {
+      role_name: 'Thursday, June 11, 2026, 6:00 PM – 8:30 PM',
+      start_time: ts('2026-06-11', '18:00'),
+      end_time: ts('2026-06-11', '20:30'),
+      notes: '"Soft launch" breezy windows open',
+    },
+    {
+      role_name: 'Wednesday, June 17, 2026, 7:00 PM – 9:30 PM',
+      start_time: ts('2026-06-17', '19:00'),
+      end_time: ts('2026-06-17', '21:30'),
+      notes: 'Mid-month momentum match',
+    },
+    {
+      role_name: 'Thursday, June 25, 2026',
+      start_time: '2026-06-25T00:00:00.000Z',
+      end_time: null,
+      notes: 'Finale vibes — trophies if you remembered your own rack',
+    },
+  ];
+
+  const mjSlotIds: string[] = [];
+  for (let i = 0; i < mahjongOptions.length; i++) {
+    const opt = mahjongOptions[i]!;
+    const { data: slot } = await supabase
+      .from('slots')
+      .insert({
+        event_id: eMahjong.id,
+        role_name: opt.role_name,
+        role_description: opt.notes,
+        start_time: opt.start_time,
+        end_time: opt.end_time,
+        capacity: 9999,
+        instructions: null,
+        sort_order: i,
+      })
+      .select('id')
+      .single();
+    if (slot?.id) mjSlotIds.push(slot.id);
+  }
+
+  const rgMjBuddy = randomUUID();
+  await insertAvailabilitySeedSignup(
+    supabase,
+    mjSlotIds[0]!,
+    CHARACTERS[6]!.name,
+    TEST_EMAILS[CHARACTERS[6]!.email]!,
+    'volunteer',
+    rgMjBuddy
+  );
+  await insertAvailabilitySeedSignup(
+    supabase,
+    mjSlotIds[2]!,
+    CHARACTERS[6]!.name,
+    TEST_EMAILS[CHARACTERS[6]!.email]!,
+    'volunteer',
+    rgMjBuddy
+  );
+  await insertAvailabilitySeedSignup(
+    supabase,
+    mjSlotIds[4]!,
+    CHARACTERS[8]!.name,
+    TEST_EMAILS[CHARACTERS[8]!.email]!,
+    'volunteer',
+    randomUUID()
+  );
+
+  console.log('✓ Crystal Mahjong availability poll (June 2026)');
+
+  // ─── 7. Playwright Stable Draft — always unpublished, for E2E tests ───────
   // This is E2E_TEST_DRAFT_EVENT_ID — a permanent draft that never gets published.
   // Tests that check "draft 404" and "Draft pill on dashboard" target this event.
   const draftDate = futureDate(60);
@@ -421,6 +700,8 @@ async function main() {
   console.log(`E2E_TEST_EVENT_ID=${e1.id}`);
   console.log(`E2E_TEST_MULTI_DATE_EVENT_ID=${e3.id}`);
   console.log(`E2E_TEST_DRAFT_EVENT_ID=${e5.id}`);
+  console.log(`DEMO_POLL_PARENTS_DINNER_ID=${eParentsDinner.id}`);
+  console.log(`DEMO_POLL_MAHJONG_ID=${eMahjong.id}`);
   console.log('─────────────────────────────────────────────────────────────\n');
 }
 

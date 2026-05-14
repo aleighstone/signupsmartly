@@ -42,8 +42,15 @@ async function main() {
     });
 
   if (createError) {
-    if (createError.message?.toLowerCase().includes('already registered') ||
-        createError.message?.toLowerCase().includes('already exists')) {
+    const dupMsg = createError.message?.toLowerCase() ?? '';
+    const isDuplicateEmail =
+      dupMsg.includes('already been registered') ||
+      dupMsg.includes('already registered') ||
+      dupMsg.includes('email address has already') ||
+      dupMsg.includes('user already registered') ||
+      dupMsg.includes('already exists');
+
+    if (isDuplicateEmail) {
       // User exists — look them up by email
       console.log('Auth user already exists — looking up existing user...');
       const { data: { users }, error: listError } =

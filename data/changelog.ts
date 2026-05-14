@@ -14,6 +14,54 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: 'May 14, 2026',
+    changes: [
+      {
+        type: 'new',
+        text: '**Availability poll**: Find a date that works for everyone! Add the dates you\'re considering, share one link, and let your group mark which ones they can make. Responses are sorted by most available so the best date rises to the top.',
+      },
+    ],
+  },
+  {
+    date: 'May 13, 2026',
+    changes: [
+      {
+        type: 'improved',
+        text: '**Dashboard on mobile**: The dashboard now sorts and lays out properly on phones. Choose Date (newest/oldest) or Event (A–Z / Z–A) from a sort picker, see coverage at a glance in a compact row, and use the same quick actions as on desktop.',
+      },
+      {
+        type: 'improved',
+        text: '**Cleaner slot labels**: "Still Needed" is now "Open" and "Filled Roles" / "Filled Items" is now just "Filled."',
+      },
+    ],
+  },
+  {
+    date: 'April 30, 2026',
+    changes: [
+      {
+        type: 'improved',
+        text: '**Redesigned dashboard**: Events are listed in a sortable table. Click any event name to jump straight to View My Signups. Sort by event name or date, and your sort preference is remembered. Quick actions (Signup Page, Edit) sit inline; the ⋮ overflow menu holds the full set: Publish, Edit, Copy, View My Signups, Archive, and Delete.',
+      },
+      {
+        type: 'new',
+        text: '**Delete signup**: Remove a signup from the ⋮ overflow menu on your dashboard. A confirmation step prevents accidents.',
+      },
+      {
+        type: 'improved',
+        text: '**View My Signups page**: Header action buttons are now in a clean row at the top: View (opens the live page), Copy Signup URL (with a toast confirmation), Edit Event, and an Export dropdown with CSV, List, and Print. Notification preference (Daily digest / Instant / None) lives directly on the page.',
+      },
+    ],
+  },
+  {
+    date: 'April 28, 2026',
+    changes: [
+      {
+        type: 'fixed',
+        text: '**Create form**: The description field in simple list signups no longer locks up when switching between signup types in the same session.',
+      },
+    ],
+  },
+  {
     date: 'April 24, 2026',
     changes: [
       {
