@@ -178,10 +178,6 @@ export async function PATCH(
       );
     }
 
-    const dateChanged =
-      start_date !== event.start_date || end_date !== event.end_date;
-    const locationChanged = location !== event.location;
-
     // Validate capacity vs signup count server-side
     for (const slot of slots) {
       if (slot.id) {
@@ -326,47 +322,8 @@ export async function PATCH(
       notification_override: null,
     }) as Event;
 
-    const { data: keptSlots } = await serviceSupabase
-      .from('slots')
-      .select('id')
-      .eq('event_id', id);
-    const keptSlotIds = (keptSlots || []).map((s: { id: string }) => s.id);
-
-    let remainingSignups: Array<{ signup: Signup & { cancel_token: string }; slot: Slot }> = [];
-    if (keptSlotIds.length > 0) {
-      const { data: signupRows } = await serviceSupabase
-        .from('signups')
-        .select('*, slots(*)')
-        .eq('cancelled', false)
-        .in('slot_id', keptSlotIds);
-
-      remainingSignups = (signupRows || []).map(
-        (r: { slot_id: string; slots: Slot } & Signup) => ({
-          signup: {
-            id: r.id,
-            slot_id: r.slot_id,
-            name: r.name,
-            email: r.email,
-            comment: r.comment,
-            cancelled: r.cancelled,
-            cancel_token: r.cancel_token,
-            source: r.source,
-            reminder_opt_in: r.reminder_opt_in,
-            reminder_offset: r.reminder_offset,
-            reminder_sent_at: r.reminder_sent_at,
-            created_at: r.created_at,
-          } as Signup & { cancel_token: string },
-          slot: r.slots as Slot,
-        })
-      );
-    }
-
     try {
-      const {
-        sendSignupCancelledByOrganizer,
-        sendEventDateChanged,
-        sendEventLocationChanged,
-      } = await import('@/lib/email');
+      const { sendSignupCancelledByOrganizer } = await import('@/lib/email');
 
       const skipSlotDeletionEmails = event.signup_type === 'availability';
 
@@ -379,35 +336,6 @@ export async function PATCH(
             event: eventForEmails,
             reason,
           });
-        }
-      }
-
-      if (dateChanged) {
-        for (const row of remainingSignups) {
-          const { signup, slot } = row as { signup: Signup; slot: Slot };
-          if (signup.email) {
-            await sendEventDateChanged({
-              signup,
-              slot,
-              event: eventForEmails,
-              oldStartDate: event.start_date,
-              oldEndDate: event.end_date,
-            });
-          }
-        }
-      }
-
-      if (locationChanged) {
-        for (const row of remainingSignups) {
-          const { signup, slot } = row as { signup: Signup; slot: Slot };
-          if (signup.email) {
-            await sendEventLocationChanged({
-              signup,
-              slot,
-              event: eventForEmails,
-              oldLocation: event.location,
-            });
-          }
         }
       }
     } catch (emailErr) {
