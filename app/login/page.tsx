@@ -50,18 +50,14 @@ function LoginUrlErrorBanner() {
         role="alert"
       >
         <p className="font-medium text-charcoal">
-          This confirmation link has expired or was already used
+          This confirmation link has expired or was already used.
         </p>
         <p className="mt-2 text-muted leading-relaxed">
-          Links from your email are valid for a limited time (about an hour).
-          You can sign in below if you already set a password, or sign up again
-          with the same email to get a fresh confirmation message.
+          Links from your email are valid for about an hour. Some email providers
+          also scan links automatically, which can make the link invalid before
+          you click it.
         </p>
         <p className="mt-2 text-muted leading-relaxed">
-          <Link href="/signup" className="font-medium text-charcoal underline hover:no-underline">
-            Sign up again
-          </Link>
-          {' · '}
           <Link
             href="/login/request-link"
             className="font-medium text-charcoal underline hover:no-underline"
