@@ -231,6 +231,36 @@ export async function getEventWithSlotsForDashboard(eventId: string) {
   return getEventWithSlots(eventId, { publishedOnly: false });
 }
 
+/**
+ * Batch-loads slots + active signups for multiple event IDs in a single query.
+ * Use on the dashboard instead of calling getEventWithSlotsForDashboard per event.
+ * Returns a Map<eventId, SlotWithSignups[]>.
+ */
+export async function getSlotsBatchForDashboard(
+  eventIds: string[]
+): Promise<Map<string, SlotWithSignups[]>> {
+  if (eventIds.length === 0) return new Map();
+
+  const { data: slots, error } = await supabase
+    .from('slots')
+    .select('*, signups(*)')
+    .in('event_id', eventIds)
+    .order('sort_order', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: true });
+
+  if (error || !slots) return new Map();
+
+  const map = new Map<string, SlotWithSignups[]>();
+  for (const s of slots as (Slot & { signups: Signup[] })[]) {
+    const active = s.signups.filter((sig) => !sig.cancelled);
+    const slotWithSignups: SlotWithSignups = { ...s, signups: active };
+    const existing = map.get(s.event_id) ?? [];
+    existing.push(slotWithSignups);
+    map.set(s.event_id, existing);
+  }
+  return map;
+}
+
 export async function getPublishedEventsForOrg(organizationId: string) {
   const { data } = await supabase
     .from('events')

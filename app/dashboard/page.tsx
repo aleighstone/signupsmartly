@@ -3,14 +3,14 @@ import { createClient } from '@/lib/supabase-server';
 import { ensureUserAndOrg } from '@/lib/ensure-user-org';
 import { TrackDashboardView } from '@/app/providers/PostHogTracker';
 import { TrackMetaCompleteRegistration } from '@/app/providers/MetaPixelTracker';
-import { getEventsForUser, getEventWithSlotsForDashboard, getEventCoverage, hasEventWithVolunteerSignup, getOrgSlugForUser } from '@/lib/db';
+import { getEventsForUser, getSlotsBatchForDashboard, getEventCoverage, hasEventWithVolunteerSignup, getOrgSlugForUser } from '@/lib/db';
 import { AppLayout } from '@/components/AppLayout';
 import { DashboardEventList } from '@/components/DashboardEventList';
 import type { EventCardData } from '@/components/DashboardEventList';
 import { NpsBanner } from '@/components/NpsBanner';
 import { formatEventDateRangeCompact } from '@/lib/calendar';
 import { serviceSupabase } from '@/lib/supabase-service';
-import type { Event } from '@/types/database';
+import type { Event, SlotWithSignups, EventWithSlots } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,24 +76,31 @@ export default async function DashboardPage() {
       hasVolunteerSignup
     );
 
-  const buildEventCards = async (
-    events: Awaited<ReturnType<typeof getEventsForUser>>
-  ): Promise<EventCardData[]> =>
-    Promise.all(events.map(async (event) => {
-      const eventWithSlots = await getEventWithSlotsForDashboard(event.id);
-      const coverage = eventWithSlots
-        ? getEventCoverage(eventWithSlots)
-        : { filled: 0, total: 0, percentage: 0 };
-      const availabilityStats = eventWithSlots && eventWithSlots.signup_type === 'availability'
-        ? {
-            responses: eventWithSlots.slots.reduce((sum, slot) => sum + slot.signups.length, 0),
-            people: new Set(
-              eventWithSlots.slots.flatMap((slot) =>
-                slot.signups.map((signup) => (signup.email || signup.name).toLowerCase())
-              )
-            ).size,
-          }
-        : undefined;
+  // Batch-load all slots + signups in a single query instead of one per event (N+1 fix)
+  const allEventIds = [...activeEvents, ...archivedEvents].map((e) => e.id);
+  const slotsMap = await getSlotsBatchForDashboard(allEventIds);
+
+  const buildEventCards = (
+    events: Awaited<ReturnType<typeof getEventsForUser>>,
+    slotsByEvent: Map<string, SlotWithSignups[]>
+  ): EventCardData[] =>
+    events.map((event) => {
+      const slots = slotsByEvent.get(event.id) ?? [];
+      const eventWithSlots: EventWithSlots = { ...(event as Event), slots };
+      const coverage = getEventCoverage(eventWithSlots);
+      const availabilityStats =
+        event.signup_type === 'availability'
+          ? {
+              responses: slots.reduce((sum, slot) => sum + slot.signups.length, 0),
+              people: new Set(
+                slots.flatMap((slot) =>
+                  slot.signups.map((signup) =>
+                    (signup.email || signup.name).toLowerCase()
+                  )
+                )
+              ).size,
+            }
+          : undefined;
       return {
         event: event as Event & { archived: boolean },
         coverage,
@@ -101,11 +108,10 @@ export default async function DashboardPage() {
         dateLabel: formatEventDateRangeCompact(event.start_date, event.end_date),
         signupPageUrl: eventUrl(event.id),
       };
-    }));
-  const [activeCards, archivedCards] = await Promise.all([
-    buildEventCards(activeEvents),
-    buildEventCards(archivedEvents),
-  ]);
+    });
+
+  const activeCards = buildEventCards(activeEvents, slotsMap);
+  const archivedCards = buildEventCards(archivedEvents, slotsMap);
 
   return (
     <AppLayout>
