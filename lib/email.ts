@@ -81,7 +81,7 @@ function buildSignupEmailDetails(params: {
 
   const scheduledDetailRows = [
     spotOrItemRow,
-    dateRow(true, event.start_date),
+    dateRow(!!slot.start_time, slot.start_time),
     timeRow,
     eventRow,
     locationRow,
@@ -277,13 +277,9 @@ export async function sendSignupReminder(params: {
   const subject = isSimple
     ? `SignupSmartly Reminder: ${slot.role_name} for ${event.title}`
     : `SignupSmartly Reminder: ${slot.role_name} on ${
-        event.start_date
+        slot.start_time
           ? format(
-              new Date(
-                event.start_date.includes('T')
-                  ? event.start_date
-                  : `${event.start_date}T00:00:00`
-              ),
+              new Date(slot.start_time),
               'MMMM d, yyyy'
             )
           : event.title
@@ -379,8 +375,8 @@ export async function sendOrganizerInstantNotification(params: {
   const timeStr =
     !isSimple && startTimeStr && endTimeStr
       ? `${startTimeStr} – ${endTimeStr}`
-      : event.start_date
-        ? safeFormatDate(event.start_date)
+      : slot.start_time
+        ? safeFormatDate(slot.start_time)
         : 'TBD';
 
   const commentRow =
