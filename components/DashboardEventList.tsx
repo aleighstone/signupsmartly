@@ -53,7 +53,8 @@ function SortIndicator({ activeDir }: { activeDir: SortDir }) {
 function MoreMenu({ card }: { card: EventCardData }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState<'publish' | 'copy' | 'archive' | 'delete' | null>(null);
+  const busy = busyAction !== null;
   const menuRef = useRef<HTMLDivElement>(null);
   const { event } = card;
 
@@ -75,7 +76,7 @@ function MoreMenu({ card }: { card: EventCardData }) {
   }, [open]);
 
   const handlePublish = async () => {
-    setBusy(true);
+    setBusyAction('publish');
     try {
       const res = await fetch(`/api/events/${event.id}`, {
         method: 'PATCH',
@@ -88,12 +89,12 @@ function MoreMenu({ card }: { card: EventCardData }) {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
   const handleCopy = async () => {
-    setBusy(true);
+    setBusyAction('copy');
     try {
       const res = await fetch(`/api/events/${event.id}/copy`, { method: 'POST' });
       if (!res.ok) throw new Error('Failed to copy signup');
@@ -104,14 +105,14 @@ function MoreMenu({ card }: { card: EventCardData }) {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not copy signup');
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
   const handleArchive = async () => {
     const ok = window.confirm('Archive this signup? This will disable its public signup page.');
     if (!ok) return;
-    setBusy(true);
+    setBusyAction('archive');
     try {
       const res = await fetch(`/api/events/${event.id}/archive`, { method: 'POST' });
       if (!res.ok) throw new Error('Failed to archive');
@@ -120,14 +121,14 @@ function MoreMenu({ card }: { card: EventCardData }) {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
   const handleDelete = async () => {
     const ok = window.confirm('Delete this signup permanently? This cannot be undone.');
     if (!ok) return;
-    setBusy(true);
+    setBusyAction('delete');
     try {
       const res = await fetch(`/api/events/${event.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
@@ -136,7 +137,7 @@ function MoreMenu({ card }: { card: EventCardData }) {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
@@ -166,7 +167,7 @@ function MoreMenu({ card }: { card: EventCardData }) {
               onClick={() => void handlePublish()}
               disabled={busy}
             >
-              {busy ? 'Publishing...' : 'Publish'}
+              {busyAction === 'publish' ? 'Publishing...' : 'Publish'}
             </button>
           ) : null}
           <Link
@@ -184,7 +185,7 @@ function MoreMenu({ card }: { card: EventCardData }) {
             onClick={() => void handleCopy()}
             disabled={busy}
           >
-            Copy signup
+            {busyAction === 'copy' ? 'Copying...' : 'Copy signup'}
           </button>
           <Link
             href={`/dashboard/event/${event.id}/signups`}
@@ -201,7 +202,7 @@ function MoreMenu({ card }: { card: EventCardData }) {
             onClick={() => void handleArchive()}
             disabled={busy}
           >
-            {busy ? 'Archiving...' : 'Archive'}
+            {busyAction === 'archive' ? 'Archiving...' : 'Archive'}
           </button>
           <button
             type="button"
@@ -210,7 +211,7 @@ function MoreMenu({ card }: { card: EventCardData }) {
             onClick={() => void handleDelete()}
             disabled={busy}
           >
-            {busy ? 'Deleting...' : 'Delete'}
+            {busyAction === 'delete' ? 'Deleting...' : 'Delete'}
           </button>
         </div>
       ) : null}
