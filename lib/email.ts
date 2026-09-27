@@ -1,7 +1,6 @@
 import { Resend } from 'resend';
 import { format } from 'date-fns';
 import type { Event, Slot, Signup } from '@/types/database';
-import { generateAddToCalendarUrl } from '@/lib/calendar';
 import { renderClaimExistingUserEmail } from '@/emails/claim-existing-user';
 import { renderClaimNewUserEmail } from '@/emails/claim-new-user';
 
@@ -269,8 +268,8 @@ export async function sendSignupReminder(params: {
     throw new Error('Cannot send reminder: signup has no email');
   }
 
-  const { cancelUrl, manageUrl, logoUrl, detailRows, labelSpotOrItem } =
-    buildSignupEmailDetails({ signup, slot, event });
+  const { cancelUrl, manageUrl, logoUrl, detailRows } =
+    buildSignupEmailDetails({ signup, slot, event, linkEventTitleToSignupPage: true });
 
   const isSimple = event.signup_type === 'simple';
 
@@ -306,20 +305,10 @@ export async function sendSignupReminder(params: {
         <span style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 1.25rem; color: #FFFFFF;">SignupSmartly</span>
       </div>
       <div style="padding: 24px;">
-        <h1 style="font-size: 24px; font-weight: 600; color: #27272A; margin: 0 0 20px;">Just a reminder — you're signed up!</h1>
-        <p style="margin: 0 0 16px; color: #27272A;">
-          Here are the details for your upcoming ${labelSpotOrItem.toLowerCase()}:
-        </p>
+        <h1 style="font-size: 24px; font-weight: 600; color: #27272A; margin: 0 0 20px;">Reminder — you're signed up!</h1>
+        <p style="margin: 0 0 16px; color: #27272A;">Here are the details:</p>
         <div style="background-color: #F0F9F0; border-radius: 8px; padding: 0 20px; margin-bottom: 24px;">
           ${detailRows}
-        </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
-          <a href="${generateAddToCalendarUrl({
-            event,
-            slot,
-            volunteerName: signup.name,
-          })}" style="display: inline-block; background-color: #15803D; color: #FFFFFF; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Add to Calendar</a>
-          <a href="${cancelUrl}" style="display: inline-block; background-color: #FFFFFF; color: #27272A; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; border: 2px solid #27272A;">Cancel signup</a>
         </div>
       </div>
       <div style="padding: 16px 24px; border-top: 1px solid #E5F2E5; font-size: 14px; color: #71717A;">
