@@ -268,7 +268,7 @@ export async function sendSignupReminder(params: {
     throw new Error('Cannot send reminder: signup has no email');
   }
 
-  const { cancelUrl, manageUrl, logoUrl, detailRows } =
+  const { manageUrl, logoUrl, detailRows } =
     buildSignupEmailDetails({ signup, slot, event, linkEventTitleToSignupPage: true });
 
   const isSimple = event.signup_type === 'simple';
