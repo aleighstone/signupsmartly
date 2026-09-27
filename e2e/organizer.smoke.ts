@@ -23,14 +23,8 @@ const dashboardMenuButtonForEvent = (page: any, eventId: string) =>
     .getByRole('button', { name: /more actions for this signup/i })
     .first();
 
-const createDescriptionTextarea = (page: any, type: 'scheduled' | 'simple') =>
-  page.locator(`textarea[name="signupsmartly-event-description-${type}"]`);
-
 const editDescriptionTextarea = (page: any) =>
   page.locator('textarea[name="signupsmartly-event-description"]');
-
-const signupTypeSelect = (page: any) =>
-  page.getByRole('combobox', { name: /signup type/i });
 
 test.describe('Dashboard', () => {
   test('loads and shows Your Signups', async ({ page }) => {
@@ -59,7 +53,7 @@ test.describe('Dashboard', () => {
 
     const menu = page.getByRole('menu').first();
     await expect(menu).toBeVisible();
-    await expect(page.getByRole('menuitem', { name: /^edit signup$/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^edit$/i })).toBeVisible();
     await expect(page.getByRole('menuitem', { name: /^delete$/i })).toBeVisible();
 
     const box = await menu.boundingBox();
@@ -89,7 +83,7 @@ test.describe('Dashboard', () => {
     await page.goto('/dashboard');
     await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
     await dashboardEventRow(page, eventId)
-      .getByRole('link', { name: /edit signup/i })
+      .getByRole('link', { name: /^edit$/i })
       .click();
     await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/edit`), { timeout: 10_000 });
 
@@ -100,103 +94,34 @@ test.describe('Dashboard', () => {
 });
 
 test.describe('Create signup flow', () => {
-  test('can load create form', async ({ page }) => {
+  test('can load create form (wizard step 1)', async ({ page }) => {
     await page.goto('/create-event');
-    await expect(page.getByText(/I want to/i)).toBeVisible();
-    // Both submit buttons present
-    await expect(page.getByRole('button', { name: /^publish$/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /save as draft/i })).toBeVisible();
-  });
-
-  test('back button on pristine form navigates immediately', async ({ page }) => {
-    await page.goto('/create-event');
-    await page.getByRole('button', { name: /← back to dashboard/i }).click();
-    await expect(page).toHaveURL(/\/dashboard/);
-  });
-
-  test('back button on dirty form shows unsaved changes modal', async ({ page }) => {
-    await page.goto('/create-event');
-    // Type something to make the form dirty
-    await page.getByPlaceholder(/falcons track meet/i).fill('Test event title');
-    await page.getByRole('button', { name: /← back to dashboard/i }).click();
-    // Modal should appear
-    await expect(page.getByText(/unsaved changes/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /discard/i })).toBeVisible();
-  });
-
-  test('unsaved changes modal discard navigates to dashboard', async ({ page }) => {
-    await page.goto('/create-event');
-    await page.getByPlaceholder(/falcons track meet/i).fill('Test event title');
-    await page.getByRole('button', { name: /← back to dashboard/i }).click();
-    await page.getByRole('button', { name: /discard/i }).click();
-    await expect(page).toHaveURL(/\/dashboard/);
-  });
-
-
-  test('description remains editable after switching signup types', async ({ page }) => {
-    await page.goto('/create-event');
-
-    const scheduledFirst = 'Scheduled description before switch';
-    const simpleEdit = 'Scheduled description before switch plus simple edit';
-    const scheduledFinal = 'Final create description after switching twice';
-
-    await expect(createDescriptionTextarea(page, 'scheduled')).toBeVisible();
-    await createDescriptionTextarea(page, 'scheduled').fill(scheduledFirst);
-    await expect(createDescriptionTextarea(page, 'scheduled')).toHaveValue(scheduledFirst);
-
-    await signupTypeSelect(page).selectOption('simple');
-    await expect(createDescriptionTextarea(page, 'simple')).toBeVisible();
-    await expect(createDescriptionTextarea(page, 'simple')).toHaveValue(scheduledFirst);
-    await createDescriptionTextarea(page, 'simple').fill(simpleEdit);
-    await expect(createDescriptionTextarea(page, 'simple')).toHaveValue(simpleEdit);
-
-    await signupTypeSelect(page).selectOption('scheduled');
-    await expect(createDescriptionTextarea(page, 'scheduled')).toBeVisible();
-    await expect(createDescriptionTextarea(page, 'scheduled')).toHaveValue(simpleEdit);
-    await createDescriptionTextarea(page, 'scheduled').fill(scheduledFinal);
-    await expect(createDescriptionTextarea(page, 'scheduled')).toHaveValue(scheduledFinal);
-  });
-
-  test('can save a draft after switching signup types with a description', async ({ page }) => {
-    const title = `Playwright Switch Description Draft ${Date.now()}`;
-    const description = 'Description entered after switching to simple list';
-
-    await page.goto('/create-event');
-    await createDescriptionTextarea(page, 'scheduled').fill('Initial scheduled description');
-    await signupTypeSelect(page).selectOption('simple');
-    await createDescriptionTextarea(page, 'simple').fill(description);
-    await page.getByLabel(/title/i).first().fill(title);
-    await page.getByPlaceholder(/entree/i).first().fill('Test item');
-    await page.getByRole('button', { name: /save as draft/i }).click();
-
-    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByRole('heading', { name: new RegExp(`${title} created!`, 'i') })).toBeVisible();
-    await page.getByRole('button', { name: /no, i.?m good/i }).click();
-    await page.waitForURL(/dashboard/, { timeout: 15_000 });
-    await expect(page.getByText(title)).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /what type of signup do you need\?/i })
+    ).toBeVisible();
+    await expect(page.getByText(/Simple list signup/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: /^next/i })).toBeVisible();
   });
 });
 
 test.describe('Draft mode', () => {
-  test('save as draft creates a draft event on dashboard', async ({ page }) => {
+  test('wizard save as draft creates a draft event on dashboard', async ({ page }) => {
     await page.goto('/create-event');
 
-    // Fill minimum required fields for a simple list
-    await page.getByRole('combobox').selectOption('simple');
-    await page.getByLabel(/title/i).first().fill('Playwright Draft Test');
-    // Item name (simple list)
-    await page.getByPlaceholder(/entree/i).first().fill('Test item');
+    // Step 1: simple list (default)
+    await page.getByRole('button', { name: /^next/i }).click();
 
-    // Save as draft
+    // Step 2: fill title
+    await page.getByPlaceholder(/Bake Sale Items/i).fill('Playwright Draft Test');
+    await page.getByRole('button', { name: /^next/i }).click();
+
+    // Step 3: add a spot
+    await page.getByPlaceholder(/Chocolate chip cookies/i).first().fill('Test item');
+    await page.getByRole('button', { name: /^next/i }).click();
+
+    // Step 4: save as draft — wizard goes straight to dashboard
     await page.getByRole('button', { name: /save as draft/i }).click();
-
-    // Should end up on dashboard (via post-creation modal → No, I'm good)
-    // or navigate to dashboard directly after modal
-    // Wait for either the modal or the dashboard
-    await page.waitForURL(/dashboard|create-event/, { timeout: 15_000 });
-
-    // Navigate to dashboard and verify at least one Draft pill appears
-    await page.goto('/dashboard');
+    await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
     await expect(page.getByText('Draft').first()).toBeVisible();
   });
 });
@@ -401,10 +326,10 @@ test.describe('Draft event', () => {
       page.getByRole('button', { name: /not yet published/i }).first()
     ).toBeDisabled();
     await dashboardMenuButtonForEvent(page, draftId).click();
-    await expect(page.getByRole('menuitem', { name: /^publish$/i })).toBeVisible();
-    await expect(page.getByRole('menuitem', { name: /^edit signup$/i })).toBeVisible();
-    await expect(page.getByRole('menuitem', { name: /^copy signup$/i })).toBeVisible();
     await expect(page.getByRole('menuitem', { name: /^view my signups$/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^publish$/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^edit$/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /^make a copy$/i })).toBeVisible();
     await expect(page.getByRole('menuitem', { name: /^archive$/i })).toBeVisible();
     await expect(page.getByRole('menuitem', { name: /^delete$/i })).toBeVisible();
   });
@@ -432,11 +357,11 @@ test.describe('Copy signup', () => {
     await page.goto('/dashboard');
     await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
     await dashboardMenuButtonForEvent(page, eventId).click();
-    await page.getByRole('menuitem', { name: /^copy signup$/i }).click();
-    // Should navigate to edit page of the new draft copy
-    await page.waitForURL(/\/dashboard\/event\/.+\/edit/, { timeout: 10_000 });
-    // Draft banner confirms the copy started as a draft
-    await expect(page.getByText(/this signup is not live yet/i)).toBeVisible();
+    await page.getByRole('menuitem', { name: /^make a copy$/i }).click();
+    // Should navigate back to the dashboard (copy lands there as a new draft)
+    await page.waitForURL(/\/dashboard$/, { timeout: 10_000 });
+    // At least one Draft pill confirms the copy is present
+    await expect(page.getByText('Draft').first()).toBeVisible();
   });
 });
 
@@ -485,11 +410,13 @@ test.describe('Archive signup', () => {
       await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
 
       await dashboardMenuButtonForEvent(page, eventId).click();
-      await expect(page.getByRole('menuitem', { name: /^edit signup$/i })).toBeVisible();
-      await expect(page.getByRole('menuitem', { name: /^copy signup$/i })).toBeVisible();
+      // Archived events: only View My Signups, Make a Copy, Delete
       await expect(page.getByRole('menuitem', { name: /^view my signups$/i })).toBeVisible();
-      await expect(page.getByRole('menuitem', { name: /^archive$/i })).toBeVisible();
+      await expect(page.getByRole('menuitem', { name: /^make a copy$/i })).toBeVisible();
       await expect(page.getByRole('menuitem', { name: /^delete$/i })).toBeVisible();
+      // Edit and Archive should NOT appear for archived events
+      await expect(page.getByRole('menuitem', { name: /^edit$/i })).not.toBeVisible();
+      await expect(page.getByRole('menuitem', { name: /^archive$/i })).not.toBeVisible();
     } finally {
       await page.request.post(`/api/events/${eventId}/unarchive`).catch(() => {
         // best-effort cleanup in local test environments

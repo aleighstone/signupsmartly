@@ -72,6 +72,17 @@ export default defineConfig({
       testMatch: /volunteer\./,
     },
 
+    // Wizard tests — authenticated
+    {
+      name: 'wizard',
+      testMatch: /wizard\.smoke\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/organizer.json',
+      },
+      dependencies: ['setup'],
+    },
+
     // Availability poll — organizer-side tests (authenticated)
     {
       name: 'availability-organizer',
