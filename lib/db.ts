@@ -157,6 +157,7 @@ export async function getSignupByCancelToken(token: string) {
       reminder_offset,
       slots!inner (
         role_name,
+        event_id,
         event:events!slots_event_id_fkey (
           title,
           signup_type,

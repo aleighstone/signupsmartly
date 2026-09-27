@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import type { Metadata } from 'next';
-import { getEventWithSlots, getEventCoverage } from '@/lib/db';
+import { getEventWithSlots, getEventCoverage, getSignupByCancelToken } from '@/lib/db';
 import { getOrgBySlug } from '@/lib/org-branding';
 import { createClient } from '@/lib/supabase-server';
 import { buildVolunteerFacingThemeHead } from '@/data/themes';
@@ -15,6 +15,7 @@ import { EventPageClient } from './EventPageClient';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ cancel?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -47,7 +48,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function EventPage({ params }: PageProps) {
+export default async function EventPage({ params, searchParams }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
   const {
@@ -58,6 +59,21 @@ export default async function EventPage({ params }: PageProps) {
 
   if (!eventData) notFound();
   if ((eventData as typeof eventData & { archived: boolean }).archived) notFound();
+
+  // Fetch cancel modal data if a cancel token is in the URL
+  const cancelToken = (await searchParams)?.cancel;
+  let cancelData: { cancelToken: string; slotName: string; alreadyCancelled: boolean } | null = null;
+  if (cancelToken) {
+    const cancelSignup = await getSignupByCancelToken(cancelToken);
+    if (cancelSignup) {
+      const s = cancelSignup as unknown as { cancelled: boolean; slots: { role_name: string } };
+      cancelData = {
+        cancelToken,
+        slotName: s.slots.role_name,
+        alreadyCancelled: s.cancelled,
+      };
+    }
+  }
 
   const slug = (await headers()).get('x-org-slug');
   const org = slug ? await getOrgBySlug(slug) : null;
@@ -141,7 +157,7 @@ export default async function EventPage({ params }: PageProps) {
         </div>
 
         <div className="mt-7 sm:mt-8">
-          <EventPageClient event={eventData} />
+          <EventPageClient event={eventData} cancelData={cancelData} />
         </div>
 
         <footer className="mt-12 text-center text-sm text-muted space-y-1">

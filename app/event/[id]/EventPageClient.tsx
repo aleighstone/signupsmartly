@@ -14,12 +14,20 @@ import {
 import type { EventWithSlots, SlotWithSignups } from '@/types/database';
 import type { SignupFormData } from '@/components/SignupForm';
 import { DEFAULT_COMMENT_LABEL } from '@/lib/slot-comment';
+import { CancelModal } from './CancelModal';
+
+interface CancelData {
+  cancelToken: string;
+  slotName: string;
+  alreadyCancelled: boolean;
+}
 
 interface EventPageClientProps {
   event: EventWithSlots;
+  cancelData?: CancelData | null;
 }
 
-export function EventPageClient({ event }: EventPageClientProps) {
+export function EventPageClient({ event, cancelData }: EventPageClientProps) {
   const router = useRouter();
   const [modalSlot, setModalSlot] = useState<SlotWithSignups | null>(null);
   const [selectedAvailabilitySlotIds, setSelectedAvailabilitySlotIds] = useState<string[]>([]);
@@ -209,6 +217,14 @@ export function EventPageClient({ event }: EventPageClientProps) {
         isSubmitting={isSubmitting}
         error={error}
         volunteerPageThemed
+        />
+      )}
+      {cancelData && (
+        <CancelModal
+          cancelToken={cancelData.cancelToken}
+          slotName={cancelData.slotName}
+          eventId={event.id}
+          alreadyCancelled={cancelData.alreadyCancelled}
         />
       )}
     </>
