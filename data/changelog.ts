@@ -42,6 +42,10 @@ export const changelog: Release[] = [
     date: 'September 9, 2026',
     changes: [
       {
+        type: 'improved',
+        text: '**Improved site speed**: Several performance improvements under the hood — optimized database queries, a missing index, and eliminated redundant data fetching that was slowing down page loads.',
+      },
+      {
         type: 'fixed',
         text: '**Confirmation and reminder emails**: Scheduled signups now show the correct slot date in confirmation and reminder emails instead of the event start date.',
       },
