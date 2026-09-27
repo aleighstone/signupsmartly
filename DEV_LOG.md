@@ -216,6 +216,39 @@
 
 ---
 
+## 2026-05-14
+
+### Completed
+
+| What | File(s) | Status |
+|---|---|---|
+| Marketing copy suggestions doc | `specs/marketing-copy-suggestions.md` | committed |
+| Marketing copy Cursor spec | `specs/cursor-prompt-marketing-copy.md` | committed |
+| Availability poll screenshot captured | `public/marketing-content/SS_Availability_poll_placeholder.png` | needs `mv ~/Downloads/SS_Availability_poll_placeholder.png` if not done |
+| Draft preview spec (4-step: auth-aware event page, preview banner, Preview ↗ in edit form, redirect to edit after draft save) | `specs/cursor-prompt-draft-preview.md` | committed — **not yet implemented** |
+| What's New entries: availability poll, dashboard redesign, delete signup, View My Signups, mobile dashboard, slot labels, create form fix | `data/changelog.ts` | ready to deploy |
+| Availability poll blurb added to signup type help modal | `app/create-event/CreateEventForm.tsx` | ready to deploy |
+
+### Backlog
+
+| Item | Notes |
+|---|---|
+| **Implement draft preview** | Spec at `specs/cursor-prompt-draft-preview.md`. 4 changes: auth check in event page, preview banner, Preview ↗ in edit form draft banner, redirect create→edit after draft save. Hand to Cursor. |
+| Spec: availability poll — group scheduling completion (Crystal feature) | Email when date is picked + "Add to Calendar" for attendees. Not yet specced. |
+| Marketing copy — implement homepage + use-cases updates | Spec at `specs/cursor-prompt-marketing-copy.md`. Copy-only changes, quick Cursor job. |
+| Availability poll — implement (Phase 1–3) | Spec + Cursor prompt ready at `specs/cursor-prompt-availability-poll.md`. DB migrations must be applied first. |
+| Screenshot: replace `SS_Availability_poll_placeholder.png` | Captured locally — move from Downloads if not done, then deploy. |
+| Marketing screenshots: replace 3 public-event screenshots | URLs confirmed; baseball screenshot updated locally. |
+| Publish a draft from dashboard — E2E test | No test yet |
+| Organizer breadcrumb — E2E test | No Playwright coverage yet |
+| Volunteer autofill — E2E test | No Playwright coverage yet |
+
+### Resume here
+
+> **Start with the draft preview spec.** It's at `specs/cursor-prompt-draft-preview.md` — 4 small changes, ready for Cursor. After that: spec out the availability poll group scheduling completion (Crystal's "email when date is picked + add to calendar" feature).
+
+---
+
 ## 2026-05-13
 
 ### Completed

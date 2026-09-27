@@ -164,7 +164,7 @@ export default async function SignupsPage({ params }: PageProps) {
         <div data-no-print className="mb-5">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted transition-colors hover:text-charcoal font-body"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted transition-colors hover:text-charcoal font-body"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path
@@ -184,7 +184,7 @@ export default async function SignupsPage({ params }: PageProps) {
             <h1 className="mb-1 text-2xl font-bold leading-[1.2] text-charcoal font-heading">
               {eventData.title}
             </h1>
-            <p className="text-sm text-muted font-body">
+            <p className="text-sm text-charcoal font-body">
               {formatEventDateRange(eventData.start_date, eventData.end_date)}
             </p>
           </div>

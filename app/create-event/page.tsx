@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase-server';
 import { ensureUserAndOrg } from '@/lib/ensure-user-org';
 import { AppLayout } from '@/components/AppLayout';
-import { CreateEventForm } from './CreateEventForm';
+import { CreateEventWizard } from './CreateEventWizard';
 
 export default async function CreateEventPage() {
   const supabase = await createClient();
@@ -25,7 +25,7 @@ export default async function CreateEventPage() {
 
   return (
     <AppLayout>
-      <CreateEventForm organizationId={orgId} createdBy={userId} />
+      <CreateEventWizard organizationId={orgId} createdBy={userId} />
     </AppLayout>
   );
 }

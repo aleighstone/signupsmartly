@@ -101,7 +101,7 @@ function MoreMenu({ card }: { card: EventCardData }) {
       const { eventId } = (await res.json()) as { eventId?: string };
       if (!eventId) throw new Error('Failed to copy signup');
       setOpen(false);
-      router.push(`/dashboard/event/${eventId}/edit`);
+      router.push('/dashboard');
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not copy signup');
     } finally {
@@ -159,7 +159,15 @@ function MoreMenu({ card }: { card: EventCardData }) {
           role="menu"
           className="absolute right-0 z-50 mt-2 min-w-[180px] rounded-xl border border-charcoal/10 bg-surface py-1 shadow-soft-md"
         >
-          {!event.published ? (
+          <Link
+            href={`/dashboard/event/${event.id}/signups`}
+            role="menuitem"
+            className="block px-3.5 py-2.5 text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
+            onClick={() => setOpen(false)}
+          >
+            View My Signups
+          </Link>
+          {!event.archived && !event.published ? (
             <button
               type="button"
               role="menuitem"
@@ -170,14 +178,16 @@ function MoreMenu({ card }: { card: EventCardData }) {
               {busyAction === 'publish' ? 'Publishing...' : 'Publish'}
             </button>
           ) : null}
-          <Link
-            href={`/dashboard/event/${event.id}/edit`}
-            role="menuitem"
-            className="block px-3.5 py-2.5 text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
-            onClick={() => setOpen(false)}
-          >
-            Edit signup
-          </Link>
+          {!event.archived ? (
+            <Link
+              href={`/dashboard/event/${event.id}/edit`}
+              role="menuitem"
+              className="block px-3.5 py-2.5 text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
+              onClick={() => setOpen(false)}
+            >
+              Edit
+            </Link>
+          ) : null}
           <button
             type="button"
             role="menuitem"
@@ -185,25 +195,19 @@ function MoreMenu({ card }: { card: EventCardData }) {
             onClick={() => void handleCopy()}
             disabled={busy}
           >
-            {busyAction === 'copy' ? 'Copying...' : 'Copy signup'}
+            {busyAction === 'copy' ? 'Copying...' : 'Make a Copy'}
           </button>
-          <Link
-            href={`/dashboard/event/${event.id}/signups`}
-            role="menuitem"
-            className="block px-3.5 py-2.5 text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
-            onClick={() => setOpen(false)}
-          >
-            View my signups
-          </Link>
-          <button
-            type="button"
-            role="menuitem"
-            className="block w-full px-3.5 py-2.5 text-left text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
-            onClick={() => void handleArchive()}
-            disabled={busy}
-          >
-            {busyAction === 'archive' ? 'Archiving...' : 'Archive'}
-          </button>
+          {!event.archived ? (
+            <button
+              type="button"
+              role="menuitem"
+              className="block w-full px-3.5 py-2.5 text-left text-sm font-medium text-charcoal hover:bg-charcoal/5 font-body"
+              onClick={() => void handleArchive()}
+              disabled={busy}
+            >
+              {busyAction === 'archive' ? 'Archiving...' : 'Archive'}
+            </button>
+          ) : null}
           <button
             type="button"
             role="menuitem"
@@ -437,7 +441,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                 <button
                   type="button"
                   onClick={() => toggleSort('event')}
-                  className={`inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] font-body ${
+                  className={`inline-flex items-center gap-1.5 text-sm font-semibold font-body ${
                     sortCol === 'event' ? 'text-charcoal' : 'text-muted'
                   }`}
                 >
@@ -448,17 +452,17 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                 <button
                   type="button"
                   onClick={() => toggleSort('date')}
-                  className={`inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] font-body ${
+                  className={`inline-flex items-center gap-1.5 text-sm font-semibold font-body ${
                     sortCol === 'date' ? 'text-charcoal' : 'text-muted'
                   }`}
                 >
                   Date <SortIndicator activeDir={sortCol === 'date' ? sortDir : null} />
                 </button>
               </div>
-              <div className="flex-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-muted font-body">
+              <div className="flex-1 text-sm font-semibold text-muted font-body">
                 Coverage
               </div>
-              <div className="w-[122px] text-[11px] font-semibold uppercase tracking-[0.05em] text-muted font-body">
+              <div className="w-[122px] text-sm font-semibold text-muted font-body">
                 Actions
               </div>
             </div>
@@ -483,11 +487,6 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                           Draft
                         </span>
                       ) : null}
-                      {card.event.archived ? (
-                        <span className="inline-flex shrink-0 items-center rounded-full bg-charcoal/10 px-2 py-0.5 text-[11px] font-semibold text-charcoal/60 font-body">
-                          Archived
-                        </span>
-                      ) : null}
                       {isAvailability ? (
                         <span className="inline-flex shrink-0 items-center rounded-full bg-sage/10 px-2 py-0.5 text-[11px] font-semibold text-sage font-body">
                           Poll
@@ -502,7 +501,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                   </div>
                   <div className="flex flex-1 items-center gap-2.5">
                     {isAvailability ? (
-                      <span className="text-xs text-muted font-body">
+                      <span className="text-sm text-muted font-body">
                         {card.availabilityStats?.responses ?? 0} responses · {card.availabilityStats?.people ?? 0} people
                       </span>
                     ) : (
@@ -513,7 +512,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                             style={{ width: `${card.coverage.percentage}%` }}
                           />
                         </div>
-                        <span className="w-20 whitespace-nowrap text-right text-xs text-muted font-body">
+                        <span className="w-20 whitespace-nowrap text-right text-sm text-muted font-body">
                           {pctLabel(card.coverage.filled, card.coverage.total)}
                         </span>
                       </>
@@ -548,24 +547,19 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                           Draft
                         </span>
                       ) : null}
-                      {card.event.archived ? (
-                        <span className="inline-flex shrink-0 items-center rounded-full bg-charcoal/10 px-2 py-0.5 text-[11px] font-semibold text-charcoal/60 font-body leading-none">
-                          Archived
-                        </span>
-                      ) : null}
                       {isAvailability ? (
                         <span className="inline-flex shrink-0 items-center rounded-full bg-sage/10 px-2 py-0.5 text-[11px] font-semibold text-sage font-body leading-none">
                           Poll
                         </span>
                       ) : null}
                     </div>
-                    <p className="text-xs text-muted font-body">{card.event.start_date ? card.dateLabel : '—'}</p>
+                    <p className="text-sm text-muted font-body">{card.event.start_date ? card.dateLabel : '—'}</p>
                   </div>
 
                   <div className="mt-3 flex items-center justify-between gap-3">
                     {isAvailability ? (
                       <>
-                        <p className="min-w-0 flex-1 text-xs leading-snug text-muted font-body">
+                        <p className="min-w-0 flex-1 text-sm leading-snug text-muted font-body">
                           {card.availabilityStats?.responses ?? 0} responses · {card.availabilityStats?.people ?? 0} people
                         </p>
                         <div className="shrink-0 self-center">
@@ -575,7 +569,7 @@ export function DashboardEventList({ activeCards, archivedCards }: Props) {
                     ) : (
                       <>
                         <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex max-w-[12rem] items-center justify-between gap-2 text-xs font-body">
+                          <div className="flex max-w-[12rem] items-center justify-between gap-2 text-sm font-body">
                             <span className="shrink-0 font-medium text-charcoal">Coverage</span>
                             <span className="shrink-0 text-right text-muted tabular-nums">
                               {pctLabel(card.coverage.filled, card.coverage.total)}

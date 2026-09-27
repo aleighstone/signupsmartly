@@ -95,22 +95,22 @@ export default async function RosterPage({ params }: PageProps) {
         <table className="min-w-full divide-y divide-neutral-200">
           <thead>
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-4 py-3 text-left text-sm font-semibold text-muted font-body">
                 Role
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-4 py-3 text-left text-sm font-semibold text-muted font-body">
                 Volunteer Name
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-4 py-3 text-left text-sm font-semibold text-muted font-body">
                 Email
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-4 py-3 text-left text-sm font-semibold text-muted font-body">
                 Time
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-4 py-3 text-left text-sm font-semibold text-muted font-body">
                 Comment
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-4 py-3 text-left text-sm font-semibold text-muted font-body">
                 Signup Timestamp
               </th>
             </tr>

@@ -34,25 +34,39 @@ function ScheduledSlotVolunteerHeading({
     slot.end_time,
     eventDateFallback
   );
-  const whenFallback = formatScheduledSlotWhen(
-    slot.start_time,
-    slot.end_time,
-    eventDateFallback,
-    { omitRedundantDate: omitRedundantSlotDate }
-  );
 
-  const timeLessSingleDay = isSingleDay && !timeLine;
-
-  if (timeLessSingleDay) {
+  // "Schedule + Spot name" mode: role_description holds the organizer's typed name.
+  // Show it as the primary heading; date/time become secondary.
+  // Always include the date here — it's no longer redundant since the heading is the spot name.
+  const spotName = slot.role_description?.trim() || null;
+  if (spotName) {
+    const secondaryParts: string[] = [];
+    if (dateLine) secondaryParts.push(dateLine);
+    if (timeLine) secondaryParts.push(timeLine);
+    const secondaryLine = secondaryParts.join(' · ');
     return (
       <>
-        <h3 className="text-base font-semibold text-charcoal font-body">
-          {whenFallback}
-        </h3>
-        <h4 className="mt-1 text-sm font-medium text-charcoal font-body">
-          {slot.role_name}
-        </h4>
+        <h3 className="text-base font-semibold text-charcoal font-body">{spotName}</h3>
+        {secondaryLine ? (
+          <p className="mt-0.5 text-sm text-charcoal font-body">{secondaryLine}</p>
+        ) : null}
       </>
+    );
+  }
+
+  // Date-only mode: show date/time derived from start_time. Do NOT render role_name
+  // (it is the same date/time label — showing it would duplicate the heading).
+  if (isSingleDay && !timeLine) {
+    // All slots on one day, no time — date already in event header; just show a
+    // fallback "when" line so the card has some label.
+    const whenFallback = formatScheduledSlotWhen(
+      slot.start_time,
+      slot.end_time,
+      eventDateFallback,
+      { omitRedundantDate: omitRedundantSlotDate }
+    );
+    return (
+      <h3 className="text-base font-semibold text-charcoal font-body">{whenFallback}</h3>
     );
   }
 
@@ -60,31 +74,19 @@ function ScheduledSlotVolunteerHeading({
     return (
       <>
         {slot.start_time ? (
-          <p className="text-sm text-muted font-body">
-            {prefixWeekday(slot.start_time)}
-          </p>
+          <p className="text-sm text-muted font-body">{prefixWeekday(slot.start_time)}</p>
         ) : null}
-        <h3 className="mt-1 text-base font-semibold text-charcoal font-body">
-          {timeLine}
-        </h3>
-        <h4 className="mt-1 text-sm font-medium text-charcoal font-body">
-          {slot.role_name}
-        </h4>
+        <h3 className="mt-1 text-base font-semibold text-charcoal font-body">{timeLine}</h3>
       </>
     );
   }
 
   return (
     <>
-      <h3 className="text-base font-semibold text-charcoal font-body">
-        {dateLine}
-      </h3>
+      <h3 className="text-base font-semibold text-charcoal font-body">{dateLine}</h3>
       {timeLine ? (
         <p className="mt-1 text-sm text-muted font-body">{timeLine}</p>
       ) : null}
-      <h4 className="mt-1 text-sm font-medium text-charcoal font-body">
-        {slot.role_name}
-      </h4>
     </>
   );
 }
@@ -196,9 +198,11 @@ function SlotCard({
             </>
           ) : null}
         </p>
-        {(slot.role_description || slot.instructions) && (
+        {/* For scheduled slots, role_description is the spot name shown in the heading;
+            only show it here for simple slots. Always show instructions. */}
+        {((!isSimple && slot.instructions) || (isSimple && (slot.role_description || slot.instructions))) && (
           <div className="mt-1 text-sm text-muted font-body prose prose-sm max-w-none prose-p:text-muted prose-li:text-muted prose-headings:text-charcoal prose-strong:text-charcoal [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
-            <MarkdownBody markdown={slot.role_description || slot.instructions || ''} />
+            <MarkdownBody markdown={(!isSimple ? slot.instructions : (slot.role_description || slot.instructions)) || ''} />
           </div>
         )}
       </div>

@@ -29,6 +29,15 @@
   --coral: var(--brand-accent);
 }
 
+/* NProgress bar — override default blue with brand sage */
+#nprogress .bar {
+  background: #6CBF6C !important;
+  height: 3px !important;
+}
+#nprogress .peg {
+  box-shadow: 0 0 10px #6CBF6C, 0 0 5px #6CBF6C !important;
+}
+
 body {
   color: var(--foreground);
   background: var(--bg-main);

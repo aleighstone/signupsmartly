@@ -5,6 +5,7 @@ import { Quicksand, Inter } from "next/font/google";
 import "./globals.css";
 import { PostHogProvider } from "./providers/PostHogProvider";
 import { PageviewTracker } from "./providers/PageviewTracker";
+import { NavigationProgress, NavigationProgressStart } from "@/components/NavigationProgress";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -83,6 +84,8 @@ fbq('track', 'PageView');
         <PostHogProvider>
           <Suspense fallback={null}>
             <PageviewTracker />
+            <NavigationProgress />
+            <NavigationProgressStart />
           </Suspense>
           {children}
         </PostHogProvider>

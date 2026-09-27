@@ -55,10 +55,13 @@ export default async function EventPage({ params, searchParams }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser();
   const isOrganizer = !!user;
-  const eventData = await getEventWithSlots(id);
+  // Logged-in organizers can preview draft events; volunteers only see published ones
+  const eventData = await getEventWithSlots(id, { publishedOnly: !isOrganizer });
 
   if (!eventData) notFound();
   if ((eventData as typeof eventData & { archived: boolean }).archived) notFound();
+
+  const isDraftPreview = isOrganizer && !(eventData as typeof eventData & { published: boolean }).published;
 
   // Fetch cancel modal data if a cancel token is in the URL
   const cancelToken = (await searchParams)?.cancel;
@@ -97,8 +100,13 @@ export default async function EventPage({ params, searchParams }: PageProps) {
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href={fontsUrl} rel="stylesheet" />
       <style dangerouslySetInnerHTML={{ __html: themeStyleCss }} />
+      {isDraftPreview && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-800 font-body">
+          <strong>Draft preview</strong> — this event is not published yet. Only you can see it.
+        </div>
+      )}
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-        {isOrganizer && (
+        {isOrganizer && !isDraftPreview && (
           <div className="mb-4">
             <Link
               href="/dashboard"

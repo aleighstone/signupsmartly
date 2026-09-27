@@ -41,7 +41,7 @@ export const colorThemes: ColorTheme[] = [
   { key: 'manchester-red', name: 'Manchester Red', category: 'sports', primary: '#DA291C', btnText: '#FFFFFF' },
 
   // ── General & Aesthetic ─────────────────────────────────────
-  { key: 'default', name: 'Default ★', category: 'general', primary: '#4A7C59', btnText: '#FFFFFF' },
+  { key: 'default', name: 'Default', category: 'general', primary: '#4A7C59', btnText: '#FFFFFF' },
   { key: 'sage', name: 'Sage', category: 'general', primary: '#4A7C59', btnText: '#FFFFFF' },
   { key: 'coral', name: 'Coral', category: 'general', primary: '#A8392A', btnText: '#FFFFFF' },
   { key: 'lavender', name: 'Lavender', category: 'general', primary: '#5B4FB5', btnText: '#FFFFFF' },

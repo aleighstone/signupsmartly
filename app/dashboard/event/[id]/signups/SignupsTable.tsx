@@ -94,21 +94,21 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
         <table className="min-w-full divide-y divide-charcoal/10">
           <thead>
             <tr className="bg-charcoal/[0.02]">
-              <th className="align-top px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.05em] text-muted font-body">
+              <th className="align-top px-5 py-2.5 text-left text-sm font-semibold text-muted font-body">
                 {label}
               </th>
               {!isSimple && (
-                <th className="align-top px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.05em] text-muted font-body">
+                <th className="align-top px-5 py-2.5 text-left text-sm font-semibold text-muted font-body">
                   Date &amp; Time
                 </th>
               )}
-              <th className="min-w-[12rem] max-w-[20rem] align-top px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.05em] text-muted font-body">
+              <th className="min-w-[12rem] max-w-[20rem] align-top px-5 py-2.5 text-left text-sm font-semibold text-muted font-body">
                 Contact
               </th>
-              <th className="align-top px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.05em] text-muted font-body">
+              <th className="align-top px-5 py-2.5 text-left text-sm font-semibold text-muted font-body">
                 Comment
               </th>
-              <th className="align-top px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.05em] text-muted font-body">
+              <th className="align-top px-5 py-2.5 text-left text-sm font-semibold text-muted font-body">
                 Signup Timestamp
               </th>
               <th className="w-10 px-5 py-2.5" />
@@ -120,12 +120,12 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                 key={row.isEmpty ? `empty-${row.slotId}-${i}` : `signup-${row.signup!.id}`}
                 className={row.isEmpty ? 'bg-charcoal/[0.02]' : 'hover:bg-charcoal/[0.015]'}
               >
-                <td className={`align-top px-5 py-3.5 text-[13px] leading-[1.45] font-body ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>
+                <td className="align-top px-5 py-3.5 text-sm leading-[1.45] font-body text-charcoal">
                   {row.role}
                 </td>
                 {!isSimple && (
                   <td
-                    className={`align-top px-5 py-3.5 text-[13px] leading-[1.45] font-body whitespace-pre-line ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}
+                    className={`align-top px-5 py-3.5 text-sm leading-[1.45] font-body whitespace-pre-line ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}
                   >
                     {(() => {
                       const { datePart, timePart } = splitDateAndTimeForTable(
@@ -145,7 +145,7 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                   </td>
                 )}
                 <td
-                  className={`min-w-[12rem] max-w-[20rem] align-top px-5 py-3.5 text-[13px] leading-[1.45] font-body whitespace-pre-line ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}
+                  className={`min-w-[12rem] max-w-[20rem] align-top px-5 py-3.5 text-sm leading-[1.45] font-body whitespace-pre-line ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}
                 >
                   {row.isEmpty ? (
                     <button
@@ -166,7 +166,7 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                     </>
                   )}
                 </td>
-                <td className={`align-top px-5 py-3.5 text-[13px] leading-[1.45] font-body ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>
+                <td className={`align-top px-5 py-3.5 text-sm leading-[1.45] font-body ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>
                   {row.isEmpty ? (
                     ''
                   ) : (
@@ -179,7 +179,7 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                       if (!custom) return text;
                       return (
                         <div className="space-y-1">
-                          <p className="text-xs font-medium uppercase tracking-wide text-muted font-body">
+                          <p className="text-sm font-medium uppercase tracking-wide text-muted font-body">
                             {lbl}
                           </p>
                           <p className="text-sm text-charcoal font-body whitespace-pre-wrap">{text}</p>
@@ -188,7 +188,7 @@ export function SignupsTable({ rows, slots, isSimple }: SignupsTableProps) {
                     })()
                   )}
                 </td>
-                <td className={`align-top px-5 py-3.5 text-[13px] leading-[1.45] text-muted`}>
+                <td className={`align-top px-5 py-3.5 text-sm leading-[1.45] ${row.isEmpty ? 'text-muted' : 'text-charcoal'}`}>
                   {row.isEmpty ? (
                     ''
                   ) : (

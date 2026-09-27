@@ -135,6 +135,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
   const slots = slotsLabel(event);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPreviewing, setIsPreviewing] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [unsavedModalOpen, setUnsavedModalOpen] = useState(false);
   const [isSavingFromModal, setIsSavingFromModal] = useState(false);
@@ -384,9 +385,9 @@ export function EditEventForm({ event }: EditEventFormProps) {
     };
   };
 
-  const saveEdits = async (): Promise<boolean> => {
+  const saveEdits = async (options?: { skipRedirect?: boolean; skipLoadingState?: boolean }): Promise<boolean> => {
     if (anyCapacityError()) return false;
-    setIsSubmitting(true);
+    if (!options?.skipLoadingState) setIsSubmitting(true);
     setError(null);
     try {
       const payload = buildPayload();
@@ -415,14 +416,30 @@ export function EditEventForm({ event }: EditEventFormProps) {
         });
       }
 
-      router.push(`/dashboard/event/${event.id}/signups`);
-      router.refresh();
+      if (!options?.skipRedirect) {
+        router.push(`/dashboard/event/${event.id}/signups`);
+        router.refresh();
+      }
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       return false;
     } finally {
-      setIsSubmitting(false);
+      if (!options?.skipLoadingState) setIsSubmitting(false);
+    }
+  };
+
+  const handlePreview = async () => {
+    const form = simple ? simpleForm : scheduledForm;
+    if (!(await form.trigger())) return;
+    setIsPreviewing(true);
+    try {
+      const ok = await saveEdits({ skipRedirect: true, skipLoadingState: true });
+      if (ok) {
+        window.open(`/event/${event.id}`, '_blank');
+      }
+    } finally {
+      setIsPreviewing(false);
     }
   };
 
@@ -579,13 +596,23 @@ export function EditEventForm({ event }: EditEventFormProps) {
             onColorChange={setColorKey}
             onFontChange={setFontKey}
           />
-          <button
-            type="submit"
-            disabled={isSubmitting || anyCapacityError()}
-            className="btn-primary"
-          >
-            {isSubmitting ? 'Saving…' : 'Save'}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={isSubmitting || isPreviewing || anyCapacityError()}
+              className="btn-primary"
+            >
+              {isSubmitting ? 'Saving…' : 'Save'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handlePreview()}
+              disabled={isSubmitting || isPreviewing || anyCapacityError()}
+              className="btn-secondary"
+            >
+              {isPreviewing ? 'Saving…' : 'Preview'}
+            </button>
+          </div>
         </form>
       ) : (
         <form
@@ -619,13 +646,23 @@ export function EditEventForm({ event }: EditEventFormProps) {
             onColorChange={setColorKey}
             onFontChange={setFontKey}
           />
-          <button
-            type="submit"
-            disabled={isSubmitting || anyCapacityError()}
-            className="btn-primary"
-          >
-            {isSubmitting ? 'Saving…' : 'Save'}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={isSubmitting || isPreviewing || anyCapacityError()}
+              className="btn-primary"
+            >
+              {isSubmitting ? 'Saving…' : 'Save'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handlePreview()}
+              disabled={isSubmitting || isPreviewing || anyCapacityError()}
+              className="btn-secondary"
+            >
+              {isPreviewing ? 'Saving…' : 'Preview'}
+            </button>
+          </div>
         </form>
       )}
 

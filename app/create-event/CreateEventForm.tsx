@@ -11,6 +11,11 @@ import { MarkdownEditor } from '@/components/MarkdownEditor';
 import { SlotCardActions } from '@/components/SlotCardActions';
 import { UnsavedChangesModal } from '@/components/UnsavedChangesModal';
 import { DEFAULT_COLOR_KEY, DEFAULT_FONT_KEY } from '@/data/themes';
+import {
+  createScheduledEvent,
+  createSimpleEvent,
+  createAvailabilityEvent,
+} from '@/app/actions/event-actions';
 
 type SignupType = 'scheduled' | 'simple' | 'availability' | 'template';
 
@@ -28,38 +33,6 @@ interface Template {
     end_time: string | null;
     instructions: string | null;
   }>;
-}
-
-function formatAvailabilityDateLabel(dateStr: string): string {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  if (!year || !month || !day) return dateStr;
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(year, month - 1, day));
-}
-
-function formatAvailabilityTimeLabel(timeStr: string): string {
-  const [hourRaw, minuteRaw] = timeStr.split(':').map(Number);
-  if (Number.isNaN(hourRaw) || Number.isNaN(minuteRaw)) return timeStr;
-  const suffix = hourRaw >= 12 ? 'PM' : 'AM';
-  const hour = hourRaw % 12 || 12;
-  return `${hour}:${String(minuteRaw).padStart(2, '0')} ${suffix}`;
-}
-
-function buildAvailabilitySlotLabel(slot: {
-  spot_date: string;
-  start_time?: string;
-  end_time?: string;
-}): string {
-  const dateLabel = formatAvailabilityDateLabel(slot.spot_date);
-  const start = slot.start_time?.trim();
-  const end = slot.end_time?.trim();
-  if (start && end) return `${dateLabel}, ${formatAvailabilityTimeLabel(start)} - ${formatAvailabilityTimeLabel(end)}`;
-  if (start) return `${dateLabel}, ${formatAvailabilityTimeLabel(start)}`;
-  return dateLabel;
 }
 
 function availabilitySlotUniqueKey(slot: {
@@ -598,62 +571,27 @@ export function CreateEventForm({
   const onSubmitScheduled = async (data: ScheduledFormData): Promise<boolean> => {
     setIsSubmitting(true);
     try {
-      const dates = data.slots.map((s) => s.spot_date).filter(Boolean) as string[];
-      const startDate = dates.length ? dates.reduce((a, b) => (a < b ? a : b)) : null;
-      const endDate = dates.length ? dates.reduce((a, b) => (a > b ? a : b)) : null;
-      const showSignups = data.show_signups ?? true;
-      const res = await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          organization_id: organizationId,
-          created_by: createdBy,
-          signup_type: 'scheduled',
-          title: data.title,
-          description: data.description || null,
-          location: data.location || null,
-          start_date: startDate ? `${startDate}T00:00:00Z` : null,
-          end_date: endDate ? `${endDate}T23:59:59Z` : null,
-          published: submitIntentRef.current === 'publish',
-          show_signups: showSignups,
-          theme: { colorKey, fontKey },
-          slots: data.slots.map((s) => {
-            const date = s.spot_date;
-            const startTimeStr = s.start_time?.trim();
-            const endTimeStr = s.end_time?.trim();
-            // Store times literally — no timezone conversion. Organizer enters 7:30, we store
-            // as 7:30 UTC so it displays as 7:30. Volunteers see the same time.
-            const toLiteralIso = (dateStr: string, timeStr: string): string => {
-              const [hh, mm] = timeStr.split(':').map((x) => parseInt(x, 10) || 0);
-              const padded = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-              return `${dateStr}T${padded}:00.000Z`;
-            };
-
-            return {
-              role_name: buildAvailabilitySlotLabel({
-                spot_date: date || '',
-                start_time: startTimeStr,
-                end_time: endTimeStr,
-              }),
-              role_description: s.instructions || null,
-              start_time:
-                date && startTimeStr
-                  ? toLiteralIso(date, startTimeStr)
-                  : date
-                    ? `${date}T00:00:00.000Z`
-                    : null,
-              end_time:
-                date && endTimeStr ? toLiteralIso(date, endTimeStr) : null,
-              capacity: s.capacity,
-              instructions: null,
-              comment_label: s.comment_label?.trim() || undefined,
-              comment_required: s.comment_required ?? false,
-            };
-          }),
-        }),
+      await createScheduledEvent({
+        organizationId,
+        createdBy,
+        published: submitIntentRef.current === 'publish',
+        colorKey,
+        fontKey,
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        show_signups: data.show_signups,
+        slots: data.slots.map((s) => ({
+          spot_date: s.spot_date,
+          role_name: s.role_name,
+          start_time: s.start_time,
+          end_time: s.end_time,
+          capacity: s.capacity,
+          instructions: s.instructions,
+          comment_label: s.comment_label,
+          comment_required: s.comment_required,
+        })),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Failed to create');
       if (posthog) {
         posthog.capture('signup_created', {
           signup_type: 'scheduled',
@@ -686,41 +624,25 @@ export function CreateEventForm({
   const onSubmitSimple = async (data: SimpleFormData): Promise<boolean> => {
     setIsSubmitting(true);
     try {
-      const dateVal = data.start_date?.trim();
-      const showSignups = data.show_signups ?? true;
-      const res = await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          organization_id: organizationId,
-          created_by: createdBy,
-          signup_type: 'simple',
-          title: data.title,
-          description: data.description || null,
-          location: data.location || null,
-          start_date: dateVal ? `${dateVal}T00:00:00Z` : null,
-          end_date: dateVal ? `${dateVal}T23:59:59Z` : null,
-          published: submitIntentRef.current === 'publish',
-          show_signups: showSignups,
-          theme: { colorKey, fontKey },
-          slots: data.slots.map((s) => ({
-            role_name: s.role_name,
-            role_description: s.role_description || null,
-            start_time: null,
-            end_time: null,
-            capacity: s.capacity,
-            instructions: null,
-            comment_label: s.comment_label?.trim() || undefined,
-            comment_required: s.comment_required ?? false,
-          })),
-        }),
+      await createSimpleEvent({
+        organizationId,
+        createdBy,
+        published: submitIntentRef.current === 'publish',
+        colorKey,
+        fontKey,
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        start_date: data.start_date,
+        show_signups: data.show_signups,
+        slots: data.slots.map((s) => ({
+          role_name: s.role_name,
+          role_description: s.role_description,
+          capacity: s.capacity,
+          comment_label: s.comment_label,
+          comment_required: s.comment_required,
+        })),
       });
-      const json = await res.json();
-      if (!res.ok) {
-        const msg = json.error || 'Failed to create';
-        const extra = json.details || json.code ? ` — ${JSON.stringify({ details: json.details, code: json.code })}` : '';
-        throw new Error(`${msg}${extra}`);
-      }
       if (posthog) {
         posthog.capture('signup_created', {
           signup_type: 'simple',
@@ -751,63 +673,27 @@ export function CreateEventForm({
   const onSubmitAvailability = async (data: AvailabilityFormData): Promise<boolean> => {
     setIsSubmitting(true);
     try {
-      const datedSlots = data.slots.filter((s) => s.spot_date);
-      const dates = datedSlots.map((s) => s.spot_date!).filter(Boolean);
-      const startDate = dates.length ? dates.reduce((a, b) => (a < b ? a : b)) : null;
-      const endDate = dates.length ? dates.reduce((a, b) => (a > b ? a : b)) : null;
-      const showSignups = data.show_signups ?? true;
-      const toLiteralIso = (dateStr: string, timeStr: string): string => {
-        const [hh, mm] = timeStr.split(':').map((x) => parseInt(x, 10) || 0);
-        const padded = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-        return `${dateStr}T${padded}:00.000Z`;
-      };
-      const res = await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          organization_id: organizationId,
-          created_by: createdBy,
-          signup_type: 'availability',
-          title: data.title,
-          description: data.description || null,
-          location: data.location || null,
-          start_date: startDate ? `${startDate}T00:00:00Z` : null,
-          end_date: endDate ? `${endDate}T23:59:59Z` : null,
-          published: submitIntentRef.current === 'publish',
-          show_signups: showSignups,
-          theme: { colorKey, fontKey },
-          slots: data.slots.map((s) => {
-            const date = s.spot_date?.trim();
-            const startTimeStr = s.start_time?.trim();
-            const endTimeStr = s.end_time?.trim();
-            return {
-              role_name: buildAvailabilitySlotLabel({
-                spot_date: date || '',
-                start_time: startTimeStr,
-                end_time: endTimeStr,
-              }),
-              role_description: s.instructions || null,
-              start_time:
-                date && startTimeStr
-                  ? toLiteralIso(date, startTimeStr)
-                  : date
-                    ? `${date}T00:00:00.000Z`
-                    : null,
-              end_time: date && endTimeStr ? toLiteralIso(date, endTimeStr) : null,
-              capacity: 9999,
-              instructions: null,
-              comment_label: undefined,
-              comment_required: false,
-            };
-          }),
-        }),
+      const { id } = await createAvailabilityEvent({
+        organizationId,
+        createdBy,
+        published: submitIntentRef.current === 'publish',
+        colorKey,
+        fontKey,
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        show_signups: data.show_signups,
+        slots: data.slots.map((s) => ({
+          spot_date: s.spot_date,
+          start_time: s.start_time,
+          end_time: s.end_time,
+          instructions: s.instructions,
+        })),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Failed to create poll');
       posthog?.capture('availability_poll_created', {
         slot_count: data.slots.length,
       });
-      router.push(`/dashboard/event/${json.id}/signups`);
+      router.push(`/dashboard/event/${id}/signups`);
       router.refresh();
       return true;
     } catch (err) {
