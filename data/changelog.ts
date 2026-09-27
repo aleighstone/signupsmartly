@@ -14,6 +14,27 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: 'September 27, 2026',
+    changes: [
+      {
+        type: 'new',
+        text: '**Live Preview**: A new Preview button on the create and edit pages saves your changes and opens the live signup page in a new tab.',
+      },
+      {
+        type: 'new',
+        text: '**New create signup wizard**: A new step-by-step flow for creating signups dramatically simplifies the creation process, taking you through one step at a time, and providing helpful examples throughout.',
+      },
+      {
+        type: 'improved',
+        text: '**Dashboard quick actions**: The ⋮ overflow menu is reordered and cleaner. Actions are now: View My Signups → Edit → Make a Copy → Archive → Delete. For archived signups, only the options that make sense are shown: View My Signups, Make a Copy, and Delete.',
+      },
+      {
+        type: 'improved',
+        text: '**Cleaner, more readable text throughout**: Standardized text sizes across the signups table, dashboard list, and coverage view. Primary content like event names, slot names, and signup timestamps is now displayed in charcoal instead of grey.',
+      },
+    ],
+  },
+  {
     date: 'May 14, 2026',
     changes: [
       {
