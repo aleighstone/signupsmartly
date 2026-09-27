@@ -271,8 +271,6 @@ export async function sendSignupReminder(params: {
   const { manageUrl, logoUrl, detailRows } =
     buildSignupEmailDetails({ signup, slot, event, linkEventTitleToSignupPage: true });
 
-  const isSimple = event.signup_type === 'simple';
-
   const subject = `Reminder: ${slot.role_name} — ${event.title}`;
 
   const { error } = await resend.emails.send({
