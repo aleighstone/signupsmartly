@@ -31,13 +31,13 @@ test.describe('Availability poll — create form (wizard)', () => {
     await expect(page.getByRole('heading', { name: /poll details/i })).toBeVisible();
   });
 
-  test('step 3 for availability poll shows "Proposed dates" slot builder', async ({ page }) => {
+  test('step 3 for availability poll shows the date options slot builder', async ({ page }) => {
     await page.goto('/create-event');
     await page.getByText('Availability poll').click();
     await page.getByRole('button', { name: /^next/i }).click();
     await page.getByPlaceholder(/Team Retreat Dates/i).fill('Test Poll');
     await page.getByRole('button', { name: /^next/i }).click();
-    await expect(page.getByText(/proposed dates/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: /add date options/i })).toBeVisible();
   });
 
   test('capacity field is hidden on availability poll step 3', async ({ page }) => {
@@ -90,6 +90,9 @@ test.describe('Availability poll — create form (wizard)', () => {
     await page.getByRole('button', { name: /^next/i }).click();
 
     await page.getByRole('button', { name: /save as draft/i }).click();
+    // SaveAsTemplateModal appears after saving — dismiss it to land on dashboard
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10_000 });
+    await page.getByRole('button', { name: /no thanks/i }).click();
     await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
     await expect(page.getByText(title)).toBeVisible();
   });
@@ -195,7 +198,7 @@ test.describe('Availability poll — organizer View Signups page', () => {
     }
     await page.goto(`/dashboard/event/${availabilityEventId}/signups`);
     await expect(page.getByRole('link', { name: /back to dashboard/i })).toBeVisible();
-    await expect(page.getByText(/responses/i)).toBeVisible();
+    await expect(page.getByText(/responses/i).first()).toBeVisible();
     await expect(page.getByText(/coverage/i)).not.toBeVisible();
   });
 

@@ -83,7 +83,7 @@ test.describe('Dashboard', () => {
     await page.goto('/dashboard');
     await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
     await dashboardEventRow(page, eventId)
-      .getByRole('link', { name: /^edit$/i })
+      .getByRole('link', { name: /edit signup/i })
       .click();
     await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/edit`), { timeout: 10_000 });
 
@@ -119,8 +119,10 @@ test.describe('Draft mode', () => {
     await page.getByPlaceholder(/Chocolate chip cookies/i).first().fill('Test item');
     await page.getByRole('button', { name: /^next/i }).click();
 
-    // Step 4: save as draft — wizard goes straight to dashboard
+    // Step 4: save as draft — opens modal, dismiss to go to dashboard
     await page.getByRole('button', { name: /save as draft/i }).click();
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10_000 });
+    await page.getByRole('button', { name: /no thanks/i }).click();
     await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
     await expect(page.getByText('Draft').first()).toBeVisible();
   });
@@ -135,8 +137,8 @@ test.describe('View My Signups page', () => {
     }
     await page.goto(`/dashboard/event/${eventId}/signups`);
     await expect(page.getByRole('link', { name: /back to dashboard/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /copy signup url/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /edit event/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /copy url/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /^edit$/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /export/i })).toBeVisible();
     await expect(page.getByText(/coverage/i).first()).toBeVisible();
     await expect(page.getByRole('table')).toBeVisible();

@@ -88,7 +88,7 @@ test.describe('Create signup wizard — navigation', () => {
 
     // Step 4 — finishing touches
     await expect(page.getByRole('heading', { name: /finishing touches/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /^publish$/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /publish signup/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /save as draft/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /^preview$/i })).toBeVisible();
   });
@@ -111,8 +111,10 @@ test.describe('Create signup wizard — save as draft', () => {
     await page.getByPlaceholder(/Chocolate chip cookies/i).first().fill('Test spot');
     await page.getByRole('button', { name: /^next/i }).click();
 
-    // Step 4: save as draft
+    // Step 4: save as draft — opens "saved as draft" modal, then dismiss to go to dashboard
     await page.getByRole('button', { name: /save as draft/i }).click();
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10_000 });
+    await page.getByRole('button', { name: /no thanks/i }).click();
 
     await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
     await expect(page.getByText(title)).toBeVisible();
