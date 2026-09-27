@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { ColorTheme, FontTheme } from '@/data/themes';
+import type { ColorTheme, FontTheme as _FontTheme } from '@/data/themes';
 import {
   colorThemes,
   fontFamilyCss,

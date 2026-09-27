@@ -999,7 +999,7 @@ function Step4Publish({
   scheduledForm,
   simpleForm,
   availabilityForm,
-  scheduledMode,
+  scheduledMode: _scheduledMode,
   colorKey,
   fontKey,
   onColorChange,
