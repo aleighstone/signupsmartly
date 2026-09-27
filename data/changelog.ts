@@ -32,6 +32,10 @@ export const changelog: Release[] = [
         type: 'improved',
         text: '**Cleaner, more readable text throughout**: Standardized text sizes across the signups table, dashboard list, and coverage view. Primary content like event names, slot names, and signup timestamps is now displayed in charcoal instead of grey.',
       },
+      {
+        type: 'improved',
+        text: '**Reminder emails**: Reminder emails now include a link to the event so volunteers can easily pull up their signup details.',
+      },
     ],
   },
   {
