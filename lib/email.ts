@@ -124,7 +124,7 @@ export async function sendSignupConfirmation(params: {
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: signup.email!,
-    subject: `You're signed up: ${slot.role_name} — ${event.title}`,
+    subject: `Signed up for ${event.title} — ${slot.role_name}`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -273,16 +273,7 @@ export async function sendSignupReminder(params: {
 
   const isSimple = event.signup_type === 'simple';
 
-  const subject = isSimple
-    ? `SignupSmartly Reminder: ${slot.role_name} for ${event.title}`
-    : `SignupSmartly Reminder: ${slot.role_name} on ${
-        slot.start_time
-          ? format(
-              new Date(slot.start_time),
-              'MMMM d, yyyy'
-            )
-          : event.title
-      }`;
+  const subject = `Reminder: ${slot.role_name} — ${event.title}`;
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
