@@ -90,10 +90,8 @@ test.describe('Availability poll — create form (wizard)', () => {
     await page.getByRole('button', { name: /^next/i }).click();
 
     await page.getByRole('button', { name: /save as draft/i }).click();
-    // SaveAsTemplateModal appears after saving — dismiss it to land on dashboard
-    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10_000 });
-    await page.getByRole('button', { name: /no thanks/i }).click();
-    await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
+    // Availability poll draft save navigates directly to the event's signups page (no template modal)
+    await page.waitForURL(/\/dashboard\/event\/.*\/signups/, { timeout: 20_000 });
     await expect(page.getByText(title)).toBeVisible();
   });
 });
@@ -223,7 +221,7 @@ test.describe('Availability poll — organizer View Signups page', () => {
       return;
     }
     await page.goto(`/dashboard/event/${availabilityEventId}/signups`);
-    await expect(page.getByText(/responses total from \d+ people/i)).toBeVisible();
+    await expect(page.getByText(/responses total from \d+ people/i).first()).toBeVisible();
   });
 
   test('export button is present', async ({ page }) => {

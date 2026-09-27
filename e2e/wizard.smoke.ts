@@ -117,7 +117,7 @@ test.describe('Create signup wizard — save as draft', () => {
     await page.getByRole('button', { name: /no thanks/i }).click();
 
     await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
-    await expect(page.getByText(title)).toBeVisible();
+    await expect(page.getByText(title).first()).toBeVisible();
   });
 });
 

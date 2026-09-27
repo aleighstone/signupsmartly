@@ -82,9 +82,8 @@ test.describe('Dashboard', () => {
 
     await page.goto('/dashboard');
     await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
-    await dashboardEventRow(page, eventId)
-      .getByRole('link', { name: /edit signup/i })
-      .click();
+    // Use direct href selector to avoid strict mode from dashboardEventRow matching an outer container
+    await page.locator(`a[href="/dashboard/event/${eventId}/edit"]`).first().click();
     await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/edit`), { timeout: 10_000 });
 
     await page.goto('/dashboard');
