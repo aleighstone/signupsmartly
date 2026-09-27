@@ -24,117 +24,91 @@ import { test, expect } from '@playwright/test';
 
 const availabilityEventId = process.env.E2E_TEST_AVAILABILITY_EVENT_ID;
 
-/** Textarea used by the create form — name attr varies by active type. */
-const createDescriptionTextarea = (page: any, type: 'scheduled' | 'simple' | 'availability') =>
-  page.locator(`textarea[name="signupsmartly-event-description-${type}"]`);
-
 /** Textarea used by the edit form (single name). */
 const editDescriptionTextarea = (page: any) =>
   page.locator('textarea[name="signupsmartly-event-description"]');
 
-const signupTypeSelect = (page: any) =>
-  page.getByRole('combobox', { name: /signup type/i });
-
 
 // ─── organizer tests (requires auth) ──────────────────────────────────────────
 
-test.describe('Availability poll — create form', () => {
-  test('availability poll is a selectable signup type', async ({ page }) => {
+test.describe('Availability poll — create form (wizard)', () => {
+  test('availability poll is a selectable type on the wizard', async ({ page }) => {
     await page.goto('/create-event');
-    await expect(signupTypeSelect(page)).toBeVisible();
-    // The select should include an "availability" option
-    const options = await signupTypeSelect(page).locator('option').allTextContents();
-    expect(options.some((o: string) => /availability/i.test(o))).toBe(true);
+    await expect(page.getByText('Availability poll')).toBeVisible();
   });
 
-  test('switching to availability type shows "Proposed dates" slot builder', async ({ page }) => {
+  test('selecting availability poll and advancing shows "Poll details" heading', async ({ page }) => {
     await page.goto('/create-event');
-    await signupTypeSelect(page).selectOption('availability');
-    // Slot section label should reflect dates, not roles/items
+    await page.getByText('Availability poll').click();
+    await page.getByRole('button', { name: /^next/i }).click();
+    await expect(page.getByRole('heading', { name: /poll details/i })).toBeVisible();
+  });
+
+  test('step 3 for availability poll shows "Proposed dates" slot builder', async ({ page }) => {
+    await page.goto('/create-event');
+    await page.getByText('Availability poll').click();
+    await page.getByRole('button', { name: /^next/i }).click();
+    await page.getByPlaceholder(/Team Retreat Dates/i).fill('Test Poll');
+    await page.getByRole('button', { name: /^next/i }).click();
     await expect(page.getByText(/proposed dates/i)).toBeVisible();
   });
 
-  test('capacity field is hidden for availability type', async ({ page }) => {
+  test('capacity field is hidden on availability poll step 3', async ({ page }) => {
     await page.goto('/create-event');
-    await signupTypeSelect(page).selectOption('availability');
-    // "How many do you need?" / capacity input should not be present
+    await page.getByText('Availability poll').click();
+    await page.getByRole('button', { name: /^next/i }).click();
+    await page.getByPlaceholder(/Team Retreat Dates/i).fill('Test Poll');
+    await page.getByRole('button', { name: /^next/i }).click();
     await expect(page.getByLabel(/how many do you need/i)).not.toBeVisible();
   });
 
-  test('reminder settings section is hidden for availability type', async ({ page }) => {
+  test('description textarea is editable on availability poll step 2', async ({ page }) => {
     await page.goto('/create-event');
-    await signupTypeSelect(page).selectOption('availability');
-    // Reminder section should not be rendered
-    await expect(page.getByText(/send reminders/i)).not.toBeVisible();
-  });
-
-  test('submit button copy is "Create poll" for availability type', async ({ page }) => {
-    await page.goto('/create-event');
-    await signupTypeSelect(page).selectOption('availability');
-    await expect(page.getByRole('button', { name: /^create poll$/i })).toBeVisible();
-  });
-
-  // ── Historical failure: description broken after type switch ────────────────
-
-  test('description textarea is editable when availability type is active', async ({ page }) => {
-    await page.goto('/create-event');
-    await signupTypeSelect(page).selectOption('availability');
-    const textarea = createDescriptionTextarea(page, 'availability');
+    await page.getByText('Availability poll').click();
+    await page.getByRole('button', { name: /^next/i }).click();
+    const textarea = page.locator('textarea[name="wizard-availability-description"]');
     await expect(textarea).toBeVisible();
     const text = 'Availability description test';
     await textarea.fill(text);
     await expect(textarea).toHaveValue(text);
   });
 
-  test('description value survives switching to availability and back', async ({ page }) => {
+  test('description value persists when navigating back and forward in the wizard', async ({ page }) => {
+    const description = 'Description that should persist';
     await page.goto('/create-event');
+    await page.getByText('Availability poll').click();
+    await page.getByRole('button', { name: /^next/i }).click();
 
-    const initial = 'Scheduled before switch';
-    const afterSwitch = 'Edited while in availability mode';
-    const backToScheduled = 'Final value after switch back';
+    const textarea = page.locator('textarea[name="wizard-availability-description"]');
+    await textarea.fill(description);
+    await expect(textarea).toHaveValue(description);
 
-    // Start in scheduled
-    await expect(createDescriptionTextarea(page, 'scheduled')).toBeVisible();
-    await createDescriptionTextarea(page, 'scheduled').fill(initial);
+    // Navigate back to step 1 and forward again
+    await page.getByRole('button', { name: /^back$/i }).click();
+    await page.getByRole('button', { name: /^next/i }).click();
 
-    // Switch to availability — value should carry over
-    await signupTypeSelect(page).selectOption('availability');
-    await expect(createDescriptionTextarea(page, 'availability')).toBeVisible();
-    await expect(createDescriptionTextarea(page, 'availability')).toHaveValue(initial);
-
-    // Edit in availability mode
-    await createDescriptionTextarea(page, 'availability').fill(afterSwitch);
-    await expect(createDescriptionTextarea(page, 'availability')).toHaveValue(afterSwitch);
-
-    // Switch back to scheduled — value should still be present
-    await signupTypeSelect(page).selectOption('scheduled');
-    await expect(createDescriptionTextarea(page, 'scheduled')).toBeVisible();
-    await expect(createDescriptionTextarea(page, 'scheduled')).toHaveValue(afterSwitch);
-
-    // And it should still be editable
-    await createDescriptionTextarea(page, 'scheduled').fill(backToScheduled);
-    await expect(createDescriptionTextarea(page, 'scheduled')).toHaveValue(backToScheduled);
+    await expect(page.locator('textarea[name="wizard-availability-description"]')).toHaveValue(description);
   });
 
-  test('can save a draft availability poll with a description', async ({ page }) => {
+  test('can save a draft availability poll via wizard', async ({ page }) => {
     const title = `Playwright Availability Draft ${Date.now()}`;
-    const description = 'Poll description saved as draft';
 
     await page.goto('/create-event');
-    await signupTypeSelect(page).selectOption('availability');
-    await page.getByLabel(/title/i).first().fill(title);
-    await createDescriptionTextarea(page, 'availability').fill(description);
-    // Add at least one proposed date slot
-    await page.locator('input[type="date"]').first().fill('2026-06-07');
+    // Step 1: select availability poll
+    await page.getByText('Availability poll').click();
+    await page.getByRole('button', { name: /^next/i }).click();
 
+    // Step 2: fill title
+    await page.getByPlaceholder(/Team Retreat Dates/i).fill(title);
+    await page.getByRole('button', { name: /^next/i }).click();
+
+    // Step 3: add at least one proposed date
+    await page.locator('input[type="date"]').first().fill('2027-06-07');
+    await page.getByRole('button', { name: /^next/i }).click();
+
+    // Step 4: save as draft — lands on dashboard
     await page.getByRole('button', { name: /save as draft/i }).click();
-    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 15_000 });
-    await expect(
-      page.getByRole('heading', { name: new RegExp(`${title} created!`, 'i') })
-    ).toBeVisible();
-
-    await page.getByRole('button', { name: /no, i.?m good/i }).click();
-    await page.waitForURL(/dashboard/, { timeout: 15_000 });
+    await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
     await expect(page.getByText(title)).toBeVisible();
   });
 });
