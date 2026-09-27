@@ -162,7 +162,10 @@ test.describe('Availability poll — edit form', () => {
     const updatedDescription = `Playwright availability description ${Date.now()}`;
 
     try {
-      await description.fill(updatedDescription);
+      // Use keyboard input instead of fill() to trigger React's onChange on the controlled textarea
+      await description.click();
+      await page.keyboard.press('Control+a');
+      await page.keyboard.type(updatedDescription);
       await expect(description).toHaveValue(updatedDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
       await page.waitForURL(
@@ -173,7 +176,10 @@ test.describe('Availability poll — edit form', () => {
       await expect(editDescriptionTextarea(page)).toHaveValue(updatedDescription);
     } finally {
       await page.goto(`/dashboard/event/${availabilityEventId}/edit`);
-      await editDescriptionTextarea(page).fill(originalDescription);
+      // Keyboard input to ensure React's onChange fires for the controlled textarea
+      await editDescriptionTextarea(page).click();
+      await page.keyboard.press('Control+a');
+      await page.keyboard.type(originalDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
       await page
         .waitForURL(

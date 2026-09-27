@@ -34,7 +34,8 @@ test.describe('Dashboard', () => {
 
   test('shows Create Signup button in nav', async ({ page }) => {
     await page.goto('/dashboard');
-    await expect(page.getByRole('navigation').getByRole('link', { name: /^create signup$/i })).toBeVisible();
+    // Nav link shows "Create" on narrow viewports and "Create Signup" on wider ones — match either
+    await expect(page.getByRole('navigation').getByRole('link', { name: /create/i }).first()).toBeVisible();
   });
 
 
@@ -82,8 +83,9 @@ test.describe('Dashboard', () => {
 
     await page.goto('/dashboard');
     await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
-    // Use direct href selector to avoid strict mode from dashboardEventRow matching an outer container
-    await page.locator(`a[href="/dashboard/event/${eventId}/edit"]`).first().click();
+    // Open the three-dot menu and click Edit (the edit link only exists in the DOM when the menu is open)
+    await dashboardMenuButtonForEvent(page, eventId).click();
+    await page.getByRole('menuitem', { name: /^edit$/i }).click();
     await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/edit`), { timeout: 10_000 });
 
     await page.goto('/dashboard');
@@ -123,7 +125,8 @@ test.describe('Draft mode', () => {
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10_000 });
     await page.getByRole('button', { name: /no thanks/i }).click();
     await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
-    await expect(page.getByText('Draft').first()).toBeVisible();
+    // Use exact: true to match the 'Draft' badge pill, not event titles that contain "Draft"
+    await expect(page.getByText('Draft', { exact: true }).first()).toBeVisible();
   });
 });
 
@@ -178,7 +181,9 @@ test.describe('Edit signup page', () => {
       return;
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
-    await page.getByLabel(/title/i).first().fill('Playwright Dirty Edit Test');
+    // The title input uses form.register('title') which adds name="title" but no id,
+    // so getByLabel doesn't work — use the name attribute directly
+    await page.locator('input[name="title"]').fill('Playwright Dirty Edit Test');
     await page.getByRole('button', { name: /← back to signups/i }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.getByText(/unsaved changes/i)).toBeVisible();
@@ -191,7 +196,7 @@ test.describe('Edit signup page', () => {
       return;
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
-    await page.getByLabel(/title/i).first().fill('Playwright Discard Test');
+    await page.locator('input[name="title"]').fill('Playwright Discard Test');
     await page.getByRole('button', { name: /← back to signups/i }).click();
     await page.getByRole('dialog').getByRole('button', { name: /discard/i }).click();
     await expect(page).toHaveURL(/signups/);
@@ -204,7 +209,7 @@ test.describe('Edit signup page', () => {
       return;
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
-    await page.getByLabel(/title/i).first().fill('Playwright Cancel Test');
+    await page.locator('input[name="title"]').fill('Playwright Cancel Test');
     await page.getByRole('button', { name: /← back to signups/i }).click();
     // Close via Escape key (backdrop button is obscured by the modal card)
     await page.keyboard.press('Escape');
@@ -268,7 +273,10 @@ test.describe('Edit signup page', () => {
     const updatedDescription = `Playwright persisted description ${Date.now()}`;
 
     try {
-      await description.fill(updatedDescription);
+      // Use keyboard input instead of fill() to trigger React's onChange on the controlled textarea
+      await description.click();
+      await page.keyboard.press('Control+a');
+      await page.keyboard.type(updatedDescription);
       await expect(description).toHaveValue(updatedDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
       await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), {
@@ -279,7 +287,10 @@ test.describe('Edit signup page', () => {
       await expect(editDescriptionTextarea(page)).toHaveValue(updatedDescription);
     } finally {
       await page.goto(`/dashboard/event/${eventId}/edit`);
-      await editDescriptionTextarea(page).fill(originalDescription);
+      // Keyboard input to ensure React's onChange fires for the controlled textarea
+      await editDescriptionTextarea(page).click();
+      await page.keyboard.press('Control+a');
+      await page.keyboard.type(originalDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
       await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), {
         timeout: 15_000,
@@ -322,7 +333,8 @@ test.describe('Draft event', () => {
     await page.goto('/dashboard');
     // Scope to the specific draft card to avoid matching other events
     await expect(dashboardSignupsLinkForEvent(page, draftId)).toBeVisible();
-    await expect(page.getByText('Draft').first()).toBeVisible();
+    // Use exact: true to match the 'Draft' badge pill, not event titles that contain "Draft"
+    await expect(page.getByText('Draft', { exact: true }).first()).toBeVisible();
     await expect(
       page.getByRole('button', { name: /not yet published/i }).first()
     ).toBeDisabled();
@@ -362,7 +374,8 @@ test.describe('Copy signup', () => {
     // Should navigate back to the dashboard (copy lands there as a new draft)
     await page.waitForURL(/\/dashboard$/, { timeout: 10_000 });
     // At least one Draft pill confirms the copy is present
-    await expect(page.getByText('Draft').first()).toBeVisible();
+    // Use exact: true to match the 'Draft' badge pill, not event titles containing "Draft"
+    await expect(page.getByText('Draft', { exact: true }).first()).toBeVisible();
   });
 });
 
@@ -432,8 +445,10 @@ test.describe('Archive signup', () => {
 test.describe('Dashboard sorting', () => {
   test('event sort persists after navigation within the session', async ({ page }) => {
     await page.goto('/dashboard');
+    // Wait for full hydration — sort buttons only render after React mounts and data loads
+    await page.waitForLoadState('networkidle');
     const eventHeader = page.getByRole('button', { name: /event/i });
-    await expect(eventHeader).toBeVisible();
+    await expect(eventHeader).toBeVisible({ timeout: 10_000 });
     await eventHeader.click(); // asc
     await eventHeader.click(); // desc
 
