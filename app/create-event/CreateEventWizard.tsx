@@ -999,7 +999,6 @@ function Step4Publish({
   scheduledForm,
   simpleForm,
   availabilityForm,
-  scheduledMode: _scheduledMode,
   colorKey,
   fontKey,
   onColorChange,
@@ -1014,7 +1013,6 @@ function Step4Publish({
   scheduledForm: ReturnType<typeof useForm<ScheduledFormData>>;
   simpleForm: ReturnType<typeof useForm<SimpleFormData>>;
   availabilityForm: ReturnType<typeof useForm<AvailabilityFormData>>;
-  scheduledMode: ScheduledMode;
   colorKey: string;
   fontKey: string;
   onColorChange: (key: string) => void;
@@ -1602,7 +1600,6 @@ export function CreateEventWizard({ organizationId, createdBy }: CreateEventWiza
           scheduledForm={scheduledForm}
           simpleForm={simpleForm}
           availabilityForm={availabilityForm}
-          scheduledMode={scheduledMode}
           colorKey={colorKey}
           fontKey={fontKey}
           onColorChange={setColorKey}
