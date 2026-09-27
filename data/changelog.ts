@@ -39,6 +39,15 @@ export const changelog: Release[] = [
     ],
   },
   {
+    date: 'September 9, 2026',
+    changes: [
+      {
+        type: 'fixed',
+        text: '**Confirmation and reminder emails**: Scheduled signups now show the correct slot date in confirmation and reminder emails instead of the event start date.',
+      },
+    ],
+  },
+  {
     date: 'May 14, 2026',
     changes: [
       {
