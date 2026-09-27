@@ -86,7 +86,7 @@ export default defineConfig({
     // Availability poll — organizer-side tests (authenticated)
     {
       name: 'availability-organizer',
-      testMatch: /availability\.smoke\.ts/,
+      testMatch: /availability-organizer\.smoke\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'e2e/.auth/organizer.json',
@@ -97,7 +97,7 @@ export default defineConfig({
     // Availability poll — public/volunteer-side tests (no auth)
     {
       name: 'availability-volunteer',
-      testMatch: /availability\.smoke\.ts/,
+      testMatch: /availability-volunteer\.smoke\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
 
