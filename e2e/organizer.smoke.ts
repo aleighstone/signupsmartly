@@ -83,10 +83,13 @@ test.describe('Dashboard', () => {
 
     await page.goto('/dashboard');
     await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
-    // Open the three-dot menu and click Edit (the edit link only exists in the DOM when the menu is open)
+    // Open the three-dot menu and click Edit (the edit link only exists in the DOM when the menu is open).
+    // waitForURL must be set up BEFORE the click because Next.js prefetching makes navigation near-instant.
     await dashboardMenuButtonForEvent(page, eventId).click();
-    await page.getByRole('menuitem', { name: /^edit$/i }).click();
-    await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/edit`), { timeout: 10_000 });
+    await Promise.all([
+      page.waitForURL(new RegExp(`/dashboard/event/${eventId}/edit`), { timeout: 10_000 }),
+      page.getByRole('menuitem', { name: /^edit$/i }).click(),
+    ]);
 
     await page.goto('/dashboard');
     await dashboardSignupsLinkForEvent(page, eventId).click();
@@ -125,8 +128,10 @@ test.describe('Draft mode', () => {
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10_000 });
     await page.getByRole('button', { name: /no thanks/i }).click();
     await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
-    // Use exact: true to match the 'Draft' badge pill, not event titles that contain "Draft"
-    await expect(page.getByText('Draft', { exact: true }).first()).toBeVisible();
+    // Pick only visible Draft badges — on mobile the desktop table is hidden (hidden md:block)
+    // so .first() on the full DOM picks the hidden span. Use :visible to get whichever badge
+    // is rendered at the current viewport width.
+    await expect(page.locator('span:visible').filter({ hasText: /^Draft$/ }).first()).toBeVisible();
   });
 });
 
@@ -181,9 +186,14 @@ test.describe('Edit signup page', () => {
       return;
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
-    // The title input uses form.register('title') which adds name="title" but no id,
-    // so getByLabel doesn't work — use the name attribute directly
-    await page.locator('input[name="title"]').fill('Playwright Dirty Edit Test');
+    // fill() alone doesn't trigger react-hook-form's isDirty because React intercepts the
+    // property setter. Use the native HTMLInputElement setter so React sees it as user input.
+    await page.evaluate(() => {
+      const el = document.querySelector('input[name="title"]') as HTMLInputElement;
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(el, 'Playwright Dirty Edit Test');
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     await page.getByRole('button', { name: /← back to signups/i }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.getByText(/unsaved changes/i)).toBeVisible();
@@ -196,7 +206,12 @@ test.describe('Edit signup page', () => {
       return;
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
-    await page.locator('input[name="title"]').fill('Playwright Discard Test');
+    await page.evaluate(() => {
+      const el = document.querySelector('input[name="title"]') as HTMLInputElement;
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(el, 'Playwright Discard Test');
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     await page.getByRole('button', { name: /← back to signups/i }).click();
     await page.getByRole('dialog').getByRole('button', { name: /discard/i }).click();
     await expect(page).toHaveURL(/signups/);
@@ -209,7 +224,12 @@ test.describe('Edit signup page', () => {
       return;
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
-    await page.locator('input[name="title"]').fill('Playwright Cancel Test');
+    await page.evaluate(() => {
+      const el = document.querySelector('input[name="title"]') as HTMLInputElement;
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(el, 'Playwright Cancel Test');
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     await page.getByRole('button', { name: /← back to signups/i }).click();
     // Close via Escape key (backdrop button is obscured by the modal card)
     await page.keyboard.press('Escape');
@@ -272,11 +292,22 @@ test.describe('Edit signup page', () => {
     const originalDescription = await description.inputValue();
     const updatedDescription = `Playwright persisted description ${Date.now()}`;
 
+    // Helper: set textarea value via the native HTMLTextAreaElement setter so React's
+    // synthetic onChange fires and react-hook-form's getValues() returns the updated value.
+    // fill() sets the DOM property through React's override which skips the change event;
+    // keyboard.type() doesn't correctly replace selections in controlled textareas.
+    const setDescription = async (value: string) => {
+      await page.evaluate((v) => {
+        const el = document.querySelector(
+          'textarea[name="signupsmartly-event-description"]'
+        ) as HTMLTextAreaElement;
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(el, v);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }, value);
+    };
+
     try {
-      // Use keyboard input instead of fill() to trigger React's onChange on the controlled textarea
-      await description.click();
-      await page.keyboard.press('Control+a');
-      await page.keyboard.type(updatedDescription);
+      await setDescription(updatedDescription);
       await expect(description).toHaveValue(updatedDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
       await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), {
@@ -287,10 +318,7 @@ test.describe('Edit signup page', () => {
       await expect(editDescriptionTextarea(page)).toHaveValue(updatedDescription);
     } finally {
       await page.goto(`/dashboard/event/${eventId}/edit`);
-      // Keyboard input to ensure React's onChange fires for the controlled textarea
-      await editDescriptionTextarea(page).click();
-      await page.keyboard.press('Control+a');
-      await page.keyboard.type(originalDescription);
+      await setDescription(originalDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
       await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), {
         timeout: 15_000,
@@ -333,8 +361,10 @@ test.describe('Draft event', () => {
     await page.goto('/dashboard');
     // Scope to the specific draft card to avoid matching other events
     await expect(dashboardSignupsLinkForEvent(page, draftId)).toBeVisible();
-    // Use exact: true to match the 'Draft' badge pill, not event titles that contain "Draft"
-    await expect(page.getByText('Draft', { exact: true }).first()).toBeVisible();
+    // Use :visible to pick only the badge rendered at the current viewport.
+    // The desktop table container is display:none on mobile (hidden md:block), so getByText.first()
+    // would resolve to the hidden desktop span. span:visible matches only the visible badge.
+    await expect(page.locator('span:visible').filter({ hasText: /^Draft$/ }).first()).toBeVisible();
     await expect(
       page.getByRole('button', { name: /not yet published/i }).first()
     ).toBeDisabled();
@@ -373,9 +403,9 @@ test.describe('Copy signup', () => {
     await page.getByRole('menuitem', { name: /^make a copy$/i }).click();
     // Should navigate back to the dashboard (copy lands there as a new draft)
     await page.waitForURL(/\/dashboard$/, { timeout: 10_000 });
-    // At least one Draft pill confirms the copy is present
-    // Use exact: true to match the 'Draft' badge pill, not event titles containing "Draft"
-    await expect(page.getByText('Draft', { exact: true }).first()).toBeVisible();
+    // At least one Draft pill confirms the copy is present.
+    // Use span:visible to avoid picking the desktop table's hidden Draft span on mobile.
+    await expect(page.locator('span:visible').filter({ hasText: /^Draft$/ }).first()).toBeVisible();
   });
 });
 
@@ -444,6 +474,12 @@ test.describe('Archive signup', () => {
 
 test.describe('Dashboard sorting', () => {
   test('event sort persists after navigation within the session', async ({ page }) => {
+    // Sort column header buttons only exist at md+ breakpoints (≥768px).
+    // Mobile uses a <select> combobox instead — this test covers the desktop sort-button UX only.
+    if ((page.viewportSize()?.width ?? 1280) < 768) {
+      test.skip(true, 'Sort header buttons not rendered at mobile viewport — combobox used instead');
+      return;
+    }
     await page.goto('/dashboard');
     // Wait for full hydration — sort buttons only render after React mounts and data loads
     await page.waitForLoadState('networkidle');

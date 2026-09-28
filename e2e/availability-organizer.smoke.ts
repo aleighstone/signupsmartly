@@ -161,11 +161,22 @@ test.describe('Availability poll — edit form', () => {
     const originalDescription = await description.inputValue();
     const updatedDescription = `Playwright availability description ${Date.now()}`;
 
+    // Helper: set the description textarea value via the native setter so React's synthetic
+    // onChange fires and react-hook-form's getValues() returns the correct value at save time.
+    const SELECTOR = 'textarea[name="signupsmartly-event-description"]';
+    const setDescription = async (value: string) => {
+      await page.evaluate(
+        ({ selector, v }) => {
+          const el = document.querySelector(selector) as HTMLTextAreaElement;
+          Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(el, v);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        },
+        { selector: SELECTOR, v: value }
+      );
+    };
+
     try {
-      // Use keyboard input instead of fill() to trigger React's onChange on the controlled textarea
-      await description.click();
-      await page.keyboard.press('Control+a');
-      await page.keyboard.type(updatedDescription);
+      await setDescription(updatedDescription);
       await expect(description).toHaveValue(updatedDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
       await page.waitForURL(
@@ -176,10 +187,7 @@ test.describe('Availability poll — edit form', () => {
       await expect(editDescriptionTextarea(page)).toHaveValue(updatedDescription);
     } finally {
       await page.goto(`/dashboard/event/${availabilityEventId}/edit`);
-      // Keyboard input to ensure React's onChange fires for the controlled textarea
-      await editDescriptionTextarea(page).click();
-      await page.keyboard.press('Control+a');
-      await page.keyboard.type(originalDescription);
+      await setDescription(originalDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
       await page
         .waitForURL(
