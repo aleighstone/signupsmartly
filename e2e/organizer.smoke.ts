@@ -26,6 +26,24 @@ const dashboardMenuButtonForEvent = (page: any, eventId: string) =>
 const editDescriptionTextarea = (page: any) =>
   page.locator('textarea[name="signupsmartly-event-description"]');
 
+/**
+ * Wait for React to hydrate a specific element before interacting with it via
+ * page.evaluate(). On slower emulated devices (e.g., mobile-organizer) the 'load'
+ * event fires while React is still executing its hydration pass, so native setter
+ * calls made immediately after page.goto() may dispatch events before React's
+ * synthetic event handlers are attached. Checking for the __reactFiber$ key
+ * confirms hydration has completed for that element.
+ */
+const waitForReactHydration = (page: any, selector: string) =>
+  page.waitForFunction(
+    (sel: string) => {
+      const el = document.querySelector(sel);
+      return el != null && Object.keys(el).some((k) => k.startsWith('__react'));
+    },
+    selector,
+    { timeout: 10_000 }
+  );
+
 test.describe('Dashboard', () => {
   test('loads and shows Your Signups', async ({ page }) => {
     await page.goto('/dashboard');
@@ -84,12 +102,16 @@ test.describe('Dashboard', () => {
     await page.goto('/dashboard');
     await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
     // Open the three-dot menu and click Edit (the edit link only exists in the DOM when the menu is open).
-    // waitForURL must be set up BEFORE the click because Next.js prefetching makes navigation near-instant.
+    // Register waitForURL BEFORE the click so we don't race the navigation.
+    // Use waitUntil:'commit' (URL changed + headers received) instead of the default 'load',
+    // because Next.js SPA navigations don't re-fire the 'load' event.
     await dashboardMenuButtonForEvent(page, eventId).click();
-    await Promise.all([
-      page.waitForURL(new RegExp(`/dashboard/event/${eventId}/edit`), { timeout: 10_000 }),
-      page.getByRole('menuitem', { name: /^edit$/i }).click(),
-    ]);
+    const editNav = page.waitForURL(
+      new RegExp(`/dashboard/event/${eventId}/edit`),
+      { timeout: 10_000, waitUntil: 'commit' }
+    );
+    await page.getByRole('menuitem', { name: /^edit$/i }).click();
+    await editNav;
 
     await page.goto('/dashboard');
     await dashboardSignupsLinkForEvent(page, eventId).click();
@@ -188,6 +210,9 @@ test.describe('Edit signup page', () => {
     await page.goto(`/dashboard/event/${eventId}/edit`);
     // fill() alone doesn't trigger react-hook-form's isDirty because React intercepts the
     // property setter. Use the native HTMLInputElement setter so React sees it as user input.
+    // Wait for React to hydrate the input before dispatching events — on mobile emulation
+    // the 'load' event fires before React finishes its hydration pass.
+    await waitForReactHydration(page, 'input[name="title"]');
     await page.evaluate(() => {
       const el = document.querySelector('input[name="title"]') as HTMLInputElement;
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(el, 'Playwright Dirty Edit Test');
@@ -206,6 +231,7 @@ test.describe('Edit signup page', () => {
       return;
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
+    await waitForReactHydration(page, 'input[name="title"]');
     await page.evaluate(() => {
       const el = document.querySelector('input[name="title"]') as HTMLInputElement;
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(el, 'Playwright Discard Test');
@@ -224,6 +250,7 @@ test.describe('Edit signup page', () => {
       return;
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
+    await waitForReactHydration(page, 'input[name="title"]');
     await page.evaluate(() => {
       const el = document.querySelector('input[name="title"]') as HTMLInputElement;
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(el, 'Playwright Cancel Test');
@@ -307,6 +334,7 @@ test.describe('Edit signup page', () => {
     };
 
     try {
+      await waitForReactHydration(page, 'textarea[name="signupsmartly-event-description"]');
       await setDescription(updatedDescription);
       await expect(description).toHaveValue(updatedDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
@@ -318,6 +346,7 @@ test.describe('Edit signup page', () => {
       await expect(editDescriptionTextarea(page)).toHaveValue(updatedDescription);
     } finally {
       await page.goto(`/dashboard/event/${eventId}/edit`);
+      await waitForReactHydration(page, 'textarea[name="signupsmartly-event-description"]');
       await setDescription(originalDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
       await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), {

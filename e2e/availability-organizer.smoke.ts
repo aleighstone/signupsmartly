@@ -175,7 +175,20 @@ test.describe('Availability poll — edit form', () => {
       );
     };
 
+    // Wait for React to hydrate the textarea before dispatching native events.
+    // On mobile emulation the 'load' event fires before React finishes its hydration pass.
+    const waitForReactHydration = () =>
+      page.waitForFunction(
+        (sel: string) => {
+          const el = document.querySelector(sel);
+          return el != null && Object.keys(el).some((k) => k.startsWith('__react'));
+        },
+        SELECTOR,
+        { timeout: 10_000 }
+      );
+
     try {
+      await waitForReactHydration();
       await setDescription(updatedDescription);
       await expect(description).toHaveValue(updatedDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
@@ -187,6 +200,7 @@ test.describe('Availability poll — edit form', () => {
       await expect(editDescriptionTextarea(page)).toHaveValue(updatedDescription);
     } finally {
       await page.goto(`/dashboard/event/${availabilityEventId}/edit`);
+      await waitForReactHydration();
       await setDescription(originalDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
       await page
