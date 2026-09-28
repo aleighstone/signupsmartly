@@ -161,22 +161,27 @@ test.describe('Availability poll — edit form', () => {
     const originalDescription = await description.inputValue();
     const updatedDescription = `Playwright availability description ${Date.now()}`;
 
-    // Helper: set the description textarea value via the native setter so React's synthetic
-    // onChange fires and react-hook-form's getValues() returns the correct value at save time.
+    // Set the description via the native setter + direct React props call so that
+    // react-hook-form's getValues() returns the new value at save time.
+    // Directly calling __reactProps$.onChange avoids the event-delegation race on mobile.
     const SELECTOR = 'textarea[name="signupsmartly-event-description"]';
     const setDescription = async (value: string) => {
       await page.evaluate(
-        ({ selector, v }) => {
-          const el = document.querySelector(selector) as HTMLTextAreaElement;
-          Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(el, v);
+        ({ sel, val }: { sel: string; val: string }) => {
+          const el = document.querySelector(sel) as HTMLTextAreaElement | null;
+          if (!el) return;
+          Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(el, val);
+          const propsKey = Object.keys(el).find((k) => k.startsWith('__reactProps'));
+          if (propsKey && typeof (el as any)[propsKey]?.onChange === 'function') {
+            (el as any)[propsKey].onChange({ target: el, currentTarget: el, type: 'input' });
+            return;
+          }
           el.dispatchEvent(new Event('input', { bubbles: true }));
         },
-        { selector: SELECTOR, v: value }
+        { sel: SELECTOR, val: value }
       );
     };
 
-    // Wait for React to hydrate the textarea before dispatching native events.
-    // On mobile emulation the 'load' event fires before React finishes its hydration pass.
     const waitForReactHydration = () =>
       page.waitForFunction(
         (sel: string) => {

@@ -31,8 +31,10 @@ test.describe('Public event page', () => {
       test.skip(true, 'E2E_TEST_DRAFT_EVENT_ID not set — skipping draft visibility test');
       return;
     }
-    const response = await page.goto(`/event/${draftId}`);
-    expect(response?.status()).toBe(404);
+    await page.goto(`/event/${draftId}`);
+    // Next.js App Router's notFound() renders a 404 UI. In development mode it returns
+    // HTTP 200 (not 404), so we check the page content rather than the response status.
+    await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
   });
 });
 

@@ -10,11 +10,19 @@ const dashboardSignupsLinkForEvent = (page: any, eventId: string) =>
 
 const dashboardEventRow = (page: any, eventId: string) =>
   page
-    .locator('div, li', {
+    // Only match VISIBLE elements — div rows are inside a hidden-on-mobile container,
+    // li cards are inside a hidden-on-desktop list. Using :visible scopes to whichever
+    // layout is active at the current viewport.
+    .locator('div:visible, li:visible', {
       has: page.locator(`a[href*="/dashboard/event/${eventId}/signups"]`),
     })
     .filter({
       has: page.getByRole('button', { name: /more actions for this signup/i }),
+    })
+    // Exclude the outer container divs/lists that contain ALL events' links.
+    // An element that has a link to a DIFFERENT event is a wrapper, not the specific row.
+    .filter({
+      hasNot: page.locator(`a[href*="/dashboard/event/"]:not([href*="${eventId}"])`),
     })
     .first();
 
@@ -42,6 +50,52 @@ const waitForReactHydration = (page: any, selector: string) =>
     },
     selector,
     { timeout: 10_000 }
+  );
+
+/**
+ * Set a form field's value so that React's synthetic onChange fires and
+ * react-hook-form's isDirty / getValues() reflect the new value.
+ *
+ * Strategy:
+ *   1. Set the native DOM value via the HTMLInputElement/HTMLTextAreaElement prototype setter
+ *      (bypasses React's property interception so the native value actually changes).
+ *   2. Directly invoke the element's __reactProps$* onChange handler — this is the same
+ *      function React calls from its synthetic event system, so isDirty updates
+ *      regardless of whether event delegation is fully wired up (critical on slow mobile
+ *      emulation where hydration may not be complete when page.evaluate() runs).
+ *   3. Fall back to dispatchEvent if the __reactProps$ key isn't present.
+ */
+const setNativeInputValue = (
+  page: any,
+  selector: string,
+  value: string,
+  elementType: 'input' | 'textarea' = 'input'
+) =>
+  page.evaluate(
+    ({ sel, val, type }: { sel: string; val: string; type: 'input' | 'textarea' }) => {
+      const el = document.querySelector(sel) as HTMLInputElement | HTMLTextAreaElement | null;
+      if (!el) return;
+
+      // 1. Set the underlying native value
+      const proto =
+        type === 'textarea'
+          ? HTMLTextAreaElement.prototype
+          : HTMLInputElement.prototype;
+      Object.getOwnPropertyDescriptor(proto, 'value')!.set!.call(el, val);
+
+      // 2. Call React's onChange prop directly (works on mobile where event delegation
+      //    may race with React hydration)
+      const propsKey = Object.keys(el).find((k) => k.startsWith('__reactProps'));
+      if (propsKey && typeof (el as any)[propsKey]?.onChange === 'function') {
+        (el as any)[propsKey].onChange({ target: el, currentTarget: el, type: 'input' });
+        return;
+      }
+
+      // 3. Fallback: fire native events that React's delegated handler will catch
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    },
+    { sel: selector, val: value, type: elementType }
   );
 
 test.describe('Dashboard', () => {
@@ -209,16 +263,9 @@ test.describe('Edit signup page', () => {
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
     // fill() alone doesn't trigger react-hook-form's isDirty because React intercepts the
-    // property setter. Use the native HTMLInputElement setter so React sees it as user input.
-    // Wait for React to hydrate the input before dispatching events — on mobile emulation
-    // the 'load' event fires before React finishes its hydration pass.
+    // property setter. Use setNativeInputValue which directly calls React's onChange prop.
     await waitForReactHydration(page, 'input[name="title"]');
-    await page.evaluate(() => {
-      const el = document.querySelector('input[name="title"]') as HTMLInputElement;
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(el, 'Playwright Dirty Edit Test');
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    await setNativeInputValue(page, 'input[name="title"]', 'Playwright Dirty Edit Test');
     await page.getByRole('button', { name: /← back to signups/i }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.getByText(/unsaved changes/i)).toBeVisible();
@@ -232,12 +279,7 @@ test.describe('Edit signup page', () => {
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
     await waitForReactHydration(page, 'input[name="title"]');
-    await page.evaluate(() => {
-      const el = document.querySelector('input[name="title"]') as HTMLInputElement;
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(el, 'Playwright Discard Test');
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    await setNativeInputValue(page, 'input[name="title"]', 'Playwright Discard Test');
     await page.getByRole('button', { name: /← back to signups/i }).click();
     await page.getByRole('dialog').getByRole('button', { name: /discard/i }).click();
     await expect(page).toHaveURL(/signups/);
@@ -251,12 +293,7 @@ test.describe('Edit signup page', () => {
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
     await waitForReactHydration(page, 'input[name="title"]');
-    await page.evaluate(() => {
-      const el = document.querySelector('input[name="title"]') as HTMLInputElement;
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(el, 'Playwright Cancel Test');
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    await setNativeInputValue(page, 'input[name="title"]', 'Playwright Cancel Test');
     await page.getByRole('button', { name: /← back to signups/i }).click();
     // Close via Escape key (backdrop button is obscured by the modal card)
     await page.keyboard.press('Escape');
@@ -319,22 +356,14 @@ test.describe('Edit signup page', () => {
     const originalDescription = await description.inputValue();
     const updatedDescription = `Playwright persisted description ${Date.now()}`;
 
-    // Helper: set textarea value via the native HTMLTextAreaElement setter so React's
-    // synthetic onChange fires and react-hook-form's getValues() returns the updated value.
-    // fill() sets the DOM property through React's override which skips the change event;
-    // keyboard.type() doesn't correctly replace selections in controlled textareas.
-    const setDescription = async (value: string) => {
-      await page.evaluate((v) => {
-        const el = document.querySelector(
-          'textarea[name="signupsmartly-event-description"]'
-        ) as HTMLTextAreaElement;
-        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(el, v);
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-      }, value);
-    };
+    // setNativeInputValue sets the native DOM value and calls React's onChange prop
+    // directly — works on mobile emulation where event delegation may race hydration.
+    const DESC_SEL = 'textarea[name="signupsmartly-event-description"]';
+    const setDescription = (value: string) =>
+      setNativeInputValue(page, DESC_SEL, value, 'textarea');
 
     try {
-      await waitForReactHydration(page, 'textarea[name="signupsmartly-event-description"]');
+      await waitForReactHydration(page, DESC_SEL);
       await setDescription(updatedDescription);
       await expect(description).toHaveValue(updatedDescription);
       await page.getByRole('button', { name: /^save$/i }).click();
