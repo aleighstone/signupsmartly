@@ -94,6 +94,48 @@ test.describe('Availability poll — create form (wizard)', () => {
     await page.waitForURL(/\/dashboard\/event\/.*\/signups/, { timeout: 20_000 });
     await expect(page.getByText(title)).toBeVisible();
   });
+
+  test('draft poll is hidden from the public until published', async ({ page, browser }) => {
+    const title = `Playwright Availability Draft ${Date.now()}`;
+
+    await page.goto('/create-event');
+    await page.getByText('Availability poll').click();
+    await page.getByRole('button', { name: /^next/i }).click();
+    await page.getByPlaceholder(/Team Retreat Dates/i).fill(title);
+    await page.getByRole('button', { name: /^next/i }).click();
+    await page.locator('input[type="date"]').first().fill('2027-06-08');
+    await page.getByRole('button', { name: /^next/i }).click();
+    await page.getByRole('button', { name: /save as draft/i }).click();
+    await page.waitForURL(/\/dashboard\/event\/.*\/signups/, { timeout: 20_000 });
+    const pollId = page.url().match(/\/dashboard\/event\/([^/]+)\/signups/)![1];
+
+    // A logged-out visitor gets the 404 page while the poll is a draft.
+    const visitor = await browser.newContext({
+      baseURL: test.info().project.use.baseURL,
+      storageState: { cookies: [], origins: [] },
+    });
+    const visitorPage = await visitor.newPage();
+    try {
+      await visitorPage.goto(`/event/${pollId}`);
+      await expect(visitorPage.getByRole('heading', { name: '404' })).toBeVisible();
+
+      // Publish from the edit page's draft banner.
+      await page.goto(`/dashboard/event/${pollId}/edit`);
+      await expect(page.getByText(/not live yet/i)).toBeVisible();
+      await expect(async () => {
+        await page.getByRole('button', { name: /^publish$/i }).first().click();
+        await expect(page.getByText(/not live yet/i)).toBeHidden({ timeout: 2_000 });
+      }).toPass({ timeout: 15_000 });
+
+      // Now the visitor can see and answer the poll.
+      await visitorPage.goto(`/event/${pollId}`);
+      await expect(visitorPage.getByText(/which dates work for you\?/i)).toBeVisible();
+    } finally {
+      await visitor.close();
+      // Keep the local dashboard tidy between runs.
+      await page.request.post(`/api/events/${pollId}/archive`);
+    }
+  });
 });
 
 
