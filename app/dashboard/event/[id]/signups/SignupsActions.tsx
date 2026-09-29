@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { usePostHog } from '@posthog/react';
 import { format } from 'date-fns';
-import { Copy, ExternalLink, Pencil } from 'lucide-react';
+import { ChevronDown, Copy, ExternalLink, Pencil } from 'lucide-react';
 import type { EventWithSlots, Slot } from '@/types/database';
 import { formatTimeRange } from '@/lib/calendar';
 import { formatCommentForExport } from '@/lib/slot-comment';
@@ -27,11 +27,12 @@ interface SignupsActionsProps {
   signupPageUrl: string;
 }
 
+// Mobile: buttons fill their grid cell (2×2). sm+: natural width in a single row.
 const secondaryButtonClass =
-  'inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-[10px] border-2 border-charcoal bg-transparent px-[18px] py-[9px] text-sm font-medium text-charcoal transition-colors hover:bg-charcoal/5 font-body';
+  'inline-flex w-full sm:w-auto min-h-[40px] items-center justify-center gap-1.5 rounded-[10px] border-2 border-charcoal bg-transparent px-[18px] py-[9px] text-sm font-medium text-charcoal transition-colors hover:bg-charcoal/5 font-body';
 
 const primarySageButtonClass =
-  'inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-[10px] border-2 border-transparent bg-sage px-[18px] py-[9px] text-sm font-semibold text-white transition-colors hover:bg-sage-hover disabled:opacity-60 font-body';
+  'inline-flex w-full sm:w-auto min-h-[40px] items-center justify-center gap-1.5 rounded-[10px] border-2 border-transparent bg-sage px-[18px] py-[9px] text-sm font-semibold text-white transition-colors hover:bg-sage-hover disabled:opacity-60 font-body';
 
 function formatSlotDateTime(slot: Slot): string {
   if (!slot.start_time) return '';
@@ -229,7 +230,7 @@ export function SignupsActions({
         }}
       />
 
-      <div data-no-print className="flex flex-row flex-wrap items-center gap-2">
+      <div data-no-print className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
         {event.published ? (
           <a
             href={signupPageUrl}
@@ -280,6 +281,7 @@ export function SignupsActions({
             aria-haspopup="menu"
           >
             Export
+            <ChevronDown className="h-3.5 w-3.5" aria-hidden />
           </button>
           {showExportDropdown ? (
             <div

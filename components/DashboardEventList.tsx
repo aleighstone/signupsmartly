@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown, ExternalLink, MoreVertical, Pencil } from 'lucide-react';
 
 export type EventCardData = {
@@ -56,7 +56,25 @@ function MoreMenu({ card }: { card: EventCardData }) {
   const [busyAction, setBusyAction] = useState<'publish' | 'copy' | 'archive' | 'delete' | null>(null);
   const busy = busyAction !== null;
   const menuRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [openUp, setOpenUp] = useState(false);
   const { event } = card;
+
+  // Open the menu upward when it would run past the bottom of the viewport
+  // (e.g. the last rows of the dashboard) and there is room above the button.
+  useLayoutEffect(() => {
+    if (!open) {
+      setOpenUp(false);
+      return;
+    }
+    const button = menuRef.current?.getBoundingClientRect();
+    const panel = panelRef.current?.getBoundingClientRect();
+    if (!button || !panel) return;
+    const gap = 8;
+    const fitsBelow = button.bottom + gap + panel.height <= window.innerHeight;
+    const fitsAbove = button.top - gap - panel.height >= 0;
+    setOpenUp(!fitsBelow && fitsAbove);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -156,8 +174,11 @@ function MoreMenu({ card }: { card: EventCardData }) {
 
       {open ? (
         <div
+          ref={panelRef}
           role="menu"
-          className="absolute right-0 z-50 mt-2 min-w-[180px] rounded-xl border border-charcoal/10 bg-surface py-1 shadow-soft-md"
+          className={`absolute right-0 z-50 min-w-[180px] rounded-xl border border-charcoal/10 bg-surface py-1 shadow-soft-md ${
+            openUp ? 'bottom-full mb-2' : 'top-full mt-2'
+          }`}
         >
           <Link
             href={`/dashboard/event/${event.id}/signups`}

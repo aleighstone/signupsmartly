@@ -31,6 +31,17 @@ const dashboardMenuButtonForEvent = (page: any, eventId: string) =>
     .getByRole('button', { name: /more actions for this signup/i })
     .first();
 
+/**
+ * Open the dashboard ⋮ menu for an event. On slow mobile emulation the first tap
+ * can land before React hydrates the button, so retry until the menu is open.
+ */
+const openDashboardMenu = async (page: any, eventId: string) => {
+  await expect(async () => {
+    await dashboardMenuButtonForEvent(page, eventId).click();
+    await expect(page.getByRole('menu').first()).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
+};
+
 const editDescriptionTextarea = (page: any) =>
   page.locator('textarea[name="signupsmartly-event-description"]');
 
@@ -98,6 +109,18 @@ const setNativeInputValue = (
     { sel: selector, val: value, type: elementType }
   );
 
+/**
+ * Make the edit form dirty the way a person would: click the title and type.
+ * Real key presses go through React's normal event path, so react-hook-form's
+ * isDirty updates on every viewport (the value-setter trick above did not on mobile).
+ */
+const typeIntoTitle = async (page: any, text: string) => {
+  const title = page.locator('input[name="title"]');
+  await title.click();
+  await title.press('End');
+  await title.pressSequentially(` ${text}`);
+};
+
 test.describe('Dashboard', () => {
   test('loads and shows Your Signups', async ({ page }) => {
     await page.goto('/dashboard');
@@ -122,7 +145,7 @@ test.describe('Dashboard', () => {
     await page.request.post(`/api/events/${eventId}/unarchive`);
     await page.goto('/dashboard');
     await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
-    await dashboardMenuButtonForEvent(page, eventId).click();
+    await openDashboardMenu(page, eventId);
 
     const menu = page.getByRole('menu').first();
     await expect(menu).toBeVisible();
@@ -159,17 +182,23 @@ test.describe('Dashboard', () => {
     // Register waitForURL BEFORE the click so we don't race the navigation.
     // Use waitUntil:'commit' (URL changed + headers received) instead of the default 'load',
     // because Next.js SPA navigations don't re-fire the 'load' event.
-    await dashboardMenuButtonForEvent(page, eventId).click();
+    await openDashboardMenu(page, eventId);
     const editNav = page.waitForURL(
       new RegExp(`/dashboard/event/${eventId}/edit`),
       { timeout: 10_000, waitUntil: 'commit' }
     );
     await page.getByRole('menuitem', { name: /^edit$/i }).click();
     await editNav;
+    // Let the edit page finish loading before navigating again, otherwise the
+    // in-flight client navigation interrupts page.goto on slower mobile emulation.
+    await expect(page.locator('input[name="title"]')).toBeVisible();
 
     await page.goto('/dashboard');
     await dashboardSignupsLinkForEvent(page, eventId).click();
-    await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), { timeout: 10_000 });
+    await page.waitForURL(new RegExp(`/dashboard/event/${eventId}/signups`), {
+      timeout: 10_000,
+      waitUntil: 'commit',
+    });
   });
 });
 
@@ -265,7 +294,7 @@ test.describe('Edit signup page', () => {
     // fill() alone doesn't trigger react-hook-form's isDirty because React intercepts the
     // property setter. Use setNativeInputValue which directly calls React's onChange prop.
     await waitForReactHydration(page, 'input[name="title"]');
-    await setNativeInputValue(page, 'input[name="title"]', 'Playwright Dirty Edit Test');
+    await typeIntoTitle(page, 'Playwright Dirty Edit Test');
     await page.getByRole('button', { name: /← back to signups/i }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.getByText(/unsaved changes/i)).toBeVisible();
@@ -279,7 +308,7 @@ test.describe('Edit signup page', () => {
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
     await waitForReactHydration(page, 'input[name="title"]');
-    await setNativeInputValue(page, 'input[name="title"]', 'Playwright Discard Test');
+    await typeIntoTitle(page, 'Playwright Discard Test');
     await page.getByRole('button', { name: /← back to signups/i }).click();
     await page.getByRole('dialog').getByRole('button', { name: /discard/i }).click();
     await expect(page).toHaveURL(/signups/);
@@ -293,7 +322,7 @@ test.describe('Edit signup page', () => {
     }
     await page.goto(`/dashboard/event/${eventId}/edit`);
     await waitForReactHydration(page, 'input[name="title"]');
-    await setNativeInputValue(page, 'input[name="title"]', 'Playwright Cancel Test');
+    await typeIntoTitle(page, 'Playwright Cancel Test');
     await page.getByRole('button', { name: /← back to signups/i }).click();
     // Close via Escape key (backdrop button is obscured by the modal card)
     await page.keyboard.press('Escape');
@@ -426,7 +455,7 @@ test.describe('Draft event', () => {
     await expect(
       page.getByRole('button', { name: /not yet published/i }).first()
     ).toBeDisabled();
-    await dashboardMenuButtonForEvent(page, draftId).click();
+    await openDashboardMenu(page, draftId);
     await expect(page.getByRole('menuitem', { name: /^view my signups$/i })).toBeVisible();
     await expect(page.getByRole('menuitem', { name: /^publish$/i })).toBeVisible();
     await expect(page.getByRole('menuitem', { name: /^edit$/i })).toBeVisible();
@@ -457,7 +486,7 @@ test.describe('Copy signup', () => {
     await page.request.post(`/api/events/${eventId}/unarchive`);
     await page.goto('/dashboard');
     await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
-    await dashboardMenuButtonForEvent(page, eventId).click();
+    await openDashboardMenu(page, eventId);
     await page.getByRole('menuitem', { name: /^make a copy$/i }).click();
     // Should navigate back to the dashboard (copy lands there as a new draft)
     await page.waitForURL(/\/dashboard$/, { timeout: 10_000 });
@@ -483,7 +512,7 @@ test.describe('Archive signup', () => {
       await page.goto('/dashboard');
       await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
 
-      await dashboardMenuButtonForEvent(page, eventId).click();
+      await openDashboardMenu(page, eventId);
       page.once('dialog', async (dialog) => {
         expect(dialog.type()).toBe('confirm');
         await dialog.accept();
@@ -511,7 +540,7 @@ test.describe('Archive signup', () => {
       await archivedTab.click();
       await expect(dashboardSignupsLinkForEvent(page, eventId)).toBeVisible();
 
-      await dashboardMenuButtonForEvent(page, eventId).click();
+      await openDashboardMenu(page, eventId);
       // Archived events: only View My Signups, Make a Copy, Delete
       await expect(page.getByRole('menuitem', { name: /^view my signups$/i })).toBeVisible();
       await expect(page.getByRole('menuitem', { name: /^make a copy$/i })).toBeVisible();
