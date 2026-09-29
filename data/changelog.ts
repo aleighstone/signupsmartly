@@ -14,6 +14,23 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: 'September 29, 2026',
+    changes: [
+      {
+        type: 'new',
+        text: '**Duplicate spots when editing**: The Edit signup page now has a Duplicate button on each spot, just like the create wizard. Copy a spot you\'ve already set up and change only what\'s different.',
+      },
+      {
+        type: 'improved',
+        text: '**Better on phones**: In the create wizard, the date, time and spots-needed fields now stack neatly on small screens. The buttons at the top of View My Signups line up in a tidy grid.',
+      },
+      {
+        type: 'fixed',
+        text: '**Dashboard menu**: The ⋮ menu now opens upward near the bottom of the screen, so every option stays visible.',
+      },
+    ],
+  },
+  {
     date: 'September 27, 2026',
     changes: [
       {
@@ -36,6 +53,14 @@ export const changelog: Release[] = [
         type: 'improved',
         text: '**Reminder emails**: Reminder emails now include a link to the event so volunteers can easily pull up their signup details.',
       },
+      {
+        type: 'improved',
+        text: '**Canceling a signup**: The Cancel signup link in emails now opens a confirmation right on the event page. Whether you cancel or keep your spot, you land on the event page, where you can see your signup or pick a different spot.',
+      },
+      {
+        type: 'improved',
+        text: '**Email subject lines**: Confirmation and reminder emails now use consistent, easy-to-scan subject lines.',
+      },
     ],
   },
   {
@@ -48,6 +73,15 @@ export const changelog: Release[] = [
       {
         type: 'fixed',
         text: '**Confirmation and reminder emails**: Scheduled signups now show the correct slot date in confirmation and reminder emails instead of the event start date.',
+      },
+    ],
+  },
+  {
+    date: 'August 18, 2026',
+    changes: [
+      {
+        type: 'fixed',
+        text: '**Expired confirmation links**: If an email confirmation link has expired or was already used, the sign-in page now explains why and offers to email you a new sign-in link.',
       },
     ],
   },
