@@ -11,6 +11,7 @@ import { DEFAULT_COMMENT_LABEL } from '@/lib/slot-comment';
 import type { EventWithSlots, SlotWithSignups } from '@/types/database';
 import { CustomizeAppearanceSection } from '@/components/EventThemePickers';
 import { MarkdownEditor } from '@/components/MarkdownEditor';
+import { Copy } from 'lucide-react';
 import { SlotCardActions } from '@/components/SlotCardActions';
 import { UnsavedChangesModal } from '@/components/UnsavedChangesModal';
 import { DEFAULT_COLOR_KEY, DEFAULT_FONT_KEY } from '@/data/themes';
@@ -272,6 +273,33 @@ export function EditEventForm({ event }: EditEventFormProps) {
         instructions: '',
         comment_label: '',
         comment_required: false,
+      });
+    }
+  };
+
+  const duplicateSlot = (index: number) => {
+    if (simple) {
+      const src = simpleSlots[index];
+      appendSimpleSlot({
+        role_name: src.role_name,
+        capacity: src.capacity,
+        role_description: src.role_description,
+        comment_label: src.comment_label,
+        comment_required: src.comment_required,
+        // intentionally no `id` — new slot must INSERT, not UPDATE
+      });
+    } else {
+      const src = scheduledSlots[index];
+      appendScheduledSlot({
+        id: undefined,
+        spot_date: src.spot_date,
+        role_name: src.role_name,
+        start_time: src.start_time,
+        end_time: src.end_time,
+        capacity: src.capacity,
+        instructions: src.instructions,
+        comment_label: src.comment_label,
+        comment_required: src.comment_required,
       });
     }
   };
@@ -586,6 +614,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
             slotsLabel={slots}
             onAdd={addSlot}
             onRemove={removeSlot}
+            onDuplicate={duplicateSlot}
             onSwapSlots={swapSimpleSlots}
             getSignupCount={getSignupCount}
             hasCapacityError={hasCapacityError}
@@ -634,6 +663,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
             slotsLabel={slots}
             onAdd={addSlot}
             onRemove={removeSlot}
+            onDuplicate={duplicateSlot}
             onSwapSlots={swapScheduledSlots}
             getSignupCount={getSignupCount}
             hasCapacityError={hasCapacityError}
@@ -880,6 +910,7 @@ function SlotsSectionSimple({
   slotsLabel,
   onAdd,
   onRemove,
+  onDuplicate,
   onSwapSlots,
   getSignupCount,
   hasCapacityError,
@@ -899,6 +930,7 @@ function SlotsSectionSimple({
   slotsLabel: string;
   onAdd: () => void;
   onRemove: (i: number) => void;
+  onDuplicate: (i: number) => void;
   onSwapSlots: (indexA: number, indexB: number) => void;
   getSignupCount: (i: number) => number;
   hasCapacityError: (i: number, cap: number) => boolean;
@@ -920,16 +952,26 @@ function SlotsSectionSimple({
                 <span className="text-sm font-medium text-muted font-body">
                   {slotLabel} {index + 1}
                 </span>
-                <SlotCardActions
-                  listLength={slotFields.length}
-                  index={index}
-                  onMoveUp={() => index > 0 && onSwapSlots(index, index - 1)}
-                  onMoveDown={() =>
-                    index < slotFields.length - 1 && onSwapSlots(index, index + 1)
-                  }
-                  onRemove={() => onRemove(index)}
-                  removeAriaLabel={`Remove ${slotLabel.toLowerCase()}`}
-                />
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => onDuplicate(index)}
+                    className="p-1 text-charcoal/50 hover:text-charcoal rounded"
+                    title="Duplicate"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                  <SlotCardActions
+                    listLength={slotFields.length}
+                    index={index}
+                    onMoveUp={() => index > 0 && onSwapSlots(index, index - 1)}
+                    onMoveDown={() =>
+                      index < slotFields.length - 1 && onSwapSlots(index, index + 1)
+                    }
+                    onRemove={() => onRemove(index)}
+                    removeAriaLabel={`Remove ${slotLabel.toLowerCase()}`}
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-charcoal mb-1 font-body">
@@ -1040,6 +1082,7 @@ function SlotsSectionScheduled({
   slotsLabel,
   onAdd,
   onRemove,
+  onDuplicate,
   onSwapSlots,
   getSignupCount,
   hasCapacityError,
@@ -1064,6 +1107,7 @@ function SlotsSectionScheduled({
   slotsLabel: string;
   onAdd: () => void;
   onRemove: (i: number) => void;
+  onDuplicate: (i: number) => void;
   onSwapSlots: (indexA: number, indexB: number) => void;
   getSignupCount: (i: number) => number;
   hasCapacityError: (i: number, cap: number) => boolean;
@@ -1085,16 +1129,26 @@ function SlotsSectionScheduled({
               <span className="text-sm font-medium text-muted font-body">
                 {slotLabel} {index + 1}
               </span>
-              <SlotCardActions
-                listLength={slotFields.length}
-                index={index}
-                onMoveUp={() => index > 0 && onSwapSlots(index, index - 1)}
-                onMoveDown={() =>
-                  index < slotFields.length - 1 && onSwapSlots(index, index + 1)
-                }
-                onRemove={() => onRemove(index)}
-                removeAriaLabel={`Remove ${slotLabel.toLowerCase()}`}
-              />
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onDuplicate(index)}
+                  className="p-1 text-charcoal/50 hover:text-charcoal rounded"
+                  title="Duplicate"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+                <SlotCardActions
+                  listLength={slotFields.length}
+                  index={index}
+                  onMoveUp={() => index > 0 && onSwapSlots(index, index - 1)}
+                  onMoveDown={() =>
+                    index < slotFields.length - 1 && onSwapSlots(index, index + 1)
+                  }
+                  onRemove={() => onRemove(index)}
+                  removeAriaLabel={`Remove ${slotLabel.toLowerCase()}`}
+                />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1 font-body">

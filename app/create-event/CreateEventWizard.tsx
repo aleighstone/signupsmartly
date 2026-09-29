@@ -657,7 +657,7 @@ function Step3SlotsSimple({
                   <p className={errorClass}>{errors.slots[index]!.role_name!.message}</p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className={labelClass}>Quantity needed</label>
                   <input
@@ -834,7 +834,7 @@ function Step3SlotsScheduled({
                   )}
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className={labelClass}>
                     Date <span className="text-coral">*</span>
@@ -854,7 +854,7 @@ function Step3SlotsScheduled({
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className={labelClass}>Start time</label>
                   <input type="time" {...register(`slots.${index}.start_time`)} className={inputClass} />
@@ -954,7 +954,7 @@ function Step3SlotsAvailability({
                   <p className={errorClass}>{errors.slots[index]!.spot_date!.message}</p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className={labelClass}>Start time</label>
                   <input type="time" {...register(`slots.${index}.start_time`)} className={inputClass} />
