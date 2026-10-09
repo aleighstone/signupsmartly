@@ -51,17 +51,16 @@ export function DeleteSignupModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50"
       role="dialog"
       aria-modal="true"
       aria-labelledby="delete-signup-title"
+      onClick={handleClose}
     >
-      <div
-        className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm"
-        onClick={handleClose}
-        aria-hidden="true"
-      />
-      <div className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md">
+      <div className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm" aria-hidden="true" />
+      <div className="absolute inset-0 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+      <div className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md" onClick={(e) => e.stopPropagation()}>
         <p
           id="delete-signup-title"
           className="text-lg font-semibold text-charcoal font-heading leading-snug"
@@ -88,6 +87,8 @@ export function DeleteSignupModal({
           >
             Cancel
           </button>
+        </div>
+      </div>
         </div>
       </div>
     </div>

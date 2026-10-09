@@ -698,17 +698,16 @@ export function EditEventForm({ event }: EditEventFormProps) {
 
       {deleteModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50"
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-modal-title"
+          onClick={() => setDeleteModal(null)}
         >
-          <div
-            className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm"
-            onClick={() => setDeleteModal(null)}
-            aria-hidden="true"
-          />
-          <div className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md">
+          <div className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm" aria-hidden="true" />
+          <div className="absolute inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+          <div className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md" onClick={(e) => e.stopPropagation()}>
             {availability ? (
               <>
                 <h2
@@ -784,6 +783,8 @@ export function EditEventForm({ event }: EditEventFormProps) {
                 </div>
               </>
             )}
+          </div>
+            </div>
           </div>
         </div>
       )}

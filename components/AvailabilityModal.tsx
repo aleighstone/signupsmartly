@@ -63,19 +63,19 @@ export function AvailabilityModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50"
       role="dialog"
       aria-modal="true"
       aria-labelledby="availability-modal-title"
+      onClick={isSubmitting ? undefined : onClose}
     >
-      <div
-        className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm"
-        onClick={isSubmitting ? undefined : onClose}
-        aria-hidden="true"
-      />
+      <div className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm" aria-hidden="true" />
+      <div className="absolute inset-0 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
       <form
         onSubmit={submit}
         className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md"
+        onClick={(e) => e.stopPropagation()}
       >
         <h2 id="availability-modal-title" className="text-lg font-semibold text-charcoal font-heading">
           Tell us who you are
@@ -141,6 +141,8 @@ export function AvailabilityModal({
           </button>
         </div>
       </form>
+        </div>
+      </div>
     </div>
   );
 }

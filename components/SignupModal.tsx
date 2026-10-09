@@ -59,35 +59,45 @@ export function SignupModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50"
       role="dialog"
       aria-modal="true"
       aria-labelledby="signup-modal-title"
+      onClick={onClose}
     >
+      {/* Visual backdrop — fixed behind scroll layer */}
       <div
         className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm"
-        onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md">
-        <SignupForm
-          key={slotId ?? slotRoleName}
-          modalTitleId="signup-modal-title"
-          slotRoleName={slotRoleName}
-          slotWhen={slotWhen}
-          slotDetails={slotDetails}
-          commentLabel={commentLabel}
-          commentRequired={commentRequired}
-          showSignupsPublic={showSignupsPublic}
-          commentShowPublicly={commentShowPublicly}
-          showReminders={showReminders}
-          onSubmit={onSubmit}
-          onCancel={onClose}
-          isSubmitting={isSubmitting}
-          error={error}
-          primaryColor={primaryColor}
-          volunteerPageThemed={volunteerPageThemed}
-        />
+      {/* Scrollable layer — lets tall content scroll on small phones */}
+      <div className="absolute inset-0 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+          {/* stopPropagation prevents card clicks from closing the modal */}
+          <div
+            className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SignupForm
+              key={slotId ?? slotRoleName}
+              modalTitleId="signup-modal-title"
+              slotRoleName={slotRoleName}
+              slotWhen={slotWhen}
+              slotDetails={slotDetails}
+              commentLabel={commentLabel}
+              commentRequired={commentRequired}
+              showSignupsPublic={showSignupsPublic}
+              commentShowPublicly={commentShowPublicly}
+              showReminders={showReminders}
+              onSubmit={onSubmit}
+              onCancel={onClose}
+              isSubmitting={isSubmitting}
+              error={error}
+              primaryColor={primaryColor}
+              volunteerPageThemed={volunteerPageThemed}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

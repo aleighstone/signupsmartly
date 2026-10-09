@@ -129,17 +129,16 @@ function SignupTypeHelpModal({
   if (!isOpen) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50"
       role="dialog"
       aria-modal="true"
       aria-labelledby="help-modal-title"
+      onClick={onClose}
     >
-      <div
-        className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <div className="relative w-full max-w-lg rounded-xl bg-surface p-6 shadow-soft-md">
+      <div className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm" aria-hidden="true" />
+      <div className="absolute inset-0 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+      <div className="relative w-full max-w-lg rounded-xl bg-surface p-6 shadow-soft-md" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-4">
           <h2 id="help-modal-title" className="text-lg font-semibold text-charcoal font-heading">
             Signup Types
@@ -172,6 +171,8 @@ function SignupTypeHelpModal({
             e.g. recurring game nights, mahjong groups, hiking crews, or any time picking the
             right date matters more than signing people up for a role.
           </p>
+        </div>
+      </div>
         </div>
       </div>
     </div>
@@ -258,9 +259,11 @@ function SaveAsTemplateModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm" onClick={handleClose} aria-hidden="true" />
-      <div className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md">
+    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" onClick={handleClose}>
+      <div className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm" aria-hidden="true" />
+      <div className="absolute inset-0 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+      <div className="relative w-full max-w-md rounded-xl bg-surface p-6 shadow-soft-md" onClick={(e) => e.stopPropagation()}>
         {step === 1 && (
           <>
             <h2 className="text-lg font-semibold text-charcoal font-heading">{signupTitle} created!</h2>
@@ -298,6 +301,8 @@ function SaveAsTemplateModal({
             </div>
           </>
         )}
+      </div>
+        </div>
       </div>
     </div>
   );

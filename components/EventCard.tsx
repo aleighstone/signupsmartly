@@ -269,8 +269,11 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
         </div>
       )}
       {confirmArchiveOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-soft-md">
+        <div className="fixed inset-0 z-50" onClick={() => setConfirmArchiveOpen(false)}>
+          <div className="absolute inset-0 bg-charcoal/40" aria-hidden="true" />
+          <div className="absolute inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+          <div className="relative w-full max-w-sm rounded-2xl bg-surface p-6 shadow-soft-md" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-base font-semibold text-charcoal font-heading">
               Archive this signup?
             </h2>
@@ -296,6 +299,8 @@ export function EventCard({ event, dateLabel, coverage, signupPageUrl }: EventCa
               >
                 {isArchiving ? 'Archiving…' : 'Archive'}
               </button>
+            </div>
+          </div>
             </div>
           </div>
         </div>

@@ -58,17 +58,16 @@ export function CancelModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50"
       role="dialog"
       aria-modal="true"
       aria-labelledby="cancel-modal-title"
+      onClick={dismiss}
     >
-      <div
-        className="absolute inset-0 bg-charcoal/40"
-        onClick={dismiss}
-        aria-hidden="true"
-      />
-      <div className="relative w-full max-w-sm rounded-2xl bg-surface p-6 shadow-soft-md">
+      <div className="absolute inset-0 bg-charcoal/40" aria-hidden="true" />
+      <div className="absolute inset-0 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+      <div className="relative w-full max-w-sm rounded-2xl bg-surface p-6 shadow-soft-md" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           onClick={dismiss}
@@ -123,6 +122,8 @@ export function CancelModal({
             </div>
           </>
         )}
+      </div>
+        </div>
       </div>
     </div>
   );

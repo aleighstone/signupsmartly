@@ -48,17 +48,16 @@ export function SignupsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50"
       role="dialog"
       aria-modal="true"
       aria-labelledby="signups-modal-title"
+      onClick={onClose}
     >
-      <div
-        className="absolute inset-0 bg-charcoal/40"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <div className="relative w-full max-w-sm rounded-2xl bg-surface p-6 shadow-soft-md">
+      <div className="absolute inset-0 bg-charcoal/40" aria-hidden="true" />
+      <div className="absolute inset-0 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+      <div className="relative w-full max-w-sm rounded-2xl bg-surface p-6 shadow-soft-md" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2
@@ -102,6 +101,8 @@ export function SignupsModal({
         <p className="mt-5 border-t border-charcoal/10 pt-4 text-center text-xs text-muted font-body">
           Organized with SignupSmartly
         </p>
+      </div>
+        </div>
       </div>
     </div>
   );
