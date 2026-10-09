@@ -91,6 +91,48 @@ test.describe('Volunteer signup flow', () => {
   });
 });
 
+test.describe('Volunteer signup flow — mobile scroll regression', () => {
+  // Guard against the "button below fold" bug that affected Samsung/iPhone users.
+  // Playwright's click() auto-scrolls via the accessibility tree, so functional
+  // tests pass even when a real finger can't reach the button. This test closes
+  // that gap by asserting the confirm button is actually within the visible
+  // viewport before clicking — not just reachable by Playwright internals.
+  //
+  // Runs under both the desktop `volunteer` project AND the `mobile-volunteer`
+  // project (iPhone 14, 390×844). The assertion matters most on mobile-volunteer.
+  test('confirm button is in viewport after filling form (catches modal scroll trap)', async ({ page }) => {
+    await page.goto(`/event/${eventId}`);
+
+    const signUpButton = page.getByRole('button', { name: /sign up/i }).first();
+    await expect(signUpButton).toBeVisible();
+    await signUpButton.click();
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+
+    // Fill the form — more content = taller modal = higher scroll risk
+    await page.getByLabel(/name/i).fill('Playwright Mobile Test');
+    await page.getByLabel(/email/i).fill('playwright-mobile@example.com');
+
+    const reminderCheckbox = page.getByLabel(/send a reminder/i);
+    if (await reminderCheckbox.isVisible()) {
+      await reminderCheckbox.uncheck();
+    }
+
+    const confirmBtn = dialog.getByRole('button', { name: /confirm/i });
+
+    // scrollIntoViewIfNeeded() only works when there is a real scroll-container
+    // ancestor. With the old broken pattern (body overflow:hidden + modal
+    // overflow:visible) this call is a no-op and the button stays below the fold.
+    // With the fixed pattern (overflow-y:auto scroll layer) it succeeds.
+    await confirmBtn.scrollIntoViewIfNeeded();
+
+    // isInViewport() checks actual pixel position, not just DOM presence.
+    // This is what would have caught the original Samsung/iPhone bug.
+    await expect(confirmBtn).toBeInViewport({ ratio: 0.9 });
+  });
+});
+
 test.describe('Slot card visual hierarchy', () => {
   test('single-date event: time is the h3 heading in slot cards', async ({
     page,
