@@ -1448,6 +1448,9 @@ export function CreateEventWizard({ organizationId, createdBy }: CreateEventWiza
           const result = existing
             ? await updateDraftSimpleEvent(existing, input)
             : await createSimpleEvent(input);
+          // Store the ID so a subsequent Preview in the same session updates this
+          // event rather than creating an orphan duplicate.
+          draftEventIdRef.current = result.id;
           posthog?.capture('signup_created', { signup_type: 'simple', slot_count: data.slots.length });
           setLastCreated({
             title: data.title,
@@ -1458,7 +1461,6 @@ export function CreateEventWizard({ organizationId, createdBy }: CreateEventWiza
             published: submitIntentRef.current === 'publish',
           });
           setSaveModalOpen(true);
-          void result; // id available if needed for redirect
         })();
       } else if (signupType === 'scheduled') {
         await scheduledForm.handleSubmit(async (data) => {
@@ -1487,6 +1489,9 @@ export function CreateEventWizard({ organizationId, createdBy }: CreateEventWiza
           const result = existing
             ? await updateDraftScheduledEvent(existing, input)
             : await createScheduledEvent(input);
+          // Store the ID so a subsequent Preview in the same session updates this
+          // event rather than creating an orphan duplicate.
+          draftEventIdRef.current = result.id;
           posthog?.capture('signup_created', { signup_type: 'scheduled', slot_count: data.slots.length });
           setLastCreated({
             title: data.title,
@@ -1503,7 +1508,6 @@ export function CreateEventWizard({ organizationId, createdBy }: CreateEventWiza
             published: submitIntentRef.current === 'publish',
           });
           setSaveModalOpen(true);
-          void result;
         })();
       } else {
         await availabilityForm.handleSubmit(async (data) => {
