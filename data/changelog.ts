@@ -14,6 +14,24 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: 'November 7, 2026',
+    changes: [
+      {
+        type: 'fixed',
+        text: '**Preview no longer duplicates spots**: Previewing or saving a draft in the create wizard now keeps your spots exactly as you set them, instead of adding an extra copy each time.',
+      },
+    ],
+  },
+  {
+    date: 'October 9, 2026',
+    changes: [
+      {
+        type: 'fixed',
+        text: '**Signing up on phones**: On some phones, the signup form could be taller than the screen, so the Confirm button was out of reach. All pop-up forms now scroll, so you can always get to the button.',
+      },
+    ],
+  },
+  {
     date: 'September 29, 2026',
     changes: [
       {
