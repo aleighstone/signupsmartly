@@ -361,7 +361,18 @@ async function replaceSlotsForDraft(
   eventId: string,
   slotsToInsert: Record<string, unknown>[],
 ) {
-  await supabase.from('slots').delete().eq('event_id', eventId);
+  const { error: deleteError } = await supabase.from('slots').delete().eq('event_id', eventId);
+  if (deleteError) throw deleteError;
+
+  // RLS turns a disallowed delete into a silent no-op, so confirm the old slots
+  // are really gone before inserting — otherwise each re-save stacks another set.
+  const { count: remaining, error: countError } = await supabase
+    .from('slots')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_id', eventId);
+  if (countError) throw countError;
+  if (remaining) throw new Error('Could not update the spots for this draft. Please try again.');
+
   const { error } = await supabase
     .from('slots')
     // @ts-expect-error Supabase SSR createServerClient return type incompatibility with Database

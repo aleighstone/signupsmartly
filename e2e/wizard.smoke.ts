@@ -131,6 +131,46 @@ test.describe('Create signup wizard — preview button', () => {
     await page.getByRole('button', { name: /^next/i }).click();
     await expect(page.getByRole('button', { name: /^preview$/i })).toBeVisible();
   });
+
+  // Regression: previewing re-saves the draft, and each re-save used to stack another
+  // full set of spots onto it (organizer needed 15 per hour, the signup asked for 30).
+  test('previewing twice does not duplicate spots', async ({ page, context }) => {
+    const title = `Playwright Preview Dupe ${Date.now()}`;
+
+    await page.goto('/create-event');
+    await page.getByText('Scheduled signup').click();
+    await page.getByRole('button', { name: /^next/i }).click();
+
+    await page.getByPlaceholder(/Fall Festival Volunteers/i).fill(title);
+    await page.getByPlaceholder(/Community Center/i).fill('Test field');
+    await page.getByRole('button', { name: /^next/i }).click();
+
+    await page.locator('input[type="date"]').first().fill('2027-03-06');
+    await page.locator('input[type="number"]').first().fill('15');
+    await page.getByRole('button', { name: /^next/i }).click();
+
+    const preview = async () => {
+      const [tab] = await Promise.all([
+        context.waitForEvent('page'),
+        page.getByRole('button', { name: /^preview$/i }).click(),
+      ]);
+      await tab.waitForLoadState('domcontentloaded');
+      const id = tab.url().match(/\/event\/([^/?#]+)/)![1];
+      await tab.close();
+      return id;
+    };
+
+    const firstId = await preview();
+    const secondId = await preview();
+    expect(secondId).toBe(firstId);
+
+    try {
+      await page.goto(`/dashboard/event/${firstId}/signups`);
+      await expect(page.getByText(/0 of 15 spots filled/i)).toBeVisible();
+    } finally {
+      await page.request.post(`/api/events/${firstId}/archive`);
+    }
+  });
 });
 
 test.describe('Edit event — preview button', () => {
